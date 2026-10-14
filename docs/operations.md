@@ -1,0 +1,31 @@
+# Operations
+
+Check API, worker and UI readiness independently. The API verifies a database query; worker readiness verifies its database access. The UI serves its public runtime configuration and static assets. Separate HTTPS routing and browser sign-in must also work.
+
+```sh
+docker compose ps
+docker compose logs --tail=100 worker
+docker compose exec worker node -e "fetch('http://127.0.0.1:4343/health/ready').then(r=>{if(!r.ok)process.exit(1)})"
+```
+
+## Worker and schedules
+
+The worker prepares private video uploads and claims due delivery jobs using database leases. Expired preparation can be recovered. Publishing claims cross a durable boundary before public provider calls; unknown outcomes become Uncertain rather than automatically republishing.
+
+Keep the worker running with the same version and secret as the API. Review per-account results when a group is Partial or Failed. Do not modify queue rows manually or restart a publishing operation merely because a response was lost.
+
+## Migrations and upgrades
+
+The API applies migrations on startup under a database advisory lock. Checksums prevent an altered historical migration from being accepted. Resolve a migration error from a verified backup and the correct release; do not edit migration records to suppress it.
+
+## Operator account recovery
+
+Use a private operator shell in the API container:
+
+```sh
+docker compose exec api node dist/apps/api/src/auth/recovery-cli.js --email admin@example.com
+```
+
+The command issues a short-lived private recovery link for an existing active account. It does not reveal a password. Share the link only with that account's owner. API startup and recovery logs may contain credentials; remove them before sharing diagnostic output.
+
+See [backup and recovery](/backup), [upgrades](/upgrades) and [troubleshooting](/troubleshooting) for the corresponding procedures.

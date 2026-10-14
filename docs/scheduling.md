@@ -1,0 +1,9 @@
+# Scheduled posts
+
+Open the publishing menu and choose **Schedule**. Select a future date and time, review it in your account's time zone, then confirm. PostgreSQL stores the requested time and the worker claims due deliveries.
+
+**Scheduled Posts** lists delivery sets, not individual account deliveries. The sidebar count includes sets with scheduled, preparing or publishing deliveries. The table shows selected accounts, **Posted by**, relative and absolute schedule times, status and available actions.
+
+Click the post title or **Edit** to reopen its editor. Saving uses a version check, so a stale browser cannot overwrite another person's changes. Once a delivery begins, content and schedule edits are no longer allowed. **Cancel** cancels deliveries that have not started; it does not remove a published post from a social network.
+
+The worker must be running for scheduled posts and video preparation. An API and UI that pass health checks do not establish that the worker is running. See [operations](/operations) if a schedule does not advance.

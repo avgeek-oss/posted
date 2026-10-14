@@ -1,0 +1,20 @@
+# Delivery details and history
+
+One delivery set contains one delivery per selected account. Post now opens its details page immediately. You can also open **Details** from Post History.
+
+The **Delivery set** Attributes card shows Requested and Scheduled for. The table below it shows each account's content, status, published time and result. A successful provider URL opens the published post. Errors are scoped to their account.
+
+| State      | Meaning                                                                  |
+| ---------- | ------------------------------------------------------------------------ |
+| Scheduled  | Waiting for its scheduled time and an available worker.                  |
+| Preparing  | A worker is preparing media or provider-side upload containers.          |
+| Publishing | The worker crossed the public publishing boundary.                       |
+| Published  | The provider returned a confirmed success.                               |
+| Partial    | Some account deliveries succeeded and others did not.                    |
+| Failed     | A definitive failure occurred without an unknown successful publication. |
+| Uncertain  | Posted cannot establish whether the provider published the request.      |
+| Cancelled  | Pending delivery was cancelled before publication.                       |
+
+Successful deliveries stay recorded when another account fails. Posted does not blindly retry across an uncertain publishing boundary. Inspect the provider account and resolve the outcome before intentionally making a new request. A repeated request key is for replaying the same logical operation, not for asking the provider to publish again.
+
+**Posted by** records the person responsible for the last accepted change. Background worker completion does not change attribution. Older edited data whose editor was never recorded displays **Not recorded** until a successful save.

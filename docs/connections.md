@@ -1,0 +1,11 @@
+# Social connections
+
+An administrator opens **Connections** and chooses **Add connection**. Only providers fully configured by the operator appear. Choose the provider, continue to its sign-in page and approve the requested posting access.
+
+Accounts belong to the team. You can connect several accounts from the same provider. Connecting the same provider account again refreshes that connection instead of creating a duplicate.
+
+Members can select connected accounts when composing. Viewers can inspect accounts and posts. Provider credentials are encrypted at rest and never returned to the browser, REST client or MCP client.
+
+If a connection needs reconnection, an administrator completes the provider authorization again. Disconnecting prevents future use of that connection; it does not delete posts already published on the provider. Drafts may retain a disconnected account for later editing, but publishing validation prevents delivery through it.
+
+See [provider application setup](/providers) for callback URLs, permissions and signing-key requirements. Local preview accounts are demonstration data and cannot publish to real providers.

@@ -1,0 +1,213 @@
+import { useState } from "react";
+import { Avatar, Checkbox, Label } from "@heroui/react";
+import {
+  Button,
+  Dialog,
+  ScrollShadow,
+  TextField,
+  Tooltip,
+} from "@posted/web-design-system";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { AlertCircleIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import type { SocialConnection } from "../../../packages/contracts/src/index.js";
+import { ProviderIcon, providerNames } from "./social-ui.js";
+
+function AccountAvatar({
+  account,
+  error,
+}: {
+  account: SocialConnection;
+  error?: string;
+}) {
+  const initials = account.name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+  return (
+    <span className="relative inline-flex shrink-0" aria-hidden="true">
+      <Avatar className="size-12">
+        <Avatar.Image
+          src={account.avatarUrl ?? undefined}
+          alt=""
+          referrerPolicy="no-referrer"
+        />
+        <Avatar.Fallback>{initials}</Avatar.Fallback>
+      </Avatar>
+      {error && (
+        <span className="absolute -left-1 -top-1 flex size-5 items-center justify-center rounded-full border-2 border-surface bg-danger text-danger-foreground">
+          <HugeiconsIcon icon={AlertCircleIcon} size={14} aria-hidden />
+        </span>
+      )}
+      <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center overflow-hidden rounded-full border-2 border-background bg-surface">
+        <ProviderIcon provider={account.provider} className="size-full" />
+      </span>
+    </span>
+  );
+}
+
+export function ComposerAccounts({
+  accounts,
+  selected,
+  activeId,
+  locked,
+  errors,
+  onChange,
+  onActiveChange,
+}: {
+  accounts: SocialConnection[];
+  selected: string[];
+  activeId?: string;
+  locked: boolean;
+  errors: Record<string, string>;
+  onChange: (ids: string[]) => void;
+  onActiveChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const query = search.trim().toLowerCase();
+  const results = accounts.filter((account) =>
+    `${account.name} ${account.handle} ${providerNames[account.provider]}`
+      .toLowerCase()
+      .includes(query),
+  );
+  const chosen = accounts.filter((account) => selected.includes(account.id));
+  return (
+    <section className="grid min-w-0 gap-4" aria-label="Selected accounts">
+      <div className="@container flex min-w-0 items-center gap-3">
+        <ScrollShadow
+          orientation="horizontal"
+          hideScrollBar
+          size={24}
+          className="flex min-w-0 flex-1 gap-3 overflow-x-auto overscroll-x-contain p-1"
+          aria-label="Account content and previews"
+        >
+          {chosen.map((account) => (
+            <Tooltip key={account.id}>
+              <Tooltip.Trigger<"span">
+                className="shrink-0"
+                role="presentation"
+                tabIndex={-1}
+                render={(props) => <span {...props} />}
+              >
+                <Button
+                  isIconOnly
+                  variant="tertiary"
+                  className={`size-14 shrink-0 overflow-visible rounded-full p-1 ${account.id === activeId ? "ring-2 ring-accent" : ""}`}
+                  aria-label={`${account.name}, ${providerNames[account.provider]}, @${account.handle}${errors[account.id] ? `: ${errors[account.id]}` : ""}`}
+                  aria-pressed={account.id === activeId}
+                  onPress={() => onActiveChange(account.id)}
+                >
+                  <AccountAvatar account={account} error={errors[account.id]} />
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                @{account.handle}
+                {errors[account.id] && (
+                  <p className="mt-1 text-danger">{errors[account.id]}</p>
+                )}
+              </Tooltip.Content>
+            </Tooltip>
+          ))}
+        </ScrollShadow>
+        <div
+          className={`shrink-0 transition-[translate] duration-220 ease-[cubic-bezier(0.65,0,0.35,1)] motion-reduce:transition-none ${chosen.length ? "translate-x-0" : "translate-x-[calc(100%_-_100cqw)]"}`}
+        >
+          <Button
+            variant="secondary"
+            isDisabled={locked}
+            onPress={() => {
+              setSearch("");
+              setOpen(true);
+            }}
+          >
+            <HugeiconsIcon icon={UserGroupIcon} size={16} aria-hidden />
+            Choose Accounts
+          </Button>
+        </div>
+      </div>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Choose Accounts"
+        footer={<Button onPress={() => setOpen(false)}>Done</Button>}
+      >
+        <div className="grid min-w-0 grid-cols-1 gap-4">
+          <TextField
+            label="Search accounts"
+            type="search"
+            placeholder="Name or handle…"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <ScrollShadow
+            orientation="vertical"
+            hideScrollBar
+            size={24}
+            className="max-h-[45dvh] overflow-y-auto overscroll-contain"
+            aria-label="Account results"
+          >
+            {results.map((account) => (
+              <Checkbox
+                key={account.id}
+                className="w-full flex-row items-center gap-3 rounded-xl px-2 py-3"
+                isSelected={selected.includes(account.id)}
+                isDisabled={
+                  locked ||
+                  (!selected.includes(account.id) &&
+                    (account.state !== "connected" || selected.length >= 50))
+                }
+                aria-label={`${account.name}, ${providerNames[account.provider]}, @${account.handle}${account.state !== "connected" ? ", reconnect required" : ""}`}
+                onChange={(checked) =>
+                  onChange(
+                    checked
+                      ? [...selected, account.id]
+                      : selected.filter((id) => id !== account.id),
+                  )
+                }
+              >
+                <Checkbox.Content className="flex min-w-0 flex-1 flex-row items-center gap-3">
+                  <Checkbox.Control>
+                    <Checkbox.Indicator />
+                  </Checkbox.Control>
+                  <AccountAvatar account={account} />
+                  <span className="grid min-w-0 gap-1">
+                    <Label
+                      className="truncate font-medium"
+                      title={account.name}
+                    >
+                      {account.name}
+                    </Label>
+                    <span className="truncate text-xs text-muted">
+                      {providerNames[account.provider]} · @{account.handle}
+                    </span>
+                    {account.state !== "connected" && (
+                      <span className="text-xs text-muted">
+                        Reconnect before posting
+                      </span>
+                    )}
+                  </span>
+                </Checkbox.Content>
+              </Checkbox>
+            ))}
+            {!results.length && (
+              <p className="py-6 text-sm text-muted">
+                {accounts.length
+                  ? "No matching accounts."
+                  : "Connect a social account to start posting."}
+              </p>
+            )}
+          </ScrollShadow>
+          <p className="text-xs text-muted">
+            {selected.length} selected
+            {selected.length >= 50 ? " · Up to 50 accounts per post" : ""}
+          </p>
+        </div>
+      </Dialog>
+    </section>
+  );
+}

@@ -1,0 +1,61 @@
+x-server-environment: &server-environment
+  NODE_ENV: production
+  DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+  POSTED_WEB_URL: ${POSTED_WEB_URL:?set POSTED_WEB_URL}
+  POSTED_API_URL: ${POSTED_API_URL:?set POSTED_API_URL}
+  POSTED_SECRET: ${POSTED_SECRET:?set POSTED_SECRET}
+  POSTED_X_CLIENT_ID: ${POSTED_X_CLIENT_ID:-}
+  POSTED_X_CLIENT_SECRET: ${POSTED_X_CLIENT_SECRET:-}
+  POSTED_LINKEDIN_CLIENT_ID: ${POSTED_LINKEDIN_CLIENT_ID:-}
+  POSTED_LINKEDIN_CLIENT_SECRET: ${POSTED_LINKEDIN_CLIENT_SECRET:-}
+  POSTED_LINKEDIN_API_VERSION: ${POSTED_LINKEDIN_API_VERSION:-202609}
+  POSTED_THREADS_CLIENT_ID: ${POSTED_THREADS_CLIENT_ID:-}
+  POSTED_THREADS_CLIENT_SECRET: ${POSTED_THREADS_CLIENT_SECRET:-}
+  POSTED_BLUESKY_CLIENT_ID: ${POSTED_BLUESKY_CLIENT_ID:-}
+  POSTED_BLUESKY_PRIVATE_KEY_JWK: ${POSTED_BLUESKY_PRIVATE_KEY_JWK:-}
+  POSTED_S3_ENDPOINT: ${POSTED_S3_ENDPOINT:-}
+  POSTED_S3_REGION: ${POSTED_S3_REGION:-auto}
+  POSTED_S3_BUCKET: ${POSTED_S3_BUCKET:-}
+  POSTED_S3_ACCESS_KEY_ID: ${POSTED_S3_ACCESS_KEY_ID:-}
+  POSTED_S3_SECRET_ACCESS_KEY: ${POSTED_S3_SECRET_ACCESS_KEY:-}
+x-runtime: &runtime
+  init: true
+  restart: unless-stopped
+  read_only: true
+  tmpfs: ["/tmp:rw,noexec,nosuid,size=32m,mode=1777"]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  stop_grace_period: 60s
+services:
+  api:
+    <<: *runtime
+    image: ghcr.io/avgeek-oss/posted-api:${POSTED_VERSION:-0.1.0}
+    environment:
+      <<: *server-environment
+      PORT: 4341
+      POSTED_SMTP_HOST: ${POSTED_SMTP_HOST:-}
+      POSTED_SMTP_PORT: ${POSTED_SMTP_PORT:-587}
+      POSTED_SMTP_SECURE: ${POSTED_SMTP_SECURE:-false}
+      POSTED_SMTP_USER: ${POSTED_SMTP_USER:-}
+      POSTED_SMTP_PASSWORD: ${POSTED_SMTP_PASSWORD:-}
+      POSTED_SMTP_FROM: ${POSTED_SMTP_FROM:-}
+    ports: ["127.0.0.1:4341:4341"]
+  worker:
+    <<: *runtime
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=256m,mode=1777"]
+    image: ghcr.io/avgeek-oss/posted-worker:${POSTED_VERSION:-0.1.0}
+    environment:
+      <<: *server-environment
+      PORT: 4343
+    depends_on:
+      api:
+        condition: service_healthy
+  web:
+    <<: *runtime
+    image: ghcr.io/avgeek-oss/posted-web:${POSTED_VERSION:-0.1.0}
+    environment:
+      NODE_ENV: production
+      PORT: 4342
+      POSTED_API_URL: ${POSTED_API_URL:?set POSTED_API_URL}
+      POSTED_S3_ENDPOINT: ${POSTED_S3_ENDPOINT:-}
+    ports: ["127.0.0.1:4342:4342"]

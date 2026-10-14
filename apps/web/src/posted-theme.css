@@ -1,0 +1,24 @@
+@layer base {
+  :root,
+  .light,
+  [data-theme="light"] {
+    --accent: oklch(0.48 0.18 260);
+    --accent-foreground: oklch(0.99 0.002 260);
+    --foreground: oklch(0.24 0.01 260);
+    --muted: oklch(0.52 0.015 260);
+    --default-foreground: var(--foreground);
+    --field-foreground: var(--foreground);
+    --segment-foreground: var(--foreground);
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    --accent: oklch(0.76 0.11 255);
+    --accent-foreground: oklch(0.2 0.025 260);
+    --foreground: oklch(0.96 0.005 260);
+    --muted: oklch(0.74 0.01 260);
+    --default-foreground: var(--foreground);
+    --field-foreground: var(--foreground);
+    --segment-foreground: var(--foreground);
+  }
+}

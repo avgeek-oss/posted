@@ -1,0 +1,51 @@
+[
+  {
+    "name": "composer",
+    "title": "Compose a post",
+    "alt": "Posted composer with sample master text, account selection, media and a provider preview.",
+    "width": 1280,
+    "height": 900,
+    "pages": ["composer", "media", "getting-started"]
+  },
+  {
+    "name": "scheduled",
+    "title": "Scheduled posts",
+    "alt": "Posted scheduled table with sample delivery sets and relative schedule times.",
+    "width": 1280,
+    "height": 900,
+    "pages": ["scheduling"]
+  },
+  {
+    "name": "connections",
+    "title": "Team connections",
+    "alt": "Posted team-owned sample social accounts for X, LinkedIn, Bluesky and Threads.",
+    "width": 1280,
+    "height": 900,
+    "pages": ["connections"]
+  },
+  {
+    "name": "drafts",
+    "title": "Saved drafts",
+    "alt": "Posted drafts table with sample ideas and Drafted by attribution.",
+    "width": 1280,
+    "height": 900,
+    "pages": ["drafts"]
+  },
+  {
+    "name": "details",
+    "title": "Delivery details",
+    "alt": "Posted delivery set attributes and per-account state table.",
+    "width": 1280,
+    "height": 900,
+    "pages": ["deliveries"]
+  },
+  {
+    "name": "composer-mobile",
+    "title": "Mobile composer",
+    "alt": "Posted composer account selection and live preview on mobile.",
+    "width": 390,
+    "height": 844,
+    "portrait": true,
+    "pages": ["composer"]
+  }
+]

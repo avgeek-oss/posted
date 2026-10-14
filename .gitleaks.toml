@@ -1,0 +1,14 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Private ignored runtime files and generated dependency/build directories"
+paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)dist/''',
+  '''(^|/)artifacts/''',
+  '''(^|/)\.env$''',
+  '''(^|/)tmp/''',
+  '''(^|/)\.git/''',
+  '''(^|/)design/'''
+]

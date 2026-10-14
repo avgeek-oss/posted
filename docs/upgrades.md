@@ -1,0 +1,18 @@
+# Upgrades
+
+Choose a published GitHub release and read its release notes and `posted-images.json`. Verify the image references, platform and version. Take a [tested backup](/backup) before changing an installation.
+
+<Steps>
+  <Step title="Stop writes and deliveries">Use a maintenance window. Stop API and worker and review in-flight or uncertain deliveries. Keep users from editing during the snapshot.</Step>
+  <Step title="Back up the installation">Retain PostgreSQL, the stable secret, private configuration and media. Record the old version and image references.</Step>
+  <Step title="Use one new version">Update `POSTED_VERSION` in the private environment. API, worker and UI must all use it. Pull the new images.</Step>
+  <Step title="Start and verify">Start Compose. The API migrates before readiness and the worker waits for API health. Check all three containers, public origins, sign-in, an existing draft and its media.</Step>
+</Steps>
+
+```sh
+docker compose pull
+docker compose up -d
+docker compose ps
+```
+
+Use the same Compose overlays as the original installation. If a migration or startup fails, keep the worker stopped and diagnose the error. Restore a tested snapshot and matching version if recovery requires rollback. Do not mutate migration checksums or reset delivery state to make the upgrade appear successful.

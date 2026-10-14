@@ -1,0 +1,112 @@
+[
+  {
+    "name": "overview",
+    "title": "Posted",
+    "description": "Self-hosted social publishing for a team."
+  },
+  {
+    "name": "getting-started",
+    "title": "Your first post",
+    "description": "Set up a team, connect an account and prepare a post."
+  },
+  {
+    "name": "composer",
+    "title": "Compose a post",
+    "description": "Write shared content, choose accounts and customize each delivery."
+  },
+  {
+    "name": "drafts",
+    "title": "Drafts",
+    "description": "Save ideas without creating publishing jobs."
+  },
+  {
+    "name": "scheduling",
+    "title": "Scheduled posts",
+    "description": "Schedule, edit and cancel posts before delivery begins."
+  },
+  {
+    "name": "deliveries",
+    "title": "Delivery details and history",
+    "description": "Inspect progress and handle partial or uncertain publication."
+  },
+  {
+    "name": "media",
+    "title": "Images and videos",
+    "description": "Upload private media, reorder it and review provider-specific limits."
+  },
+  {
+    "name": "connections",
+    "title": "Social connections",
+    "description": "Connect team-owned accounts through official provider OAuth."
+  },
+  {
+    "name": "authentication",
+    "title": "Accounts and team access",
+    "description": "Manage invitations, roles, passkeys and recovery."
+  },
+  {
+    "name": "mcp-connections",
+    "title": "MCP connections",
+    "description": "Connect an MCP client with OAuth and user-selected permissions."
+  },
+  {
+    "name": "api-keys",
+    "title": "API keys",
+    "description": "Authorize REST clients without giving them provider credentials."
+  },
+  {
+    "name": "installation",
+    "title": "Installation",
+    "description": "Run version-matched API, worker and UI images with PostgreSQL."
+  },
+  {
+    "name": "configuration",
+    "title": "Configuration",
+    "description": "Required settings and optional provider, storage and email configuration."
+  },
+  {
+    "name": "providers",
+    "title": "Provider application setup",
+    "description": "Register approved applications and exact callback URLs."
+  },
+  {
+    "name": "storage",
+    "title": "Private media storage",
+    "description": "Configure S3-compatible access, CORS and safe retention."
+  },
+  {
+    "name": "operations",
+    "title": "Operations",
+    "description": "Inspect health, schedules, account emails and recovery."
+  },
+  {
+    "name": "backup",
+    "title": "Backup and recovery",
+    "description": "Keep the database, encryption secret and private media together."
+  },
+  {
+    "name": "upgrades",
+    "title": "Upgrades",
+    "description": "Replace all three images together after a tested backup."
+  },
+  {
+    "name": "security",
+    "title": "Security",
+    "description": "Understand credentials, roles and publishing boundaries."
+  },
+  {
+    "name": "legal",
+    "title": "Licenses and provider terms",
+    "description": "Source licensing, notices and installation responsibilities."
+  },
+  {
+    "name": "release-notes",
+    "title": "Release notes",
+    "description": "Changes in the first Posted release candidate."
+  },
+  {
+    "name": "troubleshooting",
+    "title": "Troubleshooting",
+    "description": "Diagnose configuration, media and publishing problems."
+  }
+]

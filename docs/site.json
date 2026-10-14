@@ -1,0 +1,164 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Posted",
+  "description": "Open-source, self-hosted social publishing for teams.",
+  "logo": {
+    "light": "/assets/posted-mark.png",
+    "dark": "/assets/posted-mark.png",
+    "href": "/"
+  },
+  "favicon": "/assets/posted-favicon.png",
+  "colors": {
+    "primary": "#1554CC",
+    "light": "#8ABBF2",
+    "dark": "#1554CC"
+  },
+  "navigation": {
+    "dropdowns": [
+      {
+        "dropdown": "Introduction",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": ["overview", "getting-started"]
+          }
+        ]
+      },
+      {
+        "dropdown": "Using Posted",
+        "icon": "send",
+        "groups": [
+          {
+            "group": "Posts and accounts",
+            "pages": [
+              "composer",
+              "drafts",
+              "scheduling",
+              "deliveries",
+              "media",
+              "connections",
+              "authentication"
+            ]
+          }
+        ]
+      },
+      {
+        "dropdown": "API and MCP",
+        "icon": "plug",
+        "groups": [
+          {
+            "group": "Connect a client",
+            "pages": ["api-keys", "mcp-connections", "rest-reference"]
+          }
+        ]
+      },
+      {
+        "dropdown": "Self-hosting",
+        "icon": "server",
+        "groups": [
+          {
+            "group": "Install and configure",
+            "pages": [
+              "installation",
+              "configuration",
+              "providers",
+              "storage",
+              "security"
+            ]
+          },
+          {
+            "group": "Operate Posted",
+            "pages": [
+              "operations",
+              "backup",
+              "upgrades",
+              "troubleshooting",
+              "release-notes",
+              "development",
+              "legal"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Release notes",
+        "href": "/release-notes"
+      },
+      {
+        "type": "github",
+        "href": "https://github.com/avgeek-oss/posted"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get started",
+      "href": "/getting-started"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/avgeek-oss/posted"
+    },
+    "links": [
+      {
+        "header": "Documentation",
+        "items": [
+          {
+            "label": "Install Posted",
+            "href": "/installation"
+          },
+          {
+            "label": "Compose a post",
+            "href": "/composer"
+          },
+          {
+            "label": "MCP connections",
+            "href": "/mcp-connections"
+          },
+          {
+            "label": "Backup and recovery",
+            "href": "/backup"
+          }
+        ]
+      },
+      {
+        "header": "Avgeek OSS",
+        "items": [
+          {
+            "label": "Source code",
+            "href": "https://github.com/avgeek-oss/posted"
+          },
+          {
+            "label": "Our OSS philosophy",
+            "href": "https://github.com/avgeek-oss/.github/blob/main/profile/README.md"
+          },
+          {
+            "label": "Licenses and terms",
+            "href": "/legal"
+          }
+        ]
+      }
+    ]
+  },
+  "seo": {
+    "metatags": {
+      "canonical": "https://www.posted.cc",
+      "og:image": "https://www.posted.cc/assets/posted-social.png",
+      "og:image:width": "1200",
+      "og:image:height": "630",
+      "og:image:alt": "Posted, social publishing for teams",
+      "twitter:image": "https://www.posted.cc/assets/posted-social.png"
+    },
+    "organization": {
+      "name": "Posted",
+      "url": "https://www.posted.cc",
+      "logo": "https://www.posted.cc/assets/posted-mark.png",
+      "sameAs": ["https://github.com/avgeek-oss/posted"]
+    }
+  }
+}

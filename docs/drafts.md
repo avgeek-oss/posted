@@ -1,0 +1,9 @@
+# Drafts
+
+Use **Save as draft** before the publishing button group. A draft preserves master text, per-account overrides, selected accounts and ordered media. Empty content, no accounts, disconnected accounts and text that exceeds a provider's limit can all be saved.
+
+Open **Drafts** in the sidebar to return to an idea. Its badge counts saved, unpublished drafts across the team. **Drafted by** shows the person who last successfully saved it, with their avatar. **Last saved** uses your date, time and time-zone preferences.
+
+Saving a draft never creates delivery jobs. Post now or Schedule validates the content and converts the draft into one delivery set. If validation fails, the draft stays available. Repeated requests with the same request key do not create a second delivery set.
+
+Administrators and members can edit and delete drafts. Viewers can open them for inspection. Deletion requires confirmation and permanently removes the draft; it does not cancel an already converted delivery set.

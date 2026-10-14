@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256px" height="256px" viewBox="0 0 256 256" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>x</title>
+    <defs>
+        <path d="M0,0 L256,0 L256,256 L0,256 Z" id="path-1"></path>
+    </defs>
+    <g id="x" stroke="none" fill="none" xlink:href="#path-1" fill-rule="evenodd">
+        <use fill="#000000" xlink:href="#path-1"></use>
+        <g id="X" stroke-width="1" transform="translate(48, 48)" fill="#FFFFFF">
+            <path d="M95.2217332,67.7490806 L154.785334,0 L140.670667,0 L88.9516004,58.8255747 L47.6437334,0 L0,0 L62.4656001,88.9546875 L0,160 L14.1154667,160 L68.7321335,97.8781931 L112.356267,160 L160,160 L95.2182668,67.7490806 L95.2217332,67.7490806 Z M75.8886667,89.7383988 L69.5595998,80.8805175 L19.2014667,10.3974363 L40.8820001,10.3974363 L81.5216001,67.2795325 L87.850667,76.1374138 L140.677333,150.075426 L118.9968,150.075426 L75.8886667,89.7417906 L75.8886667,89.7383988 Z" id="Shape" fill-rule="nonzero"></path>
+        </g>
+    </g>
+</svg>

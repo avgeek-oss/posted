@@ -1,0 +1,13 @@
+# API keys
+
+Personal keys are bounded by their owner's current role. Administrators can create team keys with a stored team policy. Use the smallest useful access level and an appropriate expiry.
+
+Create keys in the corresponding Account Settings or Team Settings page. A key is shown once; keep it in the client's secret store. The table lists active keys and their permissions. Revocation prevents further use.
+
+REST requests use the key in the Authorization header:
+
+```sh
+curl --fail --header "Authorization: Bearer $POSTED_REST_KEY"   https://posted-api.example.com/api/providers
+```
+
+`POSTED_REST_KEY` is a private value supplied by you, not an operator environment setting. Do not put a key in a URL, screenshot, issue or public repository. OAuth is the [MCP connection method](/mcp-connections); a REST key is not its replacement.

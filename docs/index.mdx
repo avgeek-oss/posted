@@ -1,0 +1,152 @@
+---
+title: "Social publishing for your team"
+description: "Draft, tailor and schedule posts for X, LinkedIn, Bluesky and Threads. Self-host Posted with PostgreSQL and private media storage."
+mode: "custom"
+---
+
+import {
+  Home,
+  Hero,
+  Actions,
+  ActionLink,
+  ProductFrame,
+  Highlights,
+  InlineLink,
+  FeatureGroup,
+  Feature,
+  FeatureCopy,
+  FeatureImage,
+  Eyebrow,
+} from "/snippets/oss/homepage.jsx";
+import { ThemeImage } from "/snippets/oss/screenshot.jsx";
+
+<Home>
+  <Hero id="posted-heading">
+    <h1 id="posted-heading">
+      Social publishing
+      <br />
+      <span>for your team</span>
+    </h1>
+    <p className="oss-lead">
+      <span className="oss-lead-primary">
+        Draft an idea. Choose accounts. Publish when you're ready.
+      </span>
+      <span>
+        Schedule text, images and videos for X, LinkedIn, Bluesky and Threads
+        from an installation you control.
+      </span>
+    </p>
+    <Actions>
+      <ActionLink href="/getting-started">Get started →</ActionLink>
+      <ActionLink href="/installation" variant="secondary">
+        Install Posted →
+      </ActionLink>
+    </Actions>
+  </Hero>
+  <ProductFrame>
+    <ThemeImage
+      light="/assets/screenshots/composer-light.jpg"
+      dark="/assets/screenshots/composer-dark.jpg"
+      alt="Posted composer with shared text, team account avatars and a provider preview using sample data."
+      width={1280}
+      height={900}
+      priority
+    />
+  </ProductFrame>
+  <Highlights aria-label="What Posted does">
+    <div>
+      <h2>Keep ideas as drafts</h2>
+      <p>
+        Save incomplete text, accounts and media without creating a delivery
+        job.
+      </p>
+      <InlineLink href="/drafts">Work with drafts →</InlineLink>
+    </div>
+    <div>
+      <h2>Tailor each account</h2>
+      <p>
+        Start with shared text, then adjust an account's copy and review its
+        limits.
+      </p>
+      <InlineLink href="/composer">Use the composer →</InlineLink>
+    </div>
+    <div>
+      <h2>Check every delivery</h2>
+      <p>
+        See account-level progress and confirmed, failed or uncertain results.
+      </p>
+      <InlineLink href="/deliveries">Understand delivery states →</InlineLink>
+    </div>
+  </Highlights>
+  <FeatureGroup>
+    <Feature id="media-heading">
+      <FeatureCopy>
+        <Eyebrow>Private media</Eyebrow>
+        <h2 id="media-heading">Put the right files first.</h2>
+        <p>
+          Add images or videos and drag them into priority order. Posted
+          prepares the supported files for each provider, while originals stay
+          in private storage.
+        </p>
+        <InlineLink href="/media">Media formats and limits →</InlineLink>
+      </FeatureCopy>
+      <FeatureImage>
+        <ThemeImage
+          light="/assets/screenshots/composer-light.jpg"
+          dark="/assets/screenshots/composer-dark.jpg"
+          alt="Shared media, account selection and compact live preview in Posted."
+          width={1280}
+          height={900}
+        />
+      </FeatureImage>
+    </Feature>
+    <Feature id="schedule-heading">
+      <FeatureCopy>
+        <Eyebrow>Scheduling</Eyebrow>
+        <h2 id="schedule-heading">Choose a time and keep control.</h2>
+        <p>
+          Confirm an immediate post or choose a future time in your time zone.
+          Edit a schedule until delivery starts, and inspect each account's
+          result afterward.
+        </p>
+        <InlineLink href="/scheduling">Schedule and edit posts →</InlineLink>
+      </FeatureCopy>
+      <FeatureImage>
+        <ThemeImage
+          light="/assets/screenshots/scheduled-light.jpg"
+          dark="/assets/screenshots/scheduled-dark.jpg"
+          alt="Posted scheduled table with sample posts, account logos and delivery counts."
+          width={1280}
+          height={900}
+        />
+      </FeatureImage>
+    </Feature>
+    <Feature id="connections-heading">
+      <FeatureCopy>
+        <Eyebrow>Team access</Eyebrow>
+        <h2 id="connections-heading">Connect accounts to the team.</h2>
+        <p>
+          Administrators connect approved social accounts. Members write and
+          schedule; viewers inspect. OAuth MCP clients use the access level
+          chosen by the approving person.
+        </p>
+        <InlineLink href="/connections">Connect accounts →</InlineLink>
+      </FeatureCopy>
+      <FeatureImage>
+        <ThemeImage
+          light="/assets/screenshots/connections-light.jpg"
+          dark="/assets/screenshots/connections-dark.jpg"
+          alt="Team-owned social connections in Posted using demonstration accounts."
+          width={1280}
+          height={900}
+        />
+      </FeatureImage>
+    </Feature>
+  </FeatureGroup>
+  <Actions>
+    <ActionLink href="/installation">Self-host Posted →</ActionLink>
+    <ActionLink href="/mcp-connections" variant="secondary">
+      Connect an MCP client →
+    </ActionLink>
+  </Actions>
+</Home>

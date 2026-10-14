@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: .
+      target: api
+      args:
+        RELEASE_VERSION: ${POSTED_VERSION:-0.1.0}
+  worker:
+    build:
+      context: .
+      target: worker
+      args:
+        RELEASE_VERSION: ${POSTED_VERSION:-0.1.0}
+  web:
+    build:
+      context: .
+      target: web
+      args:
+        RELEASE_VERSION: ${POSTED_VERSION:-0.1.0}

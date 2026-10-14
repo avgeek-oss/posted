@@ -1,0 +1,10 @@
+{
+  "name": "@posted/web-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@hono/node-server": "2.0.11",
+    "hono": "4.13.8"
+  }
+}

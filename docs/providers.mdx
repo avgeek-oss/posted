@@ -1,0 +1,27 @@
+---
+title: "Provider application setup"
+description: "Register approved applications and exact callback URLs."
+---
+
+Create provider applications under your own accounts. Use the installation's public API origin in callback settings. Complete configuration enables that provider in Add connection; local tests cannot grant production permissions or paid-plan access.
+
+| Provider | Required environment                                         | Requested scope or client metadata                                                       |
+| -------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| X        | `POSTED_X_CLIENT_ID`, `POSTED_X_CLIENT_SECRET`               | `tweet.read tweet.write users.read offline.access media.write`                           |
+| LinkedIn | `POSTED_LINKEDIN_CLIENT_ID`, `POSTED_LINKEDIN_CLIENT_SECRET` | `openid profile w_member_social`; `POSTED_LINKEDIN_API_VERSION` selects the API version. |
+| Threads  | `POSTED_THREADS_CLIENT_ID`, `POSTED_THREADS_CLIENT_SECRET`   | `threads_basic,threads_content_publish`                                                  |
+| Bluesky  | `POSTED_BLUESKY_CLIENT_ID`, `POSTED_BLUESKY_PRIVATE_KEY_JWK` | Official OAuth with PKCE, DPoP and private-key client authentication.                    |
+
+For X, LinkedIn and Threads, register these exact callbacks after replacing the example API origin:
+
+```text
+https://posted-api.example.com/api/social/callback/x
+https://posted-api.example.com/api/social/callback/linkedin
+https://posted-api.example.com/api/social/callback/threads
+```
+
+For Bluesky, set the client ID to `https://posted-api.example.com/social/bluesky/client-metadata.json`. Supply an EC P-256 private signing JWK with a key ID. Posted serves client metadata and public keys at `/social/bluesky/client-metadata.json` and `/social/bluesky/jwks.json`; it never serves the private JWK.
+
+Consult the provider's current registration and approval instructions: [X OAuth](https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code), [LinkedIn member sharing](https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/share-on-linkedin), [Threads](https://developers.facebook.com/docs/threads/) and [Bluesky OAuth](https://atproto.com/specs/oauth).
+
+After configuration, an administrator connects a test account and confirms its granted permissions. Verify one authorized text, image and video delivery for each provider you intend to use, and inspect provider-side results. Treat provider approval and a real publishing smoke test as separate from Posted's local contract tests.

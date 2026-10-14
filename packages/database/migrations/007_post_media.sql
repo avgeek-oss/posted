@@ -1,0 +1,15 @@
+ALTER TABLE post_images RENAME TO post_media;
+ALTER TABLE post_group_images RENAME TO post_group_media;
+ALTER TABLE post_group_media RENAME COLUMN image_id TO media_id;
+ALTER TABLE post_draft_images RENAME TO post_draft_media;
+ALTER TABLE post_draft_media RENAME COLUMN image_id TO media_id;
+ALTER TABLE post_media DROP CONSTRAINT post_images_size_bytes_check;
+ALTER TABLE post_media ADD CONSTRAINT post_media_size_bytes_check CHECK(size_bytes BETWEEN 1 AND 104857600);
+ALTER TABLE post_media ADD COLUMN duration_seconds double precision CHECK(duration_seconds > 0 AND duration_seconds <= 1800);
+ALTER TABLE post_media ADD CONSTRAINT post_media_content_check CHECK(content_type IN ('image/jpeg','image/png','image/webp','video/mp4','video/quicktime'));
+ALTER TABLE post_media ADD COLUMN original_object_key text;
+ALTER TABLE post_media DROP CONSTRAINT post_images_state_check;
+ALTER TABLE post_media ADD CONSTRAINT post_media_state_check CHECK(state IN ('uploading','processing','ready','failed','deleted'));
+ALTER TABLE post_media ADD COLUMN processing_lease_token uuid;
+ALTER TABLE post_media ADD COLUMN processing_lease_until timestamptz;
+CREATE INDEX post_media_processing ON post_media(processing_lease_until) WHERE state='processing';

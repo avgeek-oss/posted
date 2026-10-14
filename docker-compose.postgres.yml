@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:17.11-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: posted
+      POSTGRES_USER: posted
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes: [posted-postgres:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U posted -d posted"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+  api:
+    environment:
+      DATABASE_URL: postgres://posted:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/posted
+    depends_on:
+      postgres:
+        condition: service_healthy
+  worker:
+    environment:
+      DATABASE_URL: postgres://posted:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/posted
+volumes:
+  posted-postgres:

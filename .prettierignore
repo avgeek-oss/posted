@@ -1,0 +1,7 @@
+docs/oss-docs.css
+docs/oss-docs.js
+docs/snippets/oss/
+docs/.oss-docs.json
+docs/docs.json
+tmp/
+artifacts/

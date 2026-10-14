@@ -1,0 +1,30 @@
+# Backup and recovery
+
+A usable backup includes PostgreSQL, `POSTED_SECRET`, operator configuration and retained private media. Losing the secret prevents encrypted tokens and email payloads from being decrypted. A database dump alone does not preserve uploaded media.
+
+## Make a consistent backup
+
+Choose a maintenance window. Stop the API and worker before copying related data so edits, uploads and publishing do not race the snapshot. Record any in-flight or Uncertain deliveries before maintenance.
+
+For bundled PostgreSQL, from a private operator shell:
+
+```sh
+docker compose stop api worker
+umask 077
+mkdir -p backups
+docker compose exec -T postgres pg_dump -U posted -d posted -Fc > backups/posted.dump
+```
+
+Export the retained `posted/originals/` and `posted/media/` objects using your storage provider's backup mechanism. Store the private `.env` and stable secret separately with restricted access. Then restart API and worker:
+
+```sh
+docker compose up -d api worker
+```
+
+For external PostgreSQL, use that provider's consistent snapshot/export tool or `pg_dump` with a private connection configuration. Do not expose the database password in a public command transcript.
+
+## Test a restore
+
+Restore into an isolated database and bucket. Keep the publishing worker stopped: a copied due schedule could publish again. Restore the saved secret and configuration, apply the matching release's migrations, and inspect accounts, drafts, scheduled media and delivery history.
+
+A `pg_restore --clean` or database replacement destroys the target's data. Confirm the destination is disposable or has a verified current backup before restoring. A release upgrade is not safe until a restore has been exercised. Never blindly roll back the application binary after a schema migration; restore the tested database, configuration and retained media together.

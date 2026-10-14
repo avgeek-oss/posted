@@ -1,0 +1,29 @@
+# Troubleshooting
+
+## A provider is missing from Add connection
+
+Check [provider setup](/providers). All required values must be present. Partial configuration fails startup. Confirm callbacks match the public API origin and that your provider application has the requested approval.
+
+## A video stays in processing
+
+Check the worker's health and logs. Video preparation needs FFmpeg and writable temporary space. The worker image supplies FFmpeg and Compose reserves 256 MiB for `/tmp`. A failed normalization returns a failed media status; re-upload a valid MP4/MOV rather than forcing a row to ready.
+
+## Uploads fail in the browser
+
+Check the exact UI origin in bucket CORS, the private bucket name, region, endpoint and bucket-scoped credential. [Storage](/storage) documents safe prefixes. An API health check does not exercise CORS or signed uploads.
+
+## A schedule does not advance
+
+Check the UTC schedule time, account time-zone preferences and worker readiness. A healthy UI does not imply a running worker. Look at delivery details rather than repeatedly submitting the same post.
+
+## Delivery is Partial or Uncertain
+
+Open [delivery details](/deliveries). Confirmed successes are kept; inspect the failed account or provider page. An uncertain response may already correspond to a public post. Verify the provider before intentionally making another posting request.
+
+## Sign-in or MCP consent fails
+
+Check both public origins, HTTPS, session cookies and the current role. Role changes revoke human-owned MCP grants; reconnect through OAuth and select the access level again. Do not add a static MCP bearer token as a workaround.
+
+## First setup asks for a secret
+
+Read the API's initial startup log in your private operator session. The setup secret proves installation access. Existing teams cannot be initialized again. Use the operator recovery procedure for a lost administrator account.
