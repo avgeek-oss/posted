@@ -315,5 +315,6 @@ jobs:
           else
             gh release create "$RELEASE_TAG" --verify-tag --draft --generate-notes --title "Posted $RELEASE_TAG"
           fi
-          gh release upload "$RELEASE_TAG" posted-images.json docker-compose.yml docker-compose.postgres.yml .env.example --clobber
+          cp .env.example posted.env.example
+          gh release upload "$RELEASE_TAG" posted-images.json docker-compose.yml docker-compose.postgres.yml posted.env.example --clobber
           gh release edit "$RELEASE_TAG" --draft=false --latest

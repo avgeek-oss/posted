@@ -6,7 +6,7 @@ Posted has separate API, worker and UI images with one version. Choose a release
 
 Use Docker Engine with Compose v2, PostgreSQL 17, separate HTTPS UI and API origins, and a reverse proxy with valid certificates. S3-compatible storage enables media and SMTP enables account emails. Social publishing requires approved provider applications. See [configuration](/configuration) before starting the installation.
 
-Download `docker-compose.yml`, `.env.example` and, if needed, `docker-compose.postgres.yml` from the same release. Copy `.env.example` to `.env`. Set `POSTED_VERSION`, the public origins and a stable secret generated with:
+Download `docker-compose.yml`, `posted.env.example` and, if needed, `docker-compose.postgres.yml` from the same release. Copy `posted.env.example` to `.env`. Set `POSTED_VERSION`, the public origins and a stable secret generated with:
 
 ```sh
 openssl rand -hex 32
