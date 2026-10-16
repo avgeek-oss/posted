@@ -1,0 +1,28 @@
+id: posted-web
+name: Posted UI
+description: Posted v0.1.0 web from the published immutable release image.
+deployment:
+  type: image
+  image: ghcr.io/avgeek-oss/posted-web@sha256:3d937f8de1bc816864edb2c3f7f07cf91353de5f00e40aecff540727c1041ac4
+autoDeploy: false
+container:
+  network: posted
+  port: 4342
+  resources:
+    cpus: 0.25
+    memory: 256m
+health:
+  path: /health/ready
+  timeoutSeconds: 180
+secrets:
+  runtime:
+    - NODE_ENV
+    - POSTED_API_URL
+environments:
+  production:
+    server: 13.206.149.158
+domains:
+  primary: posted.avgeek.ltd
+tls:
+  mode: cloudflare-dns
+  proxied: false
