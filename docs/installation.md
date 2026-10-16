@@ -58,6 +58,21 @@ curl --fail http://localhost:4342/health/ready
 docker compose exec worker node -e "fetch('http://127.0.0.1:4343/health/ready').then(r=>{if(!r.ok)process.exit(1)})"
 ```
 
+## Deploy with Towbar
+
+The repository includes `towbar.yml`, three service manifests in `.towbar/services/`, and a PostgreSQL manifest in `.towbar/datastores/`. They use the published v0.1.0 image digests, run on the registered Platform Services server, and disable automatic deployment. Forks must update the server IP and public domains before connecting the repository.
+
+1. Connect the repository in Towbar and map `production` to `main`.
+2. Save the declared production runtime values in Towbar. Set `POSTGRES_USER=posted`, `POSTGRES_DB=posted` and a generated `POSTGRES_PASSWORD`. The API and worker share `DATABASE_URL` using host `posted-postgres:5432`, the same stable `POSTED_SECRET`, and the public `POSTED_WEB_URL`/`POSTED_API_URL`. Set `NODE_ENV=production` on all three services and configure the API's declared SMTP values. See [configuration](/configuration) for optional media storage and social-provider settings.
+3. Deploy PostgreSQL, API, worker, then UI. The private `posted` Docker network connects the services to the database. Only API and UI have public domains.
+4. Check the workload readiness probes, open the UI and complete administrator setup with the installation secret from the API startup log.
+
+PostgreSQL data persists in a Towbar-managed volume. Back it up together with `POSTED_SECRET` before migration or recovery.
+
+### Move an existing Towbar installation
+
+Copying these manifests to another repository creates different Towbar workload identities; it does not transfer the existing volume, secrets or delivery history. Preserve the database and stable `POSTED_SECRET`, and coordinate the ownership cutover before connecting a replacement source. Removing the original manifests and syncing schedules cleanup of the old workloads and their owned storage. Keep the original source declarations until the migration has been verified.
+
 ## Build from source
 
 A source checkout uses public npm dependencies with no registry token. Use Node 24.16.0 and pnpm 11.5.3 for development. The source-build overlay enables the Dockerfile's targets:

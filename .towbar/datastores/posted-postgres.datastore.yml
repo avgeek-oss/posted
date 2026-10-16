@@ -1,0 +1,20 @@
+id: posted-postgres
+name: Posted PostgreSQL
+description: Persistent PostgreSQL 17 database for Posted.
+type: postgres
+image: postgres:17.11-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+autoDeploy: false
+container:
+  network: posted
+  networkAlias: posted-postgres
+  resources:
+    cpus: 0.5
+    memory: 1g
+secrets:
+  runtime:
+    - POSTGRES_USER
+    - POSTGRES_DB
+    - POSTGRES_PASSWORD
+environments:
+  production:
+    server: 13.206.149.158
