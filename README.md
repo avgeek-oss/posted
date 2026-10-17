@@ -4,7 +4,7 @@ A team-owned social media scheduler for X, LinkedIn, Bluesky and Threads.
 
 Posted uses the same shared authentication, settings and MCP consent components as Towbar, Mill, Rootset and Vitalog. Social accounts connect to the team and can be shared by its members within their current permissions.
 
-Read the documentation at [posted.cc](https://posted.cc). The source uses the published shared design system and includes PostgreSQL, private-storage, OAuth, MCP, image/video and worker-concurrency tests. See the [release sign-off](docs/release-signoff.md) for the published release evidence and deployment status. Provider application approval and production credentials remain installation prerequisites.
+Read the documentation at [posted.cc](https://posted.cc). The source uses the published shared design system and includes PostgreSQL, private-storage, OAuth, MCP, image/video and worker-concurrency tests. Published versions, image manifests and installation assets are available in [GitHub Releases](https://github.com/avgeek-oss/posted/releases). Provider application approval and production credentials remain installation prerequisites.
 
 Use the [installation guide](docs/installation.md) to run version-matched API, worker and UI images with external or bundled PostgreSQL. The [development guide](docs/development.md) describes source builds, local previews and disposable verification services. Public source builds require no npm registry credential.
 
