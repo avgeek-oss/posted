@@ -74,7 +74,13 @@ PostgreSQL data persists in a Towbar-managed volume. Back it up together with `P
 
 ### Move an existing Towbar installation
 
-Copying these manifests to another repository creates different Towbar workload identities; it does not transfer the existing volume, secrets or delivery history. Preserve the database and stable `POSTED_SECRET`, and coordinate the ownership cutover before connecting a replacement source. Removing the original manifests and syncing schedules cleanup of the old workloads and their owned storage. Keep the original source declarations until the migration has been verified.
+Towbar v2.0.52 and later can transfer repository ownership while preserving the existing workload IDs, secrets, database volume and deployment history.
+
+1. Keep the manifest IDs, environment name, workload types, server placement and image digests unchanged.
+2. Connect and sync the destination repository. Both declarations appear in **Conflicts**; running containers stay unchanged.
+3. Remove the original declarations in Git and sync the original repository. Once one compatible declaration remains, Towbar transfers ownership automatically. Sync the destination again if active operations delayed the transfer.
+
+The transfer does not restart containers or require entering secrets again. Removing a declaration without a replacement creates a pending retirement; permanent cleanup requires an explicit administrator action. See [Towbar's transfer and retirement guide](https://www.towbar.dev/docs/repositories/conflicts-and-retirements).
 
 ## Build from source
 
