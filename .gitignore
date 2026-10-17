@@ -17,3 +17,8 @@ backups/
 *.dump
 *.tar
 artifacts/
+
+# Local engineering reports
+docs/v1-requirements.md
+docs/release-signoff.md
+docs/ui-review.md
