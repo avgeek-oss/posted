@@ -36,7 +36,7 @@
     "title": "Delivery details",
     "alt": "Posted delivery set attributes and per-account state table.",
     "width": 1280,
-    "height": 900,
+    "height": 720,
     "pages": ["deliveries"]
   },
   {
@@ -93,7 +93,7 @@
     "title": "Publish history",
     "alt": "Posted sample publish history showing confirmed delivery state per delivery set.",
     "width": 1280,
-    "height": 900,
+    "height": 720,
     "pages": ["deliveries"]
   }
 ]

@@ -25,8 +25,8 @@ const environment = {
   NODE_ENV: "development",
   POSTED_DB_SCHEMA: schema,
   PORT: "4391",
-  POSTED_WEB_URL: "http://localhost:4392",
-  POSTED_API_URL: "http://localhost:4391",
+  POSTED_WEB_URL: "http://127.0.0.1:4392",
+  POSTED_API_URL: "http://127.0.0.1:4391",
   POSTED_SECRET: randomBytes(48).toString("hex"),
   POSTED_S3_ENDPOINT: "http://127.0.0.1:55491",
   POSTED_S3_REGION: "us-east-1",
@@ -157,6 +157,7 @@ const history = await calls("/posts", {
   scheduledAt: new Date(Date.now() + 86400000).toISOString(),
   idempotencyKey: randomUUID(),
 });
+await sql`UPDATE post_groups SET scheduled_at=now() WHERE id=${history.post.id}`;
 await sql`UPDATE post_deliveries SET state='published',provider_post_id='documentation-fixture',published_url='https://example.test/sample-post',published_at=now(),updated_at=now() WHERE group_id=${history.post.id}`;
 await writeFile(
   "tmp/docs-preview.json",
@@ -223,4 +224,6 @@ async function close() {
 }
 process.once("SIGTERM", () => void close());
 process.once("SIGINT", () => void close());
-console.log("Posted isolated documentation preview: http://localhost:4392");
+console.log(
+  `Posted isolated documentation preview: ${environment.POSTED_WEB_URL}`,
+);

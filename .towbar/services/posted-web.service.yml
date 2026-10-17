@@ -1,9 +1,9 @@
 id: posted-web
 name: Posted UI
-description: Posted v0.1.0 web from the published immutable release image.
+description: Posted v0.2.0 web from the published immutable release image.
 deployment:
   type: image
-  image: ghcr.io/avgeek-oss/posted-web@sha256:3d937f8de1bc816864edb2c3f7f07cf91353de5f00e40aecff540727c1041ac4
+  image: ghcr.io/avgeek-oss/posted-web@sha256:cc0181c2f4f2d8ef01e82eb04395c43bcd82815e8b4523594c8e394fe1ebf1fd
 autoDeploy: false
 container:
   network: posted
