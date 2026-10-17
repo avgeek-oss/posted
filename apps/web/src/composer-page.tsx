@@ -398,7 +398,7 @@ export function ComposerPage({
     : [];
 
   const { dragAndDropHooks } = useDragAndDrop<ComposerPart>({
-    isDisabled: locked || uploading,
+    isDisabled: locked || uploading || parts.length < 2,
     getItems: (_keys, items) =>
       items.map((part) => ({ "application/x-posted-post": part.id })),
     onReorder: ({ keys, target }) => {
