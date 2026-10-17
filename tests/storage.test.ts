@@ -431,3 +431,93 @@ test("a malformed video cannot become ready or be scheduled", async () => {
     403,
   );
 });
+
+test("worker delivers account-specific image order, explicit empty media and inherited reply media", async () => {
+  const admin = await setupUser();
+  const connectionId = randomUUID();
+  const token = seal(
+    {
+      accessToken: "disposable",
+      issuedAt: Date.now(),
+      expiresAt: Date.now() + 36e5,
+    },
+    `social-connection:${connectionId}`,
+  );
+  await sql`INSERT INTO social_connections(id,workspace_id,provider,account_id,name,handle,encrypted_credentials) VALUES(${connectionId},(SELECT id FROM workspace),'x','account-media-fixture','Fixture','fixture',${token})`;
+  const ids: string[] = [];
+  const expected: string[] = [];
+  for (const background of ["#ff0000", "#00ff00", "#0000ff"]) {
+    const id = randomUUID();
+    const key = `account-variants/${id}.png`;
+    const bytes = await sharp({
+      create: { width: 120, height: 80, channels: 3, background },
+    })
+      .png()
+      .toBuffer();
+    await storeOriginal(key, bytes, "image/png");
+    await sql`INSERT INTO post_media(id,workspace_id,object_key,file_name,content_type,size_bytes,width,height,state) VALUES(${id},(SELECT id FROM workspace),${key},'variant.png','image/png',${bytes.length},120,80,'ready')`;
+    ids.push(id);
+    expected.push((await prepareImage(bytes, "x")).bytes.toString("base64"));
+  }
+  const response = await request("/api/posts", {
+    cookie: admin.cookie,
+    body: {
+      text: "Custom selection",
+      connectionIds: [connectionId],
+      mediaIds: [ids[0]],
+      mediaOverrides: { [connectionId]: [ids[2], ids[1]] },
+      additionalPosts: [
+        {
+          text: "No media for this reply",
+          mediaIds: [ids[0]],
+          mediaOverrides: { [connectionId]: [] },
+        },
+        { text: "Inherited media", mediaIds: [ids[0]] },
+      ],
+      scheduledAt: new Date().toISOString(),
+      idempotencyKey: randomUUID(),
+    },
+  });
+  assert.equal(response.status, 201);
+  const uploaded: string[] = [];
+  const tweets: Record<string, unknown>[] = [];
+  mock.method(
+    globalThis,
+    "fetch",
+    async (target: string | URL | Request, init?: RequestInit) => {
+      const url = new URL(
+        target instanceof Request ? target.url : String(target),
+      );
+      assert.equal(url.origin, "https://api.x.com");
+      const body = JSON.parse(String(init?.body));
+      if (url.pathname === "/2/media/upload") {
+        uploaded.push(body.media);
+        return Response.json({ data: { id: `variant-${uploaded.length}` } });
+      }
+      assert.equal(url.pathname, "/2/tweets");
+      tweets.push(body);
+      return Response.json({ data: { id: `post-${tweets.length}` } });
+    },
+  );
+  try {
+    await sql`UPDATE post_deliveries SET available_at=now()-interval '1 second'`;
+    for (let i = 0; i < 3; i++) assert.equal(await deliverNext(), true);
+    assert.equal(await deliverNext(), false);
+    assert.deepEqual(uploaded, [expected[2], expected[1], expected[0]]);
+    assert.deepEqual(
+      tweets.map((tweet) => tweet.media),
+      [
+        { media_ids: ["variant-1", "variant-2"] },
+        undefined,
+        { media_ids: ["variant-3"] },
+      ],
+    );
+    assert.ok(
+      (await sql`SELECT state FROM post_deliveries`).every(
+        (row) => row.state === "published",
+      ),
+    );
+  } finally {
+    mock.restoreAll();
+  }
+});

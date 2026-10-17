@@ -430,6 +430,13 @@ try {
   const draftId = randomUUID();
   const draft = await request(`/drafts/${draftId}`, {
     text: "Release verification",
+    additionalPosts: [
+      {
+        text: "Second draft post",
+        textOverrides: { [connectionId]: "Second draft override" },
+        mediaIds: [media.id],
+      },
+    ],
     textOverrides: {},
     connectionIds: [connectionId],
     mediaIds: [media.id],
@@ -440,6 +447,14 @@ try {
   assert.equal((await draft.json()).draft.draftedBy.name, "Reviewer");
   const body = {
     text: "Future release verification",
+    additionalPosts: [
+      {
+        text: "Second scheduled post",
+        textOverrides: { [connectionId]: "Scheduled reply override" },
+        mediaIds: [media.id],
+      },
+      { text: "Third scheduled post", textOverrides: {}, mediaIds: [] },
+    ],
     connectionIds: [connectionId],
     mediaIds: [media.id],
     scheduledAt: new Date(Date.now() + 7 * 86400000).toISOString(),
@@ -449,7 +464,15 @@ try {
   assert.equal(post.status, 201);
   const postId = (await post.json()).post.id;
   assert.equal((await request("/posts", body)).status, 200);
-  assert.equal(db("SELECT count(*) FROM post_deliveries"), "1");
+  assert.equal(db("SELECT count(*) FROM post_deliveries"), "3");
+  const scheduledSequence = (await (await request(`/posts/${postId}`)).json())
+    .post;
+  assert.equal(scheduledSequence.additionalPosts.length, 2);
+  assert.equal(scheduledSequence.additionalPosts[0].media[0].id, media.id);
+  assert.deepEqual(
+    scheduledSequence.deliveries.map((delivery) => delivery.postIndex),
+    [0, 1, 2],
+  );
   assert.deepEqual(await (await request("/posts/counts")).json(), {
     drafts: 1,
     scheduled: 1,
@@ -468,7 +491,7 @@ try {
   ).json();
   assert.equal(messages.messages[0].From.Name, "Posted");
   result.checks.push(
-    "draft attribution, future scheduling, retry replay and branded SMTP delivery",
+    "ordered multi-post drafts and schedules, per-post media and overrides, retry replay and branded SMTP delivery",
   );
   const restoredBucket = bucket + "-restore";
   docker(
@@ -514,8 +537,17 @@ try {
   });
   assert.equal(login.status, 200);
   cookie = login.headers.get("set-cookie").split(";")[0];
-  assert.equal((await request(`/drafts/${draftId}`)).status, 200);
-  assert.equal((await request(`/posts/${postId}`)).status, 200);
+  const restoredDraft = await request(`/drafts/${draftId}`);
+  assert.equal(restoredDraft.status, 200);
+  const restoredDraftBody = (await restoredDraft.json()).draft;
+  assert.equal(
+    restoredDraftBody.additionalPosts[0].textOverrides[connectionId],
+    "Second draft override",
+  );
+  assert.equal(restoredDraftBody.additionalPosts[0].media[0].id, media.id);
+  const restoredPost = await request(`/posts/${postId}`);
+  assert.equal(restoredPost.status, 200);
+  assert.deepEqual((await restoredPost.json()).post, scheduledSequence);
   const restoredPreview = await (
     await request(`/media/${media.id}/preview`)
   ).json();

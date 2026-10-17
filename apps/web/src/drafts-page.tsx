@@ -10,9 +10,10 @@ import {
   toast,
   Avatar,
   TooltipText,
+  Link,
 } from "@posted/web-design-system";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Edit02Icon, FileEditIcon } from "@hugeicons/core-free-icons";
+import { QuillWrite01Icon, QuillWrite02Icon } from "@hugeicons/core-free-icons";
 import type { Page, PostDraft } from "../../../packages/contracts/src/index.js";
 import { api, errorText, type Session } from "./api.js";
 import { PageHeading } from "./page-heading.js";
@@ -49,33 +50,33 @@ export function DraftsPage({ session }: { session: Session }) {
   return (
     <section className="min-w-0">
       <PageHeading
-        title="Drafts"
-        icon={<HugeiconsIcon icon={FileEditIcon} />}
+        title="Pending Drafts"
+        icon={<HugeiconsIcon icon={QuillWrite02Icon} />}
         actions={
           editable ? (
             <ButtonLink href="/posts/new">
-              <HugeiconsIcon icon={Edit02Icon} size={16} aria-hidden />
+              <HugeiconsIcon icon={QuillWrite01Icon} size={16} aria-hidden />
               Create post
             </ButtonLink>
           ) : undefined
         }
       />
       {resource.pending && !data ? (
-        <QueryLoading>Loading drafts…</QueryLoading>
+        <QueryLoading>Loading pending drafts…</QueryLoading>
       ) : resource.failed && !data ? (
         <QueryFeedback
-          message="Drafts could not be loaded."
+          message="Pending drafts could not be loaded."
           onRetry={resource.refresh}
         />
       ) : (
         <div className="grid min-w-0 gap-4">
           <ResourceTable
-            ariaLabel="Post drafts"
+            ariaLabel="Pending drafts"
             mobileLayout="scroll"
             tableClassName="min-w-3xl"
             items={data?.items ?? []}
             getRowKey={(draft) => draft.id}
-            emptyTitle="No drafts yet"
+            emptyTitle="No pending drafts"
             emptyDescription="Save an idea from the editor and return to it when you're ready to publish."
             columns={[
               {
@@ -86,14 +87,17 @@ export function DraftsPage({ session }: { session: Session }) {
                 cell: (draft) => (
                   <ResourceName
                     name={
-                      <span className="block max-w-sm truncate">
+                      <Link
+                        href={`/drafts/${draft.id}/edit`}
+                        className="block max-w-sm truncate text-foreground no-underline hover:underline"
+                      >
                         {draft.text.trim() ||
                           (draft.media.length
                             ? "Media post"
                             : "Untitled draft")}
-                      </span>
+                      </Link>
                     }
-                    description={`${draft.connectionIds.length} ${draft.connectionIds.length === 1 ? "account" : "accounts"}`}
+                    description={`${draft.additionalPosts.length + 1} ${draft.additionalPosts.length ? "posts" : "post"} · ${draft.connectionIds.length} ${draft.connectionIds.length === 1 ? "account" : "accounts"}`}
                   />
                 ),
               },

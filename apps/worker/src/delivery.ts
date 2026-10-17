@@ -78,7 +78,12 @@ export async function deliverNext(): Promise<boolean> {
         height: number;
         durationSeconds: number | null;
       }[]
-    >`SELECT i.id,i.object_key,i.alt,i.content_type,i.width,i.height,i.duration_seconds FROM post_group_media gi JOIN post_media i ON i.id=gi.media_id WHERE gi.group_id=${job.groupId} AND i.state='ready' ORDER BY gi.position`;
+    >`SELECT i.id,i.object_key,i.alt,i.content_type,i.width,i.height,i.duration_seconds FROM (
+      SELECT media_id,position FROM post_group_account_media WHERE group_id=${job.groupId} AND post_index=${job.postIndex ?? 0} AND connection_id=${job.connectionId}
+      UNION ALL
+      SELECT media_id,position FROM post_group_media WHERE group_id=${job.groupId} AND post_index=${job.postIndex ?? 0}
+        AND NOT EXISTS(SELECT 1 FROM post_group_media_overrides WHERE group_id=${job.groupId} AND post_index=${job.postIndex ?? 0} AND connection_id=${job.connectionId})
+    ) gi JOIN post_media i ON i.id=gi.media_id WHERE i.state='ready' ORDER BY gi.position`;
     const error = mediaError(job.provider, uploaded);
     if (error) throw new Error(error);
     const originals = mediaForProvider(job.provider, uploaded);

@@ -1,8 +1,8 @@
 # Posted
 
-Posted is a self-hosted social media scheduler for X, LinkedIn, Bluesky and Threads. Connect accounts to your team, write a shared message, tailor it for each account and publish now or schedule it for later.
+Posted is a self-hosted social media scheduler for X, LinkedIn, Bluesky and Threads. Connect accounts to your team, write a single post or ordered sequence, tailor text and media for each account and publish now or schedule it for later.
 
-Drafts let you keep incomplete ideas without creating delivery jobs. Scheduled posts can be edited until delivery starts. Post History records a separate result for each selected account, including partial success and uncertain outcomes.
+Drafts let you keep incomplete ideas without creating delivery jobs. Scheduled posts can be edited until delivery starts. Publish History records a separate result for each selected account, including partial success and uncertain outcomes.
 
 An installation runs three version-matched containers: API, worker and UI. PostgreSQL stores accounts, drafts, schedules and delivery state. Optional private S3-compatible storage enables images and videos; optional SMTP handles account emails. Social publishing requires your own approved provider applications.
 

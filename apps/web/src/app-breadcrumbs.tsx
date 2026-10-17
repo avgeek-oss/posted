@@ -6,7 +6,7 @@ import {
   settingsTitles,
 } from "./settings-navigation.js";
 const BreadcrumbContext = createContext<AppShellBreadcrumbItems>([
-  { label: "Home", href: "/" },
+  { label: "Dashboard", href: "/" },
 ]);
 export const usePageBreadcrumbs = () => useContext(BreadcrumbContext);
 export function AppBreadcrumbs({

@@ -668,6 +668,12 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
   let accessToken = "disposable-dpop-access";
   let challenge = "";
   let oauthState = "";
+  let expectedReply:
+    | {
+        root: { uri: string; cid: string };
+        parent: { uri: string; cid: string };
+      }
+    | undefined;
   mock.method(
     globalThis,
     "fetch",
@@ -831,6 +837,7 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
         assert.equal(record.repo, did);
         assert.equal(record.collection, "app.bsky.feed.post");
         assert.equal(record.record.text, "Team announcement");
+        assert.deepEqual(record.record.reply, expectedReply);
         if (record.record.embed.$type === "app.bsky.embed.video") {
           assert.equal(record.record.embed.video.mimeType, "video/mp4");
           assert.equal(record.record.embed.alt, "Team video");
@@ -1003,6 +1010,29 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
       `at://${did}/app.bsky.feed.post/posted-${videoJob.id}`,
     );
     assert.equal(publications, 8);
+    const root = {
+      id: `at://${did}/app.bsky.feed.post/posted-${delivery.id}`,
+      cid,
+    };
+    let parent = root;
+    for (let index = 1; index <= 2; index++) {
+      const next = {
+        ...job("bluesky"),
+        accountId: did,
+        postIndex: index,
+        replyTo: parent,
+        threadRoot: root,
+      };
+      expectedReply = {
+        root: { uri: root.id, cid },
+        parent: { uri: parent.id, cid },
+      };
+      const reply = await preparePublication(next, [video()]);
+      const result = await reply.publish();
+      assert.equal(result.cid, cid);
+      parent = { id: result.id, cid };
+    }
+    assert.equal(publications, 10);
   } finally {
     process.env.POSTED_API_URL = original.api;
     process.env.POSTED_WEB_URL = original.web;

@@ -5,13 +5,22 @@ description: "Schedule, edit and cancel posts before delivery begins."
 
 import { Screenshot } from "/snippets/oss/screenshot.jsx";
 
-Open the publishing menu and choose **Schedule**. Select a future date and time, review it in your account's time zone, then confirm. PostgreSQL stores the requested time and the worker claims due deliveries.
+Schedule a single post or a complete sequence after reviewing its accounts and media.
 
-**Scheduled Posts** lists delivery sets, not individual account deliveries. The sidebar count includes sets with scheduled, preparing or publishing deliveries. The table shows selected accounts, **Posted by**, relative and absolute schedule times, status and available actions.
+1. Open the arrow beside **Post in X accounts** and choose **Schedule for later**.
+2. Select a future date in **Scheduled for**. The calendar popover includes a compact time row; you can also edit the date and time segments directly.
+3. Review the time in your account's time zone, the selected accounts and whether each provider receives linked replies or individual posts. Confirm **Schedule post**.
+4. Open **Scheduled Posts** to see the accepted delivery set and its per-account status.
 
-Click the post title or **Edit** to reopen its editor. Saving uses a version check, so a stale browser cannot overwrite another person's changes. Once a delivery begins, content and schedule edits are no longer allowed. **Cancel** cancels deliveries that have not started; it does not remove a published post from a social network.
+PostgreSQL stores the requested time. A worker claims due deliveries, prepares media and sends posts in order for each account. X, Bluesky and Threads use linked replies; LinkedIn receives individual posts. A later post is not sent if an earlier post for that account fails or has an uncertain outcome.
 
-The worker must be running for scheduled posts and video preparation. An API and UI that pass health checks do not establish that the worker is running. See [operations](/operations) if a schedule does not advance.
+## Edit or cancel a schedule
+
+Click a post title or its edit action to reopen the full composer, including every post, account override and attachment. **Save changes** keeps the scheduled time. **Save & Update Schedule** changes it. Updates use version checks so a stale browser cannot overwrite newer work.
+
+Once delivery begins, content and schedule edits are no longer allowed. **Cancel** stops deliveries that have not started; it does not remove already published content from a social network. Read [Publish History and delivery details](/deliveries) before retrying a failed or uncertain request.
+
+The table lists delivery sets, not individual posts or account deliveries. Its sidebar badge includes sets with scheduled, preparing or publishing work. The worker must be running for schedules and video processing; healthy API and UI probes alone do not establish this. See [operations](/operations) if a schedule does not advance.
 
 ## Scheduled posts
 
@@ -19,6 +28,16 @@ The worker must be running for scheduled posts and video preparation. An API and
   light="/assets/screenshots/scheduled-light.jpg"
   dark="/assets/screenshots/scheduled-dark.jpg"
   alt="Posted scheduled table with sample delivery sets and relative schedule times."
+  width={1280}
+  height={900}
+/>
+
+## Choose a date and time
+
+<Screenshot
+  light="/assets/screenshots/scheduling-dialog-light.jpg"
+  dark="/assets/screenshots/scheduling-dialog-dark.jpg"
+  alt="Posted scheduling dialog with a calendar and compact time input."
   width={1280}
   height={900}
 />

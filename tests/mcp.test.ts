@@ -178,6 +178,13 @@ test("MCP preserves draft, create and edit request keys across retries", async (
     await sql`INSERT INTO post_media(id,workspace_id,created_by,object_key,file_name,content_type,size_bytes,width,height,duration_seconds,state) VALUES(${mediaId},(SELECT id FROM workspace),${admin.user.id},'fixture/video.mp4','video.mp4','video/mp4',14,1280,720,10,'ready')`;
     const input = {
       text: "Scheduled from MCP",
+      additionalPosts: [
+        {
+          text: "Second post from MCP",
+          textOverrides: { [connection.id]: "Custom reply from MCP" },
+          mediaIds: [],
+        },
+      ],
       connectionIds: [connection.id],
       mediaIds: [mediaId],
       scheduledAt: new Date(Date.now() + 3_600_000).toISOString(),
@@ -198,6 +205,12 @@ test("MCP preserves draft, create and edit request keys across retries", async (
     assert.equal(post.idempotencyKey, input.idempotencyKey);
     assert.equal(post.lastEditedBy, admin.user.id);
     assert.equal((await sql`SELECT id FROM post_groups`).length, 1);
+    assert.equal((await sql`SELECT id FROM post_deliveries`).length, 2);
+    assert.equal(
+      (await sql`SELECT additional_posts FROM post_groups`)[0]
+        .additionalPosts[0].text,
+      "Second post from MCP",
+    );
     assert.equal(
       (await sql`SELECT published_post_id FROM post_drafts`)[0].publishedPostId,
       post.id,

@@ -1,12 +1,11 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { execFileSync, spawn } from "node:child_process";
-import { mkdir, readFile, writeFile, rm } from "node:fs/promises";
+import { mkdir, writeFile, rm } from "node:fs/promises";
 import postgres from "postgres";
 import {
   S3Client,
   CreateBucketCommand,
   PutBucketCorsCommand,
-  PutObjectCommand,
   ListObjectsV2Command,
   DeleteObjectsCommand,
   DeleteBucketCommand,
@@ -79,6 +78,14 @@ execFileSync(process.execPath, ["--import", "tsx", "tools/local-preview.ts"], {
   env: environment,
   stdio: "pipe",
 });
+execFileSync(
+  process.execPath,
+  ["--import", "tsx", "tools/local-preview-drafts.ts"],
+  {
+    env: environment,
+    stdio: "pipe",
+  },
+);
 Object.assign(process.env, environment);
 const { app } = await import("../apps/api/src/app.js");
 const { sql } = await import("../packages/database/src/index.js");
@@ -109,24 +116,30 @@ const calls = async (path: string, body: unknown) => {
 const accounts = await sql<
   { id: string; provider: string }[]
 >`SELECT id,provider FROM social_connections ORDER BY provider`;
-const mediaId = randomUUID();
-const image = await readFile("apps/web/public/brand/posted-mark.png");
-const key = `posted/originals/${mediaId}/posted.png`;
-await storage.send(
-  new PutObjectCommand({
-    Bucket: bucket,
-    Key: key,
-    Body: image,
-    ContentType: "image/png",
-  }),
-);
-await sql`INSERT INTO post_media(id,workspace_id,created_by,object_key,file_name,content_type,size_bytes,width,height,state,alt) VALUES(${mediaId},(SELECT id FROM workspace),(SELECT id FROM users LIMIT 1),${key},'posted.png','image/png',${image.length},256,256,'ready','Posted blue postbox logo')`;
+const attachments = await sql<
+  { id: string; fileName: string }[]
+>`SELECT id,file_name FROM post_media WHERE state='ready'`;
+const mediaId = (name: string) => {
+  const media = attachments.find((item) => item.fileName.includes(name));
+  if (!media) throw new Error(`Documentation media missing: ${name}`);
+  return media.id;
+};
 const text =
   "Meet Posted. Write a shared message, tailor it for each account and schedule it for a time that works for your team.";
 const composer = await calls("/posts", {
   text,
   connectionIds: accounts.map((account) => account.id),
-  mediaIds: [mediaId],
+  mediaIds: [mediaId("landscape")],
+  additionalPosts: [
+    {
+      text: "A closer look at the details: give each account its own voice while keeping one shared master.",
+      mediaIds: [mediaId("portrait"), mediaId("square")],
+    },
+    {
+      text: "Finish with a short motion study. What are you making this week?",
+      mediaIds: [mediaId("video")],
+    },
+  ],
   scheduledAt: new Date(Date.now() + 7 * 86400000).toISOString(),
   idempotencyKey: randomUUID(),
 });
@@ -137,22 +150,14 @@ await calls("/posts", {
   scheduledAt: new Date(Date.now() + 8 * 86400000).toISOString(),
   idempotencyKey: randomUUID(),
 });
-await calls("/drafts/" + randomUUID(), {
-  text: "Our next product update",
-  textOverrides: {},
-  connectionIds: [accounts[0].id],
-  mediaIds: [],
-  version: 0,
+const history = await calls("/posts", {
+  text: "Studio notes: one idea, several audiences. A sample completed publication for the documentation.",
+  connectionIds: accounts.map((account) => account.id),
+  mediaIds: [mediaId("square")],
+  scheduledAt: new Date(Date.now() + 86400000).toISOString(),
   idempotencyKey: randomUUID(),
 });
-await calls("/drafts/" + randomUUID(), {
-  text: "Three things we learned this week",
-  textOverrides: {},
-  connectionIds: [],
-  mediaIds: [],
-  version: 0,
-  idempotencyKey: randomUUID(),
-});
+await sql`UPDATE post_deliveries SET state='published',provider_post_id='documentation-fixture',published_url='https://example.test/sample-post',published_at=now(),updated_at=now() WHERE group_id=${history.post.id}`;
 await writeFile(
   "tmp/docs-preview.json",
   JSON.stringify(
@@ -160,6 +165,7 @@ await writeFile(
       ui: environment.POSTED_WEB_URL,
       api: environment.POSTED_API_URL,
       composerId: composer.post.id,
+      historyId: history.post.id,
       schema,
       bucket,
     },

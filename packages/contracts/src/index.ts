@@ -60,6 +60,11 @@ export type SocialConnection = {
   state: "connected" | "reauthentication_required" | "disconnected";
   createdAt: string;
 };
+export type SocialConnectionSummary = SocialConnection & {
+  connectedBy: { id: string; name: string; avatarUrl: string } | null;
+  lastPublished: { postId: string; publishedAt: string } | null;
+  scheduledCount: number;
+};
 export const DELIVERY_STATES = [
   "scheduled",
   "preparing",
@@ -89,6 +94,7 @@ export type PostMedia = {
   durationSeconds: number | null;
 };
 export type PostDelivery = {
+  postIndex: number;
   id: string;
   connectionId: string;
   provider: Provider;
@@ -101,6 +107,8 @@ export type PostDelivery = {
   publishedAt: string | null;
 };
 export type Post = {
+  mediaOverrides: Record<string, PostMedia[]>;
+  additionalPosts: PostPart[];
   id: string;
   text: string;
   scheduledAt: string;
@@ -112,7 +120,21 @@ export type Post = {
   deliveries: PostDelivery[];
   managedBy: { id: string; name: string; avatarUrl: string } | null;
 };
+export type PostPartInput = {
+  mediaOverrides?: Record<string, string[]>;
+  text: string;
+  textOverrides?: Record<string, string>;
+  mediaIds: string[];
+};
+export type PostPart = {
+  mediaOverrides: Record<string, PostMedia[]>;
+  text: string;
+  textOverrides: Record<string, string>;
+  media: PostMedia[];
+};
 export type PostInput = {
+  mediaOverrides?: Record<string, string[]>;
+  additionalPosts?: PostPartInput[];
   text: string;
   textOverrides?: Record<string, string>;
   connectionIds: string[];
@@ -122,6 +144,8 @@ export type PostInput = {
   draftSource?: { id: string; version: number };
 };
 export type DraftInput = {
+  mediaOverrides?: Record<string, string[]>;
+  additionalPosts?: PostPartInput[];
   text: string;
   textOverrides: Record<string, string>;
   connectionIds: string[];
@@ -130,6 +154,8 @@ export type DraftInput = {
   idempotencyKey: string;
 };
 export type PostDraft = {
+  mediaOverrides: Record<string, PostMedia[]>;
+  additionalPosts: PostPart[];
   id: string;
   text: string;
   textOverrides: Record<string, string>;

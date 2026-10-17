@@ -33,13 +33,13 @@ import type {
   SidebarLinkConfig,
 } from "@avgeek-oss/design-system/layouts/application-shell-types";
 import {
-  Home01Icon,
+  DashboardSquare01Icon,
   Link01Icon,
   Calendar03Icon,
-  Clock01Icon,
+  QuillWrite01Icon,
   UserAccountIcon,
   UserGroupIcon,
-  FileEditIcon,
+  QuillWrite02Icon,
 } from "@hugeicons/core-free-icons";
 import {
   SettingsNavigation,
@@ -189,7 +189,7 @@ export function App() {
   const postBreadcrumbs: AppShellBreadcrumbItems | undefined = postId
     ? [
         {
-          label: editId ? "Scheduled Posts" : "Post History",
+          label: editId ? "Scheduled Posts" : "Publish History",
           href: editId ? "/posts/scheduled" : "/posts/history",
         },
         {
@@ -214,7 +214,7 @@ export function App() {
       ]
     : draftId
       ? [
-          { label: "Drafts", href: "/posts/drafts" },
+          { label: "Pending Drafts", href: "/posts/drafts" },
           {
             label: draftId.slice(0, 8),
             content: (
@@ -229,7 +229,7 @@ export function App() {
   const routeTitle = draftId
     ? "Edit Draft"
     : path === "/posts/drafts"
-      ? "Drafts"
+      ? "Pending Drafts"
       : section
         ? settingsTitles[section]
         : path === "/connections"
@@ -237,7 +237,7 @@ export function App() {
           : path === "/posts/scheduled"
             ? "Scheduled Posts"
             : path === "/posts/history"
-              ? "Post History"
+              ? "Publish History"
               : editId
                 ? "Edit Schedule"
                 : detailsId
@@ -246,7 +246,7 @@ export function App() {
                     ? "Create post"
                     : path === "/connections/authorize"
                       ? "Authorize Posted"
-                      : (helpTitles[path] ?? "Home");
+                      : (helpTitles[path] ?? "Dashboard");
   const [session, setSession] = useState<Session | null>(null);
   const [setup, setSetup] = useState(false);
   const [ready, setReady] = useState(false);
@@ -451,7 +451,7 @@ export function App() {
             id: "overview",
             label: "Overview",
             items: [
-              nav("Home", "/", Home01Icon),
+              nav("Dashboard", "/", DashboardSquare01Icon),
               nav("Connections", "/connections", Link01Icon),
             ],
           },
@@ -459,10 +459,11 @@ export function App() {
             id: "posts",
             label: "Posts",
             items: [
+              nav("Publish History", "/posts/history", QuillWrite01Icon),
               nav(
-                "Drafts",
+                "Pending Drafts",
                 "/posts/drafts",
-                FileEditIcon,
+                QuillWrite02Icon,
                 counts.value?.drafts,
               ),
               nav(
@@ -471,7 +472,6 @@ export function App() {
                 Calendar03Icon,
                 counts.value?.scheduled,
               ),
-              nav("Post History", "/posts/history", Clock01Icon),
             ],
           },
           {
@@ -523,7 +523,7 @@ export function App() {
       />
     );
   else if (path === "/connections")
-    page = <ConnectionsPage canManage={admin} />;
+    page = <ConnectionsPage canManage={admin} session={session} />;
   else if (path === "/posts/scheduled" || path === "/posts/history")
     page = (
       <PostsPage
@@ -607,6 +607,7 @@ export function App() {
                         <AppShell.Content
                           id="main-content"
                           tabIndex={-1}
+                          className="outline-none"
                           variant="broad"
                         >
                           <Suspense fallback={null}>{page}</Suspense>

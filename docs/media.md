@@ -9,6 +9,10 @@ An operator enables [private S3-compatible storage](/storage). Uploads use short
 
 Video processing requires the worker. The editor waits for ready metadata before a video can be scheduled. A malformed or unsupported file fails preparation rather than appearing as a ready asset.
 
+## Customize an account
+
+In an account's **Edit** view, add or remove media and drag the six-dot handle to reorder attachments. The vertical insertion line shows where the item will land. Dragging the image itself does not reorder it; clicking it opens the larger preview. Changes apply only to that account and post. Removing every inherited attachment keeps that account text-only. **Reset to master** restores both text and media after confirmation.
+
 ## Provider selection
 
 Reorder media to choose the most important files first. Posted uses the supported prefix for each provider.
@@ -22,4 +26,4 @@ Reorder media to choose the most important files first. Posted uses the supporte
 
 X, LinkedIn and Bluesky accept images or a video in this version; mixing both produces an account error. Threads can use mixed media. These are conservative application limits. Provider access, quota and current policy still apply.
 
-Add an accessible media description before uploading. Native video controls work in the media strip and live preview. Previews do not autoplay. Original images are preserved; delivery copies may be cropped or compressed for the target provider.
+Add an accessible media description before uploading. Click a thumbnail in the expanded master or account editor to open a larger image or video dialog. Its title shows dimensions and file size, plus duration in seconds for videos. Video playback controls appear in the larger dialog and live preview. Close with X, Escape or a click outside; dismissing the dialog stops playback. Previews do not autoplay. Original images are preserved; delivery copies may be cropped or compressed for the target provider.

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Avatar, Checkbox, Label } from "@heroui/react";
+import { Avatar, Checkbox } from "@heroui/react";
 import {
   Button,
   Dialog,
@@ -8,7 +8,7 @@ import {
   Tooltip,
 } from "@posted/web-design-system";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { AlertCircleIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import { Add01Icon, AlertCircleIcon } from "@hugeicons/core-free-icons";
 import type { SocialConnection } from "../../../packages/contracts/src/index.js";
 import { ProviderIcon, providerNames } from "./social-ui.js";
 
@@ -28,7 +28,7 @@ function AccountAvatar({
     .toUpperCase();
   return (
     <span className="relative inline-flex shrink-0" aria-hidden="true">
-      <Avatar className="size-12">
+      <Avatar size="md">
         <Avatar.Image
           src={account.avatarUrl ?? undefined}
           alt=""
@@ -41,7 +41,7 @@ function AccountAvatar({
           <HugeiconsIcon icon={AlertCircleIcon} size={14} aria-hidden />
         </span>
       )}
-      <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center overflow-hidden rounded-full border-2 border-background bg-surface">
+      <span className="absolute -bottom-1 -right-1 flex size-4 items-center justify-center overflow-hidden rounded-full border-2 border-background bg-surface">
         <ProviderIcon provider={account.provider} className="size-full" />
       </span>
     </span>
@@ -54,6 +54,7 @@ export function ComposerAccounts({
   activeId,
   locked,
   errors,
+  customAccountIds,
   onChange,
   onActiveChange,
 }: {
@@ -62,11 +63,26 @@ export function ComposerAccounts({
   activeId?: string;
   locked: boolean;
   errors: Record<string, string>;
+  customAccountIds: ReadonlySet<string>;
   onChange: (ids: string[]) => void;
   onActiveChange: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [draftSelected, setDraftSelected] = useState<string[]>([]);
+  const [confirmingRemoval, setConfirmingRemoval] = useState(false);
+  const removedCustomIds = selected.filter(
+    (id) => !draftSelected.includes(id) && customAccountIds.has(id),
+  );
+  function closeChooser() {
+    setOpen(false);
+    setConfirmingRemoval(false);
+  }
+  function applySelection() {
+    if (locked) return;
+    onChange(draftSelected);
+    closeChooser();
+  }
   const query = search.trim().toLowerCase();
   const results = accounts.filter((account) =>
     `${account.name} ${account.handle} ${providerNames[account.provider]}`
@@ -95,7 +111,7 @@ export function ComposerAccounts({
                 <Button
                   isIconOnly
                   variant="tertiary"
-                  className={`size-14 shrink-0 overflow-visible rounded-full p-1 ${account.id === activeId ? "ring-2 ring-accent" : ""}`}
+                  className={`size-12 shrink-0 overflow-visible rounded-full p-1 ${account.id === activeId ? "ring-2 ring-accent" : ""}`}
                   aria-label={`${account.name}, ${providerNames[account.provider]}, @${account.handle}${errors[account.id] ? `: ${errors[account.id]}` : ""}`}
                   aria-pressed={account.id === activeId}
                   onPress={() => onActiveChange(account.id)}
@@ -120,93 +136,163 @@ export function ComposerAccounts({
             isDisabled={locked}
             onPress={() => {
               setSearch("");
+              setDraftSelected([...selected]);
+              setConfirmingRemoval(false);
               setOpen(true);
             }}
           >
-            <HugeiconsIcon icon={UserGroupIcon} size={16} aria-hidden />
+            <HugeiconsIcon icon={Add01Icon} size={16} aria-hidden />
             Choose Accounts
           </Button>
         </div>
       </div>
       <Dialog
         open={open}
-        onClose={() => setOpen(false)}
-        title="Choose Accounts"
-        footer={<Button onPress={() => setOpen(false)}>Done</Button>}
-      >
-        <div className="grid min-w-0 grid-cols-1 gap-4">
-          <TextField
-            label="Search accounts"
-            type="search"
-            placeholder="Name or handle…"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            autoComplete="off"
-            spellCheck={false}
-          />
-          <ScrollShadow
-            orientation="vertical"
-            hideScrollBar
-            size={24}
-            className="max-h-[45dvh] overflow-y-auto overscroll-contain"
-            aria-label="Account results"
-          >
-            {results.map((account) => (
-              <Checkbox
-                key={account.id}
-                className="w-full flex-row items-center gap-3 rounded-xl px-2 py-3"
-                isSelected={selected.includes(account.id)}
-                isDisabled={
-                  locked ||
-                  (!selected.includes(account.id) &&
-                    (account.state !== "connected" || selected.length >= 50))
-                }
-                aria-label={`${account.name}, ${providerNames[account.provider]}, @${account.handle}${account.state !== "connected" ? ", reconnect required" : ""}`}
-                onChange={(checked) =>
-                  onChange(
-                    checked
-                      ? [...selected, account.id]
-                      : selected.filter((id) => id !== account.id),
-                  )
-                }
+        onClose={closeChooser}
+        title={
+          confirmingRemoval
+            ? `Remove ${removedCustomIds.length === 1 ? "account" : "accounts"} with custom content?`
+            : "Choose Accounts"
+        }
+        footer={
+          confirmingRemoval ? (
+            <>
+              <Button autoFocus variant="secondary" onPress={closeChooser}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                isDisabled={locked}
+                onPress={applySelection}
               >
-                <Checkbox.Content className="flex min-w-0 flex-1 flex-row items-center gap-3">
-                  <Checkbox.Control>
-                    <Checkbox.Indicator />
-                  </Checkbox.Control>
-                  <AccountAvatar account={account} />
-                  <span className="grid min-w-0 gap-1">
-                    <Label
-                      className="truncate font-medium"
-                      title={account.name}
-                    >
-                      {account.name}
-                    </Label>
-                    <span className="truncate text-xs text-muted">
-                      {providerNames[account.provider]} · @{account.handle}
-                    </span>
-                    {account.state !== "connected" && (
-                      <span className="text-xs text-muted">
-                        Reconnect before posting
-                      </span>
+                Remove {removedCustomIds.length === 1 ? "account" : "accounts"}
+              </Button>
+            </>
+          ) : (
+            <Button
+              isDisabled={locked}
+              onPress={() => {
+                if (removedCustomIds.length) setConfirmingRemoval(true);
+                else applySelection();
+              }}
+            >
+              Choose {draftSelected.length}{" "}
+              {draftSelected.length === 1 ? "account" : "accounts"}
+            </Button>
+          )
+        }
+      >
+        {confirmingRemoval ? (
+          <div className="grid gap-4">
+            <p className="text-sm text-muted">
+              Removing{" "}
+              {removedCustomIds.length === 1
+                ? "this account"
+                : "these accounts"}{" "}
+              from the sequence will discard their custom content across all
+              posts. This cannot be undone.
+            </p>
+            <ul className="grid max-h-[35dvh] gap-2 overflow-y-auto">
+              {removedCustomIds.map((id) => {
+                const account = accounts.find((item) => item.id === id);
+                return (
+                  <li
+                    key={id}
+                    className="flex min-w-0 items-center gap-2 text-sm"
+                  >
+                    {account ? (
+                      <>
+                        <ProviderIcon provider={account.provider} />
+                        <span>
+                          {account.name} · {providerNames[account.provider]} · @
+                          {account.handle}
+                        </span>
+                      </>
+                    ) : (
+                      "Unavailable account"
                     )}
-                  </span>
-                </Checkbox.Content>
-              </Checkbox>
-            ))}
-            {!results.length && (
-              <p className="py-6 text-sm text-muted">
-                {accounts.length
-                  ? "No matching accounts."
-                  : "Connect a social account to start posting."}
-              </p>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : (
+          <div className="grid min-w-0 grid-cols-1 gap-4">
+            <TextField
+              label="Search accounts"
+              type="search"
+              placeholder="Name or handle…"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <ScrollShadow
+              orientation="vertical"
+              hideScrollBar
+              size={24}
+              className="max-h-[45dvh] overflow-y-auto overscroll-contain"
+              aria-label="Account results"
+            >
+              {results.map((account) => (
+                <Checkbox
+                  key={account.id}
+                  variant="secondary"
+                  className="w-full flex-row items-center gap-3 rounded-xl px-0 py-3"
+                  isSelected={draftSelected.includes(account.id)}
+                  isDisabled={
+                    locked ||
+                    (!draftSelected.includes(account.id) &&
+                      ((account.state !== "connected" &&
+                        !selected.includes(account.id)) ||
+                        draftSelected.length >= 50))
+                  }
+                  aria-label={`${account.name}, ${providerNames[account.provider]}, @${account.handle}${account.state !== "connected" ? ", reconnect required" : ""}`}
+                  onChange={(checked) =>
+                    setDraftSelected(
+                      checked
+                        ? [...draftSelected, account.id]
+                        : draftSelected.filter((id) => id !== account.id),
+                    )
+                  }
+                >
+                  <Checkbox.Content className="flex min-w-0 flex-1 flex-row items-center gap-3">
+                    <Checkbox.Control>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                    <AccountAvatar account={account} />
+                    <span className="grid min-w-0 gap-1">
+                      <span
+                        className="truncate font-medium"
+                        title={account.name}
+                      >
+                        {account.name}
+                      </span>
+                      <span className="truncate text-xs text-muted">
+                        {providerNames[account.provider]} · @{account.handle}
+                      </span>
+                      {account.state !== "connected" && (
+                        <span className="text-xs text-muted">
+                          Reconnect before posting
+                        </span>
+                      )}
+                    </span>
+                  </Checkbox.Content>
+                </Checkbox>
+              ))}
+              {!results.length && (
+                <p className="py-6 text-sm text-muted">
+                  {accounts.length
+                    ? "No matching accounts."
+                    : "Connect a social account to start posting."}
+                </p>
+              )}
+            </ScrollShadow>
+            {draftSelected.length >= 50 && (
+              <p className="text-xs text-muted">Up to 50 accounts per post</p>
             )}
-          </ScrollShadow>
-          <p className="text-xs text-muted">
-            {selected.length} selected
-            {selected.length >= 50 ? " · Up to 50 accounts per post" : ""}
-          </p>
-        </div>
+          </div>
+        )}
       </Dialog>
     </section>
   );

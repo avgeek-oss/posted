@@ -13,7 +13,7 @@ import { prepareImage } from "../apps/api/src/media/prepare.js";
 import { enabledProviders } from "../apps/api/src/social/capabilities.js";
 import { seal, unseal } from "../apps/api/src/social/secrets.js";
 import { validateProviderContent } from "../apps/api/src/posts/input.js";
-import { reorderMedia } from "../apps/web/src/media-order.js";
+import { reorderItems } from "../apps/web/src/item-order.js";
 import {
   characterLimits,
   providerTextLength,
@@ -133,7 +133,7 @@ test("image priority survives reordering and each provider uses its supported pr
     contentType: "image/png",
     durationSeconds: null,
   }));
-  const reordered = reorderMedia(
+  const reordered = reorderItems(
     original,
     new Set(["19", "17"]),
     "0",
@@ -156,7 +156,7 @@ test("image priority survives reordering and each provider uses its supported pr
   assert.equal(original[0].id, "0");
   assert.equal(original[19].id, "19");
   assert.deepEqual(
-    reorderMedia(original, new Set(["0"]), "2", "after")
+    reorderItems(original, new Set(["0"]), "2", "after")
       .slice(0, 4)
       .map((image) => image.id),
     ["1", "2", "0", "3"],

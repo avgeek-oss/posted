@@ -7,7 +7,13 @@ import {
   mediaError,
   videoUploadBytes,
 } from "../../../packages/contracts/src/media.js";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import {
   now,
   parseAbsolute,
@@ -21,6 +27,7 @@ import {
   DatePicker,
   FieldError,
   Label,
+  TimeField,
 } from "@heroui/react";
 import {
   Button,
@@ -29,15 +36,17 @@ import {
   FileUpload,
   TextField,
   toast,
+  Tabs,
 } from "@posted/web-design-system";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  AttachmentIcon,
   Calendar03Icon,
   ArrowDown01Icon,
-  Edit02Icon,
+  QuillWrite01Icon,
+  QuillWrite02Icon,
   SentIcon,
   FloppyDiskIcon,
+  Add01Icon,
 } from "@hugeicons/core-free-icons";
 import type {
   Post,
@@ -56,26 +65,34 @@ import {
   type Session,
 } from "./api.js";
 import { PageHeading } from "./page-heading.js";
-import {
-  providerNames,
-  SocialPreview,
-  type PreviewMedia,
-} from "./social-ui.js";
+import { providerNames, SocialSequencePreview } from "./social-ui.js";
 
 import { ComposerAccounts } from "./composer-accounts.js";
 import type { ComposerMediaItem } from "./composer-media.js";
-
-const ComposerMedia = lazy(() =>
-  import("./composer-media.js").then((module) => ({
-    default: module.ComposerMedia,
-  })),
-);
+import { MasterPostEditor, type ComposerPart } from "./composer-post.js";
+import { GridList, GridListItem, useDragAndDrop } from "react-aria-components";
+import { reorderItems } from "./item-order.js";
+import { ComposerAccountEditor } from "./composer-account-editor.js";
+import { PublishingSummary } from "./publishing-summary.js";
 
 type MediaConfiguration = {
   enabled: boolean;
   maxBytes: number;
   contentTypes: string[];
 };
+type PostEditAction =
+  | { kind: "remove"; partId: string }
+  | { kind: "reset"; partId: string; accountId: string };
+const desktopQuery = "(min-width: 1024px)";
+function subscribeDesktop(onChange: () => void) {
+  const query = window.matchMedia(desktopQuery);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+function desktopSnapshot() {
+  return window.matchMedia(desktopQuery).matches;
+}
+
 function draftSignature(
   text: string,
   accounts: string[],
@@ -83,20 +100,46 @@ function draftSignature(
   mode: string,
   date: ZonedDateTime,
   textOverrides: Record<string, string> = {},
+  additionalPosts: ComposerPart[] = [],
+  mediaOverrides: Record<string, ComposerMediaItem[]> = {},
 ) {
   return JSON.stringify({
     text,
+    additionalPosts: additionalPosts.map((part) => ({
+      text: part.text,
+      media: part.media.map((image) => image.id),
+      mediaOverrides: mediaOverrideInput(part.mediaOverrides, accounts),
+      textOverrides: Object.fromEntries(
+        accounts
+          .filter((id) => part.textOverrides[id] !== undefined)
+          .sort()
+          .map((id) => [id, part.textOverrides[id]]),
+      ),
+    })),
     textOverrides: Object.fromEntries(
       accounts
         .filter((id) => textOverrides[id] !== undefined)
         .sort()
         .map((id) => [id, textOverrides[id]]),
     ),
+    mediaOverrides: mediaOverrideInput(mediaOverrides, accounts),
     accounts: [...accounts].sort(),
     media: media.map((image) => image.id),
     mode,
     date: mode === "schedule" ? date.toDate().toISOString() : null,
   });
+}
+
+function mediaOverrideInput(
+  overrides: Record<string, ComposerMediaItem[]>,
+  selected: string[],
+) {
+  return Object.fromEntries(
+    selected
+      .filter((id) => overrides[id] !== undefined)
+      .sort()
+      .map((id) => [id, overrides[id].map((item) => item.id)]),
+  );
 }
 
 export function ComposerPage({
@@ -114,13 +157,144 @@ export function ComposerPage({
   session: Session;
   onSubmitted: () => void;
 }) {
-  const [text, setText] = useState(initialText);
-  const [textOverrides, setTextOverrides] = useState<Record<string, string>>(
-    {},
-  );
+  const [parts, setParts] = useState<ComposerPart[]>(() => [
+    {
+      id: crypto.randomUUID(),
+      text: initialText,
+      textOverrides: {},
+      media: [],
+      mediaOverrides: {},
+    },
+  ]);
   const [accounts, setAccounts] = useState<SocialConnection[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
-  const [media, setMedia] = useState<ComposerMediaItem[]>([]);
+  const [{ text, textOverrides, media, mediaOverrides }, ...additionalPosts] =
+    parts;
+  const [activePostId, setActivePostId] = useState<string | null>(parts[0].id);
+  const [uploadTarget, setUploadTarget] = useState<{
+    partId: string;
+    accountId?: string;
+  } | null>(null);
+  const [mobileView, setMobileView] = useState("write");
+  const desktop = useSyncExternalStore(
+    subscribeDesktop,
+    desktopSnapshot,
+    () => false,
+  );
+  const [focusNewPostId, setFocusNewPostId] = useState<string | null>(null);
+  const postDragHandlePressed = useRef(false);
+  const accountEditors = useRef(new Map<string, HTMLTextAreaElement>());
+  const [accountView, setAccountView] = useState("preview");
+  const [pendingPostAction, setPendingPostAction] =
+    useState<PostEditAction | null>(null);
+  const pendingPartIndex = parts.findIndex(
+    (part) => part.id === pendingPostAction?.partId,
+  );
+  const resetAccount =
+    pendingPostAction?.kind === "reset"
+      ? accounts.find((account) => account.id === pendingPostAction.accountId)
+      : undefined;
+  const updatePart = useCallback(
+    (id: string, change: Partial<ComposerPart>) => {
+      setParts((current) =>
+        current.map((part) => (part.id === id ? { ...part, ...change } : part)),
+      );
+    },
+    [],
+  );
+  function applyAccountSelection(ids: string[]) {
+    if (locked) return;
+    const removed = new Set(selected.filter((id) => !ids.includes(id)));
+    setSelected(ids);
+    if (removed.size) {
+      setParts((current) =>
+        current.map((part) => ({
+          ...part,
+          mediaOverrides: Object.fromEntries(
+            Object.entries(part.mediaOverrides).filter(
+              ([id]) => !removed.has(id),
+            ),
+          ),
+          textOverrides: Object.fromEntries(
+            Object.entries(part.textOverrides).filter(
+              ([id]) => !removed.has(id),
+            ),
+          ),
+        })),
+      );
+    }
+    if (!ids.includes(previewId)) setPreviewId(ids[0] ?? "");
+  }
+  function removePart(index: number) {
+    if (parts.length === 1) return;
+    const next = parts.filter((_, at) => at !== index);
+    setParts(next);
+    if (parts[index].id === activePostId)
+      setActivePostId(next[Math.min(index, next.length - 1)].id);
+  }
+  function confirmPostAction() {
+    if (!pendingPostAction || locked || uploading || pendingPartIndex < 0)
+      return;
+    if (pendingPostAction.kind === "remove") removePart(pendingPartIndex);
+    else {
+      const next = { ...parts[pendingPartIndex].textOverrides };
+      delete next[pendingPostAction.accountId];
+      const nextMedia = { ...parts[pendingPartIndex].mediaOverrides };
+      delete nextMedia[pendingPostAction.accountId];
+      updatePart(parts[pendingPartIndex].id, {
+        textOverrides: next,
+        mediaOverrides: nextMedia,
+      });
+      const partId = pendingPostAction.partId;
+      requestAnimationFrame(() => accountEditors.current.get(partId)?.focus());
+    }
+    setPendingPostAction(null);
+  }
+  function insertPart(index: number) {
+    const part: ComposerPart = {
+      id: crypto.randomUUID(),
+      text: "",
+      textOverrides: {},
+      media: [],
+      mediaOverrides: {},
+    };
+    setParts((current) => [
+      ...current.slice(0, index),
+      part,
+      ...current.slice(index),
+    ]);
+    setActivePostId(part.id);
+    setFocusNewPostId(part.id);
+    setMobileView("write");
+  }
+  function activatePart(id: string | null) {
+    setActivePostId(id);
+  }
+  function movePart(index: number, direction: -1 | 1) {
+    const target = parts[index + direction];
+    if (!target) return;
+    setParts((current) =>
+      reorderItems(
+        current,
+        new Set([parts[index].id]),
+        target.id,
+        direction === -1 ? "before" : "after",
+      ),
+    );
+    toast.success(`Post moved to position ${index + direction + 1}`);
+  }
+  function additionalInput() {
+    return additionalPosts.map((part) => ({
+      text: part.text,
+      textOverrides: Object.fromEntries(
+        selected
+          .filter((id) => part.textOverrides[id] !== undefined)
+          .map((id) => [id, part.textOverrides[id]]),
+      ),
+      mediaIds: part.media.map((image) => image.id),
+      mediaOverrides: mediaOverrideInput(part.mediaOverrides, selected),
+    }));
+  }
   const [configuration, setConfiguration] = useState<MediaConfiguration | null>(
     null,
   );
@@ -147,6 +321,9 @@ export function ComposerPage({
   const [previewId, setPreviewId] = useState("");
   const [leave, setLeave] = useState<NavigationRequest | null>(null);
   const accountText = useRef<HTMLTextAreaElement>(null);
+  const previewUrls = useRef(
+    new Map<string, { url: string; expiresAt: number }>(),
+  );
   const key = useRef<string>(crypto.randomUUID());
   const retry = useRef<PostInput | null>(null);
   const draftSave = useRef<{ id: string; input: DraftInput } | null>(null);
@@ -155,41 +332,85 @@ export function ComposerPage({
     draftSignature(initialText, [], [], postId ? "schedule" : "now", date),
   );
   const dirty =
-    draftSignature(text, selected, media, mode, date, textOverrides) !==
-    baseline.current;
+    draftSignature(
+      text,
+      selected,
+      media,
+      mode,
+      date,
+      textOverrides,
+      additionalPosts,
+      mediaOverrides,
+    ) !== baseline.current;
   const editablePost =
     !postId ||
     (!!post &&
       post.deliveries.every((delivery) => delivery.state === "scheduled"));
   const locked = !canEdit || !editablePost || busy || ambiguous;
   const chosen = accounts.filter((account) => selected.includes(account.id));
-  const invalidAccounts = chosen.filter(
-    (account) =>
-      providerTextLength(account.provider, textOverrides[account.id] ?? text) >
-      characterLimits[account.provider],
-  );
+  function partError(account: SocialConnection, part: ComposerPart) {
+    const value = part.textOverrides[account.id] ?? part.text;
+    const accountMedia = part.mediaOverrides[account.id] ?? part.media;
+    return providerTextLength(account.provider, value) >
+      characterLimits[account.provider]
+      ? `${providerNames[account.provider]} supports up to ${characterLimits[account.provider]} characters.`
+      : !value.trim() && !accountMedia.length
+        ? "Add text or media for this account."
+        : mediaError(account.provider, accountMedia);
+  }
   const accountErrors: Record<string, string> = Object.fromEntries(
     chosen.flatMap((account) => {
-      const value = textOverrides[account.id] ?? text;
-      const error =
-        account.state !== "connected"
-          ? "Reconnect this account before posting."
-          : providerTextLength(account.provider, value) >
-              characterLimits[account.provider]
-            ? `${providerNames[account.provider]} supports up to ${characterLimits[account.provider]} characters.`
-            : !value.trim() && !media.length
-              ? "Add text or media for this account."
-              : mediaError(account.provider, media);
-      return error ? [[account.id, error]] : [];
+      if (account.state !== "connected")
+        return [[account.id, "Reconnect this account before posting."]];
+      const index = parts.findIndex((part) => partError(account, part));
+      return index < 0
+        ? []
+        : [
+            [
+              account.id,
+              `Post ${index + 1}: ${partError(account, parts[index])}`,
+            ],
+          ];
     }),
   );
   const hasAccountErrors = Object.keys(accountErrors).length > 0;
   const preview =
     chosen.find((account) => account.id === previewId) ?? chosen[0];
-  const mediaIds = media
-    .map((image) => image.id)
+  const mediaIds = [
+    ...new Set(
+      parts.flatMap((part) =>
+        [...part.media, ...Object.values(part.mediaOverrides).flat()].map(
+          (image) => image.id,
+        ),
+      ),
+    ),
+  ]
     .sort()
     .join(",");
+  const uploadPostIndex = parts.findIndex(
+    (part) => part.id === uploadTarget?.partId,
+  );
+  const uploadPart = parts[uploadPostIndex];
+  const uploadMedia = uploadPart
+    ? uploadTarget?.accountId
+      ? (uploadPart.mediaOverrides[uploadTarget.accountId] ?? uploadPart.media)
+      : uploadPart.media
+    : [];
+
+  const { dragAndDropHooks } = useDragAndDrop<ComposerPart>({
+    isDisabled: locked || uploading || parts.length < 2,
+    getItems: (_keys, items) =>
+      items.map((part) => ({ "application/x-posted-post": part.id })),
+    onReorder: ({ keys, target }) => {
+      if (target.dropPosition === "before" || target.dropPosition === "after") {
+        const position = target.dropPosition;
+        setParts((current) =>
+          reorderItems(current, keys, target.key, position),
+        );
+        toast.success("Post order updated");
+      }
+    },
+  });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -230,10 +451,24 @@ export function ComposerPage({
         if (existingDraft) {
           const stored = existingDraft.draft;
           setSavedDraft(stored);
-          setText(stored.text);
-          setTextOverrides(stored.textOverrides);
+
           setSelected(stored.connectionIds);
-          setMedia(stored.media);
+
+          const loadedParts = [
+            {
+              id: crypto.randomUUID(),
+              text: stored.text,
+              textOverrides: stored.textOverrides,
+              media: stored.media,
+              mediaOverrides: stored.mediaOverrides,
+            },
+            ...stored.additionalPosts.map((part) => ({
+              ...part,
+              id: crypto.randomUUID(),
+            })),
+          ];
+          setParts(loadedParts);
+          setActivePostId(loadedParts[0].id);
           setAccounts([
             ...connections.items,
             ...stored.connections.filter(
@@ -248,6 +483,11 @@ export function ComposerPage({
             "now",
             date,
             stored.textOverrides,
+            stored.additionalPosts.map((part) => ({
+              ...part,
+              id: crypto.randomUUID(),
+            })),
+            stored.mediaOverrides,
           );
         }
         if (existing) {
@@ -256,21 +496,40 @@ export function ComposerPage({
             stored.scheduledAt,
             session.user.timeZone,
           );
-          const ids = stored.deliveries.map(
-            (delivery) => delivery.connectionId,
-          );
-          setPost(stored);
-          setText(stored.text);
-          const overrides = Object.fromEntries(
-            stored.deliveries.flatMap((delivery) =>
-              delivery.textOverride === null
-                ? []
-                : [[delivery.connectionId, delivery.textOverride]],
+          const ids = [
+            ...new Set(
+              stored.deliveries.map((delivery) => delivery.connectionId),
             ),
+          ];
+          setPost(stored);
+
+          const overrides = Object.fromEntries(
+            stored.deliveries
+              .filter((delivery) => delivery.postIndex === 0)
+              .flatMap((delivery) =>
+                delivery.textOverride === null
+                  ? []
+                  : [[delivery.connectionId, delivery.textOverride]],
+              ),
           );
-          setTextOverrides(overrides);
+
           setSelected(ids);
-          setMedia(stored.media);
+
+          const loadedParts = [
+            {
+              id: crypto.randomUUID(),
+              text: stored.text,
+              textOverrides: overrides,
+              media: stored.media,
+              mediaOverrides: stored.mediaOverrides,
+            },
+            ...stored.additionalPosts.map((part) => ({
+              ...part,
+              id: crypto.randomUUID(),
+            })),
+          ];
+          setParts(loadedParts);
+          setActivePostId(loadedParts[0].id);
           setDate(scheduled);
           setMode("schedule");
           baseline.current = draftSignature(
@@ -280,6 +539,11 @@ export function ComposerPage({
             "schedule",
             scheduled,
             overrides,
+            stored.additionalPosts.map((part) => ({
+              ...part,
+              id: crypto.randomUUID(),
+            })),
+            stored.mediaOverrides,
           );
         }
       } catch (error) {
@@ -298,36 +562,73 @@ export function ComposerPage({
   useEffect(() => {
     if (!mediaIds) return;
     const controller = new AbortController();
+    const ids = mediaIds.split(",");
+    let running = false;
     async function loadPreviews() {
+      if (running) return;
+      running = true;
       try {
-        const results = await Promise.all(
-          mediaIds.split(",").map(async (id) => ({
-            id,
-            ...(await api<{ url: string }>(
-              `/media/${id}/preview`,
-              undefined,
-              "GET",
-              { signal: controller.signal },
-            )),
-          })),
+        let next = 0;
+        await Promise.all(
+          Array.from({ length: Math.min(4, ids.length) }, async () => {
+            while (next < ids.length) {
+              const id = ids[next++];
+              const cached = previewUrls.current.get(id);
+              if (cached && cached.expiresAt > Date.now()) continue;
+              const { url } = await api<{ url: string }>(
+                `/media/${id}/preview`,
+                undefined,
+                "GET",
+                { signal: controller.signal },
+              );
+              if (!controller.signal.aborted)
+                previewUrls.current.set(id, {
+                  url,
+                  expiresAt: Date.now() + 540_000,
+                });
+            }
+          }),
         );
-        if (!controller.signal.aborted)
-          setMedia((current) =>
-            current.map((image) => ({
-              ...image,
-              url:
-                results.find((result) => result.id === image.id)?.url ??
-                image.url,
-            })),
+        if (!controller.signal.aborted) {
+          const refresh = (items: ComposerMediaItem[]) => {
+            let changed = false;
+            const result = items.map((image) => {
+              const url = previewUrls.current.get(image.id)?.url;
+              if (!url || url === image.url) return image;
+              changed = true;
+              return { ...image, url };
+            });
+            return changed ? result : items;
+          };
+          setParts((current) =>
+            current.map((part) => {
+              const media = refresh(part.media);
+              const entries = Object.entries(part.mediaOverrides).map(
+                ([id, items]) => [id, refresh(items)] as const,
+              );
+              const changed = entries.some(
+                ([id, items]) => items !== part.mediaOverrides[id],
+              );
+              return media === part.media && !changed
+                ? part
+                : {
+                    ...part,
+                    media,
+                    mediaOverrides: Object.fromEntries(entries),
+                  };
+            }),
           );
+        }
       } catch (error) {
         if (!controller.signal.aborted) toast.danger(errorText(error));
+      } finally {
+        running = false;
       }
     }
     void loadPreviews();
     const timer = setInterval(() => {
       if (document.visibilityState === "visible") void loadPreviews();
-    }, 600_000);
+    }, 60_000);
     return () => {
       controller.abort();
       clearInterval(timer);
@@ -362,7 +663,7 @@ export function ComposerPage({
   async function upload(file: File) {
     if (!file.type.startsWith("video/") && file.size > 20 * 1024 * 1024)
       throw new Error("Images must be 20 MB or smaller.");
-    if (locked || uploading || media.length >= 20)
+    if (!uploadPart || locked || uploading || uploadMedia.length >= 20)
       throw new Error(
         "Wait for the current upload or remove a file before adding another.",
       );
@@ -409,7 +710,23 @@ export function ComposerPage({
       if (!result.media)
         throw new Error("The media response was incomplete. Try again.");
       const added = result.media;
-      setMedia((current) => [...current, added]);
+      setParts((current) =>
+        current.map((part) => {
+          if (part.id !== uploadTarget?.partId) return part;
+          if (uploadTarget.accountId) {
+            const items =
+              part.mediaOverrides[uploadTarget.accountId] ?? part.media;
+            return {
+              ...part,
+              mediaOverrides: {
+                ...part.mediaOverrides,
+                [uploadTarget.accountId]: [...items, added],
+              },
+            };
+          }
+          return { ...part, media: [...part.media, added] };
+        }),
+      );
       setAlt("");
       toast.success("Media added to your post");
     } finally {
@@ -430,6 +747,8 @@ export function ComposerPage({
         ),
         connectionIds: selected,
         mediaIds: media.map((image) => image.id),
+        mediaOverrides: mediaOverrideInput(mediaOverrides, selected),
+        additionalPosts: additionalInput(),
         version: savedDraft?.version ?? 0,
         idempotencyKey: crypto.randomUUID(),
       },
@@ -488,6 +807,8 @@ export function ComposerPage({
         ),
         connectionIds: selected,
         mediaIds: media.map((image) => image.id),
+        mediaOverrides: mediaOverrideInput(mediaOverrides, selected),
+        additionalPosts: additionalInput(),
         scheduledAt:
           publishMode === "schedule"
             ? publishDate.toDate().toISOString()
@@ -541,9 +862,6 @@ export function ComposerPage({
     }
   }
 
-  const previewMedia: PreviewMedia[] = media.flatMap((image) =>
-    image.url ? [{ ...image, url: image.url }] : [],
-  );
   const publishDisabled =
     !canEdit ||
     !editablePost ||
@@ -557,15 +875,18 @@ export function ComposerPage({
     if (ambiguous || postId) void submit(ambiguous ? mode : "schedule");
     else setPostNowOpen(true);
   }
+  const publishLabel = selected.length
+    ? `Post in ${selected.length} ${selected.length === 1 ? "account" : "accounts"}`
+    : "Post now";
   const publishAction = (
     <ButtonGroup
-      size="sm"
+      size="md"
       className="items-stretch"
       isDisabled={publishDisabled}
       aria-label="Publishing actions"
     >
       <Button
-        size="sm"
+        size="md"
         isPending={busy && !draftSave.current}
         isDisabled={publishDisabled}
         onPress={requestPublish}
@@ -579,13 +900,13 @@ export function ComposerPage({
           ? "Retry save safely"
           : postId
             ? "Save changes"
-            : "Post now"}
+            : publishLabel}
       </Button>
       <Dropdown>
         <Button
           isIconOnly
-          size="sm"
-          className="h-auto self-stretch"
+          size="md"
+          className="self-stretch"
           aria-label="More publishing options"
           isDisabled={publishDisabled || ambiguous}
         >
@@ -609,10 +930,14 @@ export function ComposerPage({
           >
             <Dropdown.Item
               id="schedule"
-              textValue={postId ? "Save & Update Schedule" : "Schedule"}
+              textValue={
+                postId ? "Save & Update Schedule" : "Schedule for later"
+              }
             >
               <HugeiconsIcon icon={Calendar03Icon} size={16} aria-hidden />
-              <Label>{postId ? "Save & Update Schedule" : "Schedule"}</Label>
+              <Label>
+                {postId ? "Save & Update Schedule" : "Schedule for later"}
+              </Label>
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown.Popover>
@@ -634,33 +959,267 @@ export function ComposerPage({
         Retry editor
       </Button>
     );
+  const writePanel = (
+    <section
+      className="grid min-w-0 content-start gap-3"
+      aria-label="Post content"
+      onPointerDownCapture={(event) => {
+        postDragHandlePressed.current =
+          event.target instanceof Element &&
+          !!event.target.closest("[data-post-drag-handle]");
+      }}
+      onDragStartCapture={(event) => {
+        if (
+          event.target instanceof Element &&
+          event.target.matches(".composer-post") &&
+          !postDragHandlePressed.current
+        ) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
+    >
+      <GridList
+        aria-label="Master posts"
+        items={parts}
+        selectionMode="none"
+        dependencies={[
+          parts,
+          activePostId,
+          focusNewPostId,
+          locked,
+          uploading,
+          configuration?.enabled,
+          parts.length,
+        ]}
+        dragAndDropHooks={dragAndDropHooks}
+        className="composer-posts grid min-w-0"
+      >
+        {(part) => {
+          const index = parts.findIndex((item) => item.id === part.id);
+          const expanded = parts.length === 1 || part.id === activePostId;
+          return (
+            <GridListItem
+              id={part.id}
+              textValue={`Post ${index + 1}: ${part.text.trim() || "No text yet"}`}
+              className="composer-post group relative min-w-0 rounded-2xl outline-none data-[dragging]:opacity-50"
+            >
+              <MasterPostEditor
+                part={part}
+                index={index}
+                total={parts.length}
+                expanded={expanded}
+                autoFocus={focusNewPostId === part.id}
+                onFocus={() => setFocusNewPostId(null)}
+                locked={locked}
+                uploading={uploading}
+                storageEnabled={!!configuration?.enabled}
+                onActivate={() => activatePart(expanded ? null : part.id)}
+                onChange={updatePart}
+                onUpload={() => {
+                  setUploadTarget({ partId: part.id });
+                  setAlt("");
+                  setUploadOpen(true);
+                }}
+                onRemove={() =>
+                  setPendingPostAction({ kind: "remove", partId: part.id })
+                }
+                onInsert={() => insertPart(index + 1)}
+                onMove={(direction) => movePart(index, direction)}
+              />
+              {index < parts.length - 1 && (
+                <div className="flex items-center gap-2 px-4 py-3">
+                  <span
+                    aria-hidden="true"
+                    className="flex-1 border-t border-dashed border-muted/30"
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    isDisabled={locked || uploading}
+                    aria-label={`Insert post after post ${index + 1}`}
+                    onPress={() => insertPart(index + 1)}
+                  >
+                    <HugeiconsIcon icon={Add01Icon} size={14} aria-hidden />
+                    Insert post
+                  </Button>
+                  <span
+                    aria-hidden="true"
+                    className="flex-1 border-t border-dashed border-muted/30"
+                  />
+                </div>
+              )}
+            </GridListItem>
+          );
+        }}
+      </GridList>
+      <div className="pt-3">
+        <Button
+          variant="secondary"
+          isDisabled={locked || uploading}
+          onPress={() => insertPart(parts.length)}
+        >
+          <HugeiconsIcon icon={Add01Icon} size={16} aria-hidden />
+          Add Another Post
+        </Button>
+      </div>
+    </section>
+  );
+  const editors = preview && (
+    <ol className="grid min-w-0 gap-6" aria-label="Account content">
+      {parts.map((part, index) => (
+        <ComposerAccountEditor
+          key={part.id}
+          part={part}
+          index={index}
+          total={parts.length}
+          account={preview}
+          locked={locked}
+          uploading={uploading}
+          storageEnabled={!!configuration?.enabled}
+          onUpload={() => {
+            setUploadTarget({ partId: part.id, accountId: preview.id });
+            setAlt("");
+            setUploadOpen(true);
+          }}
+          error={partError(preview, part) ?? ""}
+          onReset={() =>
+            setPendingPostAction({
+              kind: "reset",
+              partId: part.id,
+              accountId: preview.id,
+            })
+          }
+          onChange={updatePart}
+          inputRef={(node) => {
+            if (node) accountEditors.current.set(part.id, node);
+            else accountEditors.current.delete(part.id);
+            if (index === 0) accountText.current = node;
+          }}
+        />
+      ))}
+    </ol>
+  );
+  const previews = preview && (
+    <aside className="min-w-0" aria-label="Post preview">
+      <SocialSequencePreview
+        account={preview}
+        posts={parts.map((part) => ({
+          text: part.textOverrides[preview.id] ?? part.text,
+          media: mediaForProvider(
+            preview.provider,
+            (part.mediaOverrides[preview.id] ?? part.media).flatMap((image) =>
+              image.url ? [{ ...image, url: image.url }] : [],
+            ),
+          ),
+        }))}
+      />
+    </aside>
+  );
+  function accountPanel() {
+    return (
+      <Card className="min-w-0">
+        <Card.Content
+          className={`grid min-w-0 content-start ${preview ? "gap-4" : "gap-3"}`}
+        >
+          <div
+            className={`sticky top-0 z-10 grid min-w-0 gap-3 bg-surface ${preview ? "pb-2" : ""}`}
+          >
+            <ComposerAccounts
+              accounts={accounts}
+              selected={selected}
+              activeId={preview?.id}
+              locked={locked}
+              errors={accountErrors}
+              customAccountIds={
+                new Set(
+                  parts.flatMap((part) => [
+                    ...Object.entries(part.textOverrides)
+                      .filter(([, value]) => value.trim())
+                      .map(([id]) => id),
+                    ...Object.keys(part.mediaOverrides),
+                  ]),
+                )
+              }
+              onChange={applyAccountSelection}
+              onActiveChange={setPreviewId}
+            />
+            {preview && (
+              <div className="min-w-0">
+                <h2 className="truncate text-base font-medium">
+                  {preview.name}
+                </h2>
+                <p className="truncate text-xs text-muted">
+                  {providerNames[preview.provider]} · @{preview.handle}
+                </p>
+              </div>
+            )}
+          </div>
+          {preview ? (
+            <Tabs
+              selectedKey={accountView}
+              onSelectionChange={(key) => setAccountView(String(key))}
+            >
+              <Tabs.ListContainer>
+                <Tabs.List aria-label="Account workspace">
+                  <Tabs.Tab id="edit">
+                    Edit
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
+                  <Tabs.Tab id="preview">
+                    Preview
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
+                </Tabs.List>
+              </Tabs.ListContainer>
+              <Tabs.Panel id="edit" className="px-0 pt-4">
+                {accountView === "edit" && editors}
+              </Tabs.Panel>
+              <Tabs.Panel id="preview" className="px-0 pt-4">
+                {accountView === "preview" && previews}
+              </Tabs.Panel>
+            </Tabs>
+          ) : (
+            <p className="text-xs text-muted">
+              Choose accounts to customise their content and see a live preview.
+            </p>
+          )}
+        </Card.Content>
+      </Card>
+    );
+  }
+  const heading = (
+    <PageHeading
+      title={postId ? "Edit Schedule" : draftId ? "Edit Draft" : "Create post"}
+      icon={
+        <HugeiconsIcon icon={draftId ? QuillWrite02Icon : QuillWrite01Icon} />
+      }
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          {!postId && (
+            <Button
+              size="md"
+              variant="secondary"
+              isPending={busy && !!draftSave.current}
+              isDisabled={
+                !canEdit || busy || uploading || (ambiguous && !draftRetry)
+              }
+              onPress={() => void saveDraft()}
+            >
+              <HugeiconsIcon icon={FloppyDiskIcon} size={16} aria-hidden />
+              {draftRetry ? "Retry draft save" : "Save as draft"}
+            </Button>
+          )}
+          {publishAction}
+        </div>
+      }
+    />
+  );
   return (
     <section className="min-w-0">
-      <PageHeading
-        title={
-          postId ? "Edit Schedule" : draftId ? "Edit Draft" : "Create post"
-        }
-        icon={<HugeiconsIcon icon={Edit02Icon} />}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            {!postId && (
-              <Button
-                size="sm"
-                variant="secondary"
-                isPending={busy && !!draftSave.current}
-                isDisabled={
-                  !canEdit || busy || uploading || (ambiguous && !draftRetry)
-                }
-                onPress={() => void saveDraft()}
-              >
-                <HugeiconsIcon icon={FloppyDiskIcon} size={16} aria-hidden />
-                {draftRetry ? "Retry draft save" : "Save as draft"}
-              </Button>
-            )}
-            {publishAction}
-          </div>
-        }
-      />
+      {desktop && (
+        <div className="sticky top-0 z-20 bg-background pt-2">{heading}</div>
+      )}
       {!editablePost && (
         <p className="mb-6 text-sm text-muted">
           This post has started publishing. Its content can no longer be edited.
@@ -675,171 +1234,98 @@ export function ComposerPage({
             requestPublish();
           }}
         >
-          <section
-            className="grid min-w-0 content-start gap-4"
-            aria-label="Post content"
-          >
-            <Card className="min-w-0">
-              <Card.Content className="grid min-w-0 gap-4">
-                <TextField
-                  label="Master text"
-                  hideLabel
-                  value={text}
-                  onChange={(event) => setText(event.target.value)}
-                  multiline
-                  rows={12}
-                  maxLength={3000}
-                  disabled={locked}
-                  variant="secondary"
-                  placeholder="What do you want to share?"
-                  className="min-h-72 resize-y p-5 text-base leading-relaxed"
-                />
-                {!!media.length && (
-                  <Suspense
-                    fallback={
-                      <p className="text-xs text-muted" role="status">
-                        Loading media…
-                      </p>
-                    }
-                  >
-                    <ComposerMedia
-                      media={media}
-                      disabled={locked || uploading}
-                      onChange={setMedia}
-                    />
-                  </Suspense>
-                )}
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button
-                    variant="secondary"
-                    onPress={() => setUploadOpen(true)}
-                    isDisabled={
-                      locked ||
-                      uploading ||
-                      !configuration?.enabled ||
-                      media.length >= 20
-                    }
-                  >
-                    <HugeiconsIcon
-                      icon={AttachmentIcon}
-                      size={16}
-                      aria-hidden
-                    />
-                    Add media
-                  </Button>
-                  {!configuration?.enabled && (
-                    <p className="text-xs text-muted">
-                      Media storage hasn't been configured.
-                    </p>
-                  )}
-                </div>
-              </Card.Content>
-            </Card>
-          </section>
-          <Card className="min-w-0">
-            <Card.Content
-              className={`grid min-w-0 content-start ${preview ? "gap-4" : "gap-3"}`}
+          {desktop ? (
+            <>
+              {writePanel}
+              {accountPanel()}
+            </>
+          ) : (
+            <Tabs
+              selectedKey={mobileView}
+              onSelectionChange={(key) => setMobileView(String(key))}
+              className="min-w-0"
             >
-              <ComposerAccounts
-                accounts={accounts}
-                selected={selected}
-                activeId={preview?.id}
-                locked={locked}
-                errors={accountErrors}
-                onChange={setSelected}
-                onActiveChange={setPreviewId}
-              />
-              {preview ? (
-                <div className="grid min-w-0 gap-6">
-                  <section
-                    className="grid min-w-0 content-start gap-3"
-                    aria-label="Account content"
+              <div className="sticky top-0 z-20 bg-background pt-2">
+                {heading}
+                <Tabs.ListContainer>
+                  <Tabs.List
+                    aria-label="Create post workspace"
+                    className="w-full"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <h2 className="truncate text-base font-medium">
-                          {preview.name}
-                        </h2>
-                        <p className="text-xs text-muted">
-                          {providerNames[preview.provider]} · @{preview.handle}
-                        </p>
-                      </div>
-                      {textOverrides[preview.id] !== undefined && (
-                        <Button
-                          variant="tertiary"
-                          isDisabled={locked}
-                          onPress={() => {
-                            setTextOverrides((current) => {
-                              const next = { ...current };
-                              delete next[preview.id];
-                              return next;
-                            });
-                            accountText.current?.focus();
-                          }}
-                        >
-                          Use master text
-                        </Button>
-                      )}
-                    </div>
-                    <TextField
-                      ref={accountText}
-                      label="Account text"
-                      hideLabel
-                      multiline
-                      value={textOverrides[preview.id] ?? text}
-                      onChange={(event) =>
-                        setTextOverrides((current) => ({
-                          ...current,
-                          [preview.id]: event.target.value,
-                        }))
-                      }
-                      maxLength={3000}
-                      disabled={locked}
-                      aria-invalid={
-                        invalidAccounts.includes(preview) ||
-                        (!(textOverrides[preview.id] ?? text).trim() &&
-                          !media.length)
-                      }
-                      variant="secondary"
-                      rows={3}
-                      className="min-h-24 resize-y p-4 text-base leading-relaxed"
-                    />
-                    <p
-                      className={`text-xs tabular-nums ${invalidAccounts.includes(preview) ? "text-danger" : "text-muted"}`}
-                    >
-                      {providerTextLength(
-                        preview.provider,
-                        textOverrides[preview.id] ?? text,
-                      )}
-                      /{characterLimits[preview.provider]} characters
-                    </p>
-                  </section>
-                  <aside
-                    className="grid min-w-0 content-start gap-3"
-                    aria-label="Live preview"
-                  >
-                    <h2 className="text-base font-medium">Live preview</h2>
-                    <SocialPreview
-                      account={preview}
-                      text={textOverrides[preview.id] ?? text}
-                      media={mediaForProvider(preview.provider, previewMedia)}
-                    />
-                  </aside>
-                </div>
-              ) : (
-                <p className="text-sm text-muted">
-                  Choose accounts to customise their content and see a live
-                  preview.
-                </p>
-              )}
-            </Card.Content>
-          </Card>
+                    <Tabs.Tab id="write" className="flex-1">
+                      Write
+                      <Tabs.Indicator />
+                    </Tabs.Tab>
+                    <Tabs.Tab id="accounts" className="flex-1">
+                      Accounts
+                      <Tabs.Indicator />
+                    </Tabs.Tab>
+                  </Tabs.List>
+                </Tabs.ListContainer>
+              </div>
+              <Tabs.Panel id="write" className="px-0 pt-2">
+                {writePanel}
+              </Tabs.Panel>
+              <Tabs.Panel id="accounts" className="px-0 pt-2">
+                {accountPanel()}
+              </Tabs.Panel>
+            </Tabs>
+          )}
         </form>
       </div>
       <Dialog
+        open={!!pendingPostAction}
+        onClose={() => setPendingPostAction(null)}
+        title={
+          pendingPostAction?.kind === "reset"
+            ? "Reset to master?"
+            : "Remove master post?"
+        }
+        footer={
+          <>
+            <Button
+              autoFocus
+              variant="secondary"
+              onPress={() => setPendingPostAction(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              isDisabled={locked || uploading || pendingPartIndex < 0}
+              onPress={confirmPostAction}
+            >
+              {pendingPostAction?.kind === "reset"
+                ? "Reset to master"
+                : "Remove post"}
+            </Button>
+          </>
+        }
+      >
+        {pendingPostAction && (
+          <p className="text-sm text-muted">
+            {pendingPostAction.kind === "reset" ? (
+              <>
+                Post {pendingPartIndex + 1}
+                {resetAccount &&
+                  ` for ${providerNames[resetAccount.provider]} (@${resetAccount.handle})`}{" "}
+                will use its master text and media again. Its custom text and
+                media selection will be discarded. This cannot be undone.
+              </>
+            ) : (
+              <>
+                Remove post {pendingPartIndex + 1} from this sequence? Its text,
+                attached media and account-specific edits will be lost.
+                Remaining posts will be renumbered. This cannot be undone.
+              </>
+            )}
+          </p>
+        )}
+      </Dialog>
+      <Dialog
         open={postNowOpen}
         onClose={() => setPostNowOpen(false)}
-        title="Post now?"
+        title="Publish now?"
         isDismissDisabled={busy}
         footer={
           <>
@@ -856,14 +1342,12 @@ export function ComposerPage({
               onPress={() => void submit("now")}
             >
               <HugeiconsIcon icon={SentIcon} size={16} aria-hidden />
-              {ambiguous ? "Retry save safely" : "Post now"}
+              {ambiguous ? "Retry save safely" : publishLabel}
             </Button>
           </>
         }
       >
-        <p className="text-sm text-muted">
-          Publish this post to the selected accounts now?
-        </p>
+        <PublishingSummary accounts={chosen} postCount={parts.length} />
       </Dialog>
       <Dialog
         open={scheduleOpen}
@@ -895,9 +1379,10 @@ export function ComposerPage({
           </>
         }
       >
+        <PublishingSummary accounts={chosen} postCount={parts.length} />
         <form
           id="post-schedule"
-          className="grid gap-3"
+          className="mt-5 grid gap-3"
           onSubmit={(event) => {
             event.preventDefault();
             if (scheduleDate) void submit("schedule", scheduleDate);
@@ -909,6 +1394,7 @@ export function ComposerPage({
               setScheduleDate(value);
             }}
             name="scheduledAt"
+            shouldCloseOnSelect={false}
             isRequired
             granularity="minute"
             hideTimeZone
@@ -916,46 +1402,73 @@ export function ComposerPage({
             minValue={now(session.user.timeZone)}
             hourCycle={session.user.timeFormat.startsWith("12") ? 12 : 24}
           >
-            <Label>Scheduled for</Label>
-            <DateField.Group variant="secondary" fullWidth>
-              <DateField.Input>
-                {(segment) => <DateField.Segment segment={segment} />}
-              </DateField.Input>
-              <DateField.Suffix>
-                <DatePicker.Trigger aria-label="Choose publishing date">
-                  <DatePicker.TriggerIndicator />
-                </DatePicker.Trigger>
-              </DateField.Suffix>
-            </DateField.Group>
-            <FieldError />
-            <DatePicker.Popover>
-              <Calendar
-                aria-label="Publishing date"
-                minValue={now(session.user.timeZone)}
-              >
-                <Calendar.Header>
-                  <Calendar.YearPickerTrigger>
-                    <Calendar.YearPickerTriggerHeading />
-                    <Calendar.YearPickerTriggerIndicator />
-                  </Calendar.YearPickerTrigger>
-                  <Calendar.NavButton slot="previous" />
-                  <Calendar.NavButton slot="next" />
-                </Calendar.Header>
-                <Calendar.Grid>
-                  <Calendar.GridHeader>
-                    {(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
-                  </Calendar.GridHeader>
-                  <Calendar.GridBody>
-                    {(value) => <Calendar.Cell date={value} />}
-                  </Calendar.GridBody>
-                </Calendar.Grid>
-                <Calendar.YearPickerGrid>
-                  <Calendar.YearPickerGridBody>
-                    {({ year }) => <Calendar.YearPickerCell year={year} />}
-                  </Calendar.YearPickerGridBody>
-                </Calendar.YearPickerGrid>
-              </Calendar>
-            </DatePicker.Popover>
+            {({ state }) => (
+              <>
+                <Label>Scheduled for</Label>
+                <DateField.Group variant="secondary" fullWidth>
+                  <DateField.Input>
+                    {(segment) => <DateField.Segment segment={segment} />}
+                  </DateField.Input>
+                  <DateField.Suffix>
+                    <DatePicker.Trigger aria-label="Choose publishing date and time">
+                      <DatePicker.TriggerIndicator />
+                    </DatePicker.Trigger>
+                  </DateField.Suffix>
+                </DateField.Group>
+                <FieldError />
+                <DatePicker.Popover className="flex flex-col gap-3">
+                  <Calendar
+                    aria-label="Publishing date"
+                    minValue={now(session.user.timeZone)}
+                  >
+                    <Calendar.Header>
+                      <Calendar.YearPickerTrigger>
+                        <Calendar.YearPickerTriggerHeading />
+                        <Calendar.YearPickerTriggerIndicator />
+                      </Calendar.YearPickerTrigger>
+                      <Calendar.NavButton slot="previous" />
+                      <Calendar.NavButton slot="next" />
+                    </Calendar.Header>
+                    <Calendar.Grid>
+                      <Calendar.GridHeader>
+                        {(day) => (
+                          <Calendar.HeaderCell>{day}</Calendar.HeaderCell>
+                        )}
+                      </Calendar.GridHeader>
+                      <Calendar.GridBody>
+                        {(value) => <Calendar.Cell date={value} />}
+                      </Calendar.GridBody>
+                    </Calendar.Grid>
+                    <Calendar.YearPickerGrid>
+                      <Calendar.YearPickerGridBody>
+                        {({ year }) => <Calendar.YearPickerCell year={year} />}
+                      </Calendar.YearPickerGridBody>
+                    </Calendar.YearPickerGrid>
+                  </Calendar>
+                  <TimeField
+                    className="flex-row items-center justify-between gap-3 border-t border-separator pt-3"
+                    value={state.timeValue}
+                    onChange={(value) => {
+                      if (value) state.setTimeValue(value);
+                    }}
+                    granularity="minute"
+                    hideTimeZone
+                    hourCycle={
+                      session.user.timeFormat.startsWith("12") ? 12 : 24
+                    }
+                    isDisabled={locked}
+                    isRequired
+                  >
+                    <Label>Time</Label>
+                    <TimeField.Group variant="secondary">
+                      <TimeField.Input>
+                        {(segment) => <TimeField.Segment segment={segment} />}
+                      </TimeField.Input>
+                    </TimeField.Group>
+                  </TimeField>
+                </DatePicker.Popover>
+              </>
+            )}
           </DatePicker>
           <p className="text-xs text-muted">
             Times are shown in {session.user.timeZone}.
@@ -992,11 +1505,12 @@ export function ComposerPage({
             description="Drop an image or video here or browse your files."
             accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
             maxSizeBytes={configuration?.maxBytes ?? videoUploadBytes}
-            isDisabled={locked || uploading || media.length >= 20}
+            isDisabled={locked || uploading || uploadMedia.length >= 20}
             onUpload={upload}
           />
           <p className="text-xs text-muted">
-            {media.length} of 20 files added.
+            {uploadMedia.length} of 20 files added to post {uploadPostIndex + 1}
+            {uploadTarget?.accountId ? " for this account" : ""}.
           </p>
         </div>
       </Dialog>
