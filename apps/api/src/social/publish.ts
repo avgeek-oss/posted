@@ -26,7 +26,7 @@ export type DeliveryVideo = Omit<DeliveryImage, "kind"> & {
   durationSeconds: number;
 };
 export type DeliveryMedia = DeliveryImage | DeliveryVideo;
-export type Publication = { id: string; url: string };
+export type Publication = { id: string; url: string; cid?: string };
 export type PreparedPublication = {
   checkpoint:
     | { mediaIds: string[] }
@@ -91,6 +91,7 @@ async function prepareX(
   }
   const payload = {
     ...(job.text ? { text: job.text } : {}),
+    ...(job.replyTo ? { reply: { in_reply_to_tweet_id: job.replyTo.id } } : {}),
     ...(ids.length ? { media: { media_ids: ids } } : {}),
   };
   return {
@@ -265,6 +266,7 @@ async function prepareThreads(
     job.accountId,
     {
       text: job.text,
+      ...(job.replyTo ? { reply_to_id: job.replyTo.id } : {}),
       ...(children.length
         ? { media_type: "CAROUSEL", children: children.join(",") }
         : image
@@ -326,11 +328,21 @@ async function prepareBluesky(
   }
   const richText = new RichText({ text: job.text });
   await richText.detectFacets(agent);
+  if (job.replyTo && (!job.replyTo.cid || !job.threadRoot?.cid))
+    throw new Error("Bluesky thread references require confirmed record CIDs");
   const record = {
     $type: "app.bsky.feed.post",
     text: richText.text,
     facets: richText.facets,
     createdAt: new Date().toISOString(),
+    ...(job.replyTo && job.threadRoot
+      ? {
+          reply: {
+            root: { uri: job.threadRoot.id, cid: job.threadRoot.cid },
+            parent: { uri: job.replyTo.id, cid: job.replyTo.cid },
+          },
+        }
+      : {}),
     ...(video && videoBlob
       ? {
           embed: {
@@ -359,6 +371,7 @@ async function prepareBluesky(
         });
         return {
           id: data.uri,
+          cid: data.cid,
           url: `https://bsky.app/profile/${job.accountId}/post/${rkey}`,
         };
       } catch (error) {

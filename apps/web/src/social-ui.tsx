@@ -12,9 +12,11 @@ import {
   Share08Icon,
   ThumbsUpIcon,
   Bookmark02Icon,
+  TriangleAlertIcon,
 } from "@hugeicons/core-free-icons";
-import { Chip } from "@posted/web-design-system";
+import { Chip, TooltipText } from "@posted/web-design-system";
 import { textForProviderPreview } from "../../../packages/contracts/src/text.js";
+import { supportsThreads } from "../../../packages/contracts/src/threads.js";
 import type {
   Provider,
   SocialConnection,
@@ -99,7 +101,48 @@ export type PreviewMedia = {
   alt: string;
   contentType: string;
   durationSeconds: number | null;
+  width: number;
+  height: number;
 };
+export function SocialSequencePreview({
+  account,
+  posts,
+}: {
+  account: SocialConnection;
+  posts: { text: string; media: PreviewMedia[] }[];
+}) {
+  const threaded = posts.length > 1 && supportsThreads(account.provider);
+  return (
+    <ol
+      className="grid min-w-0 gap-6"
+      aria-label={threaded ? "Thread preview" : "Post previews"}
+    >
+      {posts.map((post, index) => (
+        <li key={index} className="grid min-w-0 gap-2">
+          {posts.length > 1 && (
+            <p
+              className={`relative text-xs text-muted ${threaded ? "pl-14" : ""}`}
+            >
+              {threaded && index > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -top-6 -bottom-2 left-8 w-px bg-separator"
+                />
+              )}
+              Post {index + 1} of {posts.length}
+              {threaded && index > 0 ? ` · Reply to @${account.handle}` : ""}
+            </p>
+          )}
+          <SocialPreview
+            account={account}
+            text={post.text}
+            media={post.media}
+          />
+        </li>
+      ))}
+    </ol>
+  );
+}
 export function SocialPreview({
   account,
   text,
@@ -137,9 +180,9 @@ export function SocialPreview({
       className="overflow-hidden rounded-2xl border border-separator bg-surface shadow-none"
       aria-label={`${providerNames[account.provider]} preview for ${account.name}`}
     >
-      <div className="p-5">
-        <div className="flex items-start gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-default text-sm font-medium">
+      <div className="p-3">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-default text-sm leading-none font-medium">
             {account.avatarUrl ? (
               <img
                 src={account.avatarUrl}
@@ -156,9 +199,11 @@ export function SocialPreview({
                 .toUpperCase()
             )}
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium">{account.name}</p>
-            <p className="truncate text-xs text-muted">
+          <div className="grid min-w-0 flex-1 content-center gap-0.5">
+            <p className="truncate text-base leading-5 font-medium">
+              {account.name}
+            </p>
+            <p className="truncate text-xs leading-4 text-muted">
               {linkedIn ? "Just now · Public" : `@${account.handle} · now`}
             </p>
           </div>
@@ -171,10 +216,33 @@ export function SocialPreview({
         </div>
         {(text.trim() || !media.length) && (
           <p
-            className={`mt-4 whitespace-pre-wrap break-words leading-relaxed ${x ? "text-lg" : "text-sm"} ${!text ? "text-muted" : ""}`}
+            className={`mt-4 whitespace-pre-wrap break-words leading-relaxed ${x ? "text-lg" : "text-sm"} ${!text.trim() ? "text-muted" : ""}`}
           >
-            {textForProviderPreview(account.provider, text) ||
-              "Your post will appear here."}
+            {text.trim() ? (
+              textForProviderPreview(account.provider, text)
+            ) : (
+              <span className="flex items-center gap-2">
+                <TooltipText
+                  tooltip={
+                    <span className="block max-w-56 whitespace-normal">
+                      Post copy missing, type in the composer to reflect in the
+                      preview.
+                    </span>
+                  }
+                  openOnPress
+                  tabIndex={0}
+                  aria-label="Post copy missing"
+                  className="inline-flex shrink-0 rounded-sm text-danger outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                >
+                  <HugeiconsIcon
+                    icon={TriangleAlertIcon}
+                    size={16}
+                    aria-hidden
+                  />
+                </TooltipText>
+                <em className="italic">Your post will appear here.</em>
+              </span>
+            )}
           </p>
         )}
         {!!media.length && (
@@ -193,6 +261,10 @@ export function SocialPreview({
                   <img
                     src={image.url}
                     alt={image.alt || "Post image"}
+                    loading="lazy"
+                    decoding="async"
+                    width={image.width}
+                    height={image.height}
                     className={
                       media.length === 1
                         ? "max-h-48 max-w-full w-auto object-contain"
@@ -209,20 +281,20 @@ export function SocialPreview({
             ))}
           </div>
         )}
-        <div
-          className="mt-5 flex items-center justify-between border-t border-separator pt-4 text-muted"
-          aria-hidden
-        >
-          {actions.map(({ icon, label }, index) => (
-            <span
-              key={index}
-              className="inline-flex items-center gap-1.5 text-xs"
-            >
-              <HugeiconsIcon icon={icon} size={16} strokeWidth={1.5} />
-              {label}
-            </span>
-          ))}
-        </div>
+      </div>
+      <div
+        className="flex items-center justify-between border-t border-separator p-3 text-muted"
+        aria-hidden
+      >
+        {actions.map(({ icon, label }, index) => (
+          <span
+            key={index}
+            className="inline-flex items-center gap-1.5 text-xs"
+          >
+            <HugeiconsIcon icon={icon} size={16} strokeWidth={1.5} />
+            {label}
+          </span>
+        ))}
       </div>
     </article>
   );

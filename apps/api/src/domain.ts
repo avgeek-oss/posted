@@ -1,3 +1,8 @@
+import {
+  allMediaIds,
+  readAccountMedia,
+  saveAccountMedia,
+} from "./posts/account-media.js";
 import { createHash } from "node:crypto";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -19,7 +24,9 @@ import type {
   Post,
   PostDelivery,
   PostMedia,
+  PostPart,
   SocialConnection,
+  SocialConnectionSummary,
 } from "../../../packages/contracts/src/index.js";
 
 import {
@@ -31,7 +38,11 @@ import {
 export const domainRoutes = new Hono<Env>();
 domainRoutes.route("/", draftRoutes);
 const uuid = z.uuid();
-type Group = Omit<Post, "state" | "deliveries" | "media" | "managedBy"> & {
+type Group = Omit<
+  Post,
+  "state" | "deliveries" | "media" | "managedBy" | "additionalPosts"
+> & {
+  additionalPosts: Omit<PostPart, "media">[];
   managerId: string | null;
   managerName: string | null;
   managerEmail: string | null;
@@ -39,18 +50,20 @@ type Group = Omit<Post, "state" | "deliveries" | "media" | "managedBy"> & {
 async function readPost(id: string): Promise<Post> {
   const [record] = await sql<
     Group[]
-  >`SELECT g.id,g.text,g.scheduled_at,g.idempotency_key,g.version,g.created_at,u.id AS manager_id,u.name AS manager_name,u.email AS manager_email FROM post_groups g LEFT JOIN users u ON u.id=g.last_edited_by WHERE g.id=${id}`;
+  >`SELECT g.id,g.text,g.additional_posts,g.scheduled_at,g.idempotency_key,g.version,g.created_at,u.id AS manager_id,u.name AS manager_name,u.email AS manager_email FROM post_groups g LEFT JOIN users u ON u.id=g.last_edited_by WHERE g.id=${id}`;
   if (!record)
     throw new HTTPException(404, { message: "This post does not exist" });
   const { managerId, managerName, managerEmail, ...post } = record;
   const deliveries = await sql<
     PostDelivery[]
-  >`SELECT d.id,d.connection_id,c.provider,c.name AS account_name,d.text_override,d.state,d.provider_post_id,d.published_url,d.error,d.published_at FROM post_deliveries d JOIN social_connections c ON c.id=d.connection_id WHERE d.group_id=${id} ORDER BY d.created_at,d.id`;
+  >`SELECT d.id,d.post_index,d.connection_id,c.provider,c.name AS account_name,d.text_override,d.state,d.provider_post_id,d.published_url,d.error,d.published_at FROM post_deliveries d JOIN social_connections c ON c.id=d.connection_id WHERE d.group_id=${id} ORDER BY d.post_index,c.provider,c.id,d.id`;
+  const accountMedia = await readAccountMedia("group", id);
   const images = await sql<
-    PostMedia[]
-  >`SELECT i.id,i.file_name,i.content_type,i.size_bytes,i.width,i.height,i.alt,i.duration_seconds FROM post_group_media gi JOIN post_media i ON i.id=gi.media_id WHERE gi.group_id=${id} ORDER BY gi.position`;
+    (PostMedia & { postIndex: number })[]
+  >`SELECT gi.post_index,i.id,i.file_name,i.content_type,i.size_bytes,i.width,i.height,i.alt,i.duration_seconds FROM post_group_media gi JOIN post_media i ON i.id=gi.media_id WHERE gi.group_id=${id} ORDER BY gi.post_index,gi.position`;
   return {
     ...post,
+    mediaOverrides: accountMedia.get(0) ?? {},
     managedBy:
       managerId && managerName && managerEmail
         ? {
@@ -61,7 +74,16 @@ async function readPost(id: string): Promise<Post> {
         : null,
     state: postState(deliveries.map((item) => item.state)),
     deliveries,
-    media: images,
+    media: images
+      .filter((image) => image.postIndex === 0)
+      .map(({ postIndex: _, ...image }) => image),
+    additionalPosts: post.additionalPosts.map((part, index) => ({
+      ...part,
+      mediaOverrides: accountMedia.get(index + 1) ?? {},
+      media: images
+        .filter((image) => image.postIndex === index + 1)
+        .map(({ postIndex: _, ...image }) => image),
+    })),
   };
 }
 async function validateTargets(
@@ -78,33 +100,37 @@ async function validateTargets(
     throw new HTTPException(400, {
       message: "Select connected accounts belonging to this team",
     });
+  const parts = [input, ...input.additionalPosts];
+  const mediaIds = allMediaIds(parts);
   const images = await sql<
     PostMedia[]
-  >`SELECT id,content_type,duration_seconds FROM post_media WHERE id=ANY(${input.mediaIds}::uuid[]) AND workspace_id=${workspaceId} AND state='ready' FOR SHARE`;
-  if (images.length !== input.mediaIds.length)
+  >`SELECT id,content_type,duration_seconds FROM post_media WHERE id=ANY(${mediaIds}::uuid[]) AND workspace_id=${workspaceId} AND state='ready' FOR SHARE`;
+  if (images.length !== mediaIds.length)
     throw new HTTPException(400, {
       message: "Wait for this team's media to finish uploading",
     });
-  const ordered = images.sort(
-    (left, right) =>
-      input.mediaIds.indexOf(left.id) - input.mediaIds.indexOf(right.id),
-  );
-  for (const connection of connections) {
-    try {
-      const error = mediaError(connection.provider, ordered);
-      if (error) throw new Error(error);
-      validateProviderContent(
-        connection.provider,
-        input.textOverrides[connection.id] ?? input.text,
-        mediaForProvider(connection.provider, ordered).filter(
-          (item) => !isVideo(item),
-        ).length,
-      );
-    } catch (error) {
-      throw new HTTPException(400, {
-        message:
-          error instanceof Error ? error.message : "Check this post's content",
-      });
+  for (const part of parts) {
+    for (const connection of connections) {
+      const ids = part.mediaOverrides[connection.id] ?? part.mediaIds;
+      const ordered = ids.map((id) => images.find((image) => image.id === id)!);
+      try {
+        const error = mediaError(connection.provider, ordered);
+        if (error) throw new Error(error);
+        validateProviderContent(
+          connection.provider,
+          part.textOverrides[connection.id] ?? part.text,
+          mediaForProvider(connection.provider, ordered).filter(
+            (item) => !isVideo(item),
+          ).length,
+        );
+      } catch (error) {
+        throw new HTTPException(400, {
+          message:
+            error instanceof Error
+              ? error.message
+              : "Check this post's content",
+        });
+      }
     }
   }
 }
@@ -113,10 +139,16 @@ async function saveTargets(
   workspaceId: string,
   input: z.infer<typeof postInput>,
 ) {
-  for (const connectionId of input.connectionIds)
-    await sql`INSERT INTO post_deliveries(group_id,workspace_id,connection_id,available_at,text_override) VALUES(${id},${workspaceId},${connectionId},${input.scheduledAt},${input.textOverrides[connectionId] ?? null})`;
-  for (let position = 0; position < input.mediaIds.length; position++)
-    await sql`INSERT INTO post_group_media(group_id,media_id,workspace_id,position) VALUES(${id},${input.mediaIds[position]},${workspaceId},${position})`;
+  await saveAccountMedia("group", id, workspaceId, [
+    input,
+    ...input.additionalPosts,
+  ]);
+  for (const [postIndex, part] of [input, ...input.additionalPosts].entries()) {
+    for (const connectionId of input.connectionIds)
+      await sql`INSERT INTO post_deliveries(group_id,workspace_id,connection_id,post_index,available_at,text_override) VALUES(${id},${workspaceId},${connectionId},${postIndex},${input.scheduledAt},${part.textOverrides[connectionId] ?? null})`;
+    for (let position = 0; position < part.mediaIds.length; position++)
+      await sql`INSERT INTO post_group_media(group_id,media_id,workspace_id,post_index,position) VALUES(${id},${part.mediaIds[position]},${workspaceId},${postIndex},${position})`;
+  }
 }
 
 domainRoutes.get("/providers", (c) => {
@@ -125,9 +157,63 @@ domainRoutes.get("/providers", (c) => {
 });
 domainRoutes.get("/connections", async (c) => {
   requireRole(c);
-  const items = await sql<
-    SocialConnection[]
-  >`SELECT id,provider,account_id,name,handle,avatar_url,state,created_at FROM social_connections WHERE workspace_id=(SELECT id FROM workspace) AND state<>'disconnected' ORDER BY provider,lower(name),id`;
+  const rows = await sql<
+    (SocialConnection & {
+      connectorId: string | null;
+      connectorName: string | null;
+      connectorEmail: string | null;
+      lastPublishedPostId: string | null;
+      lastPublishedAt: string | null;
+      scheduledCount: number;
+    })[]
+  >`
+    WITH latest_publications AS (
+      SELECT DISTINCT ON (connection_id) connection_id,group_id,published_at
+      FROM post_deliveries
+      WHERE workspace_id=(SELECT id FROM workspace)
+        AND state='published' AND published_at IS NOT NULL
+      ORDER BY connection_id,published_at DESC,id DESC
+    ), scheduled_counts AS (
+      SELECT connection_id,count(*)::int AS scheduled_count
+      FROM post_deliveries
+      WHERE workspace_id=(SELECT id FROM workspace)
+        AND state IN ('scheduled','preparing','publishing')
+      GROUP BY connection_id
+    )
+    SELECT c.id,c.provider,c.account_id,c.name,c.handle,c.avatar_url,c.state,c.created_at,
+      u.id AS connector_id,u.name AS connector_name,u.email AS connector_email,
+      p.group_id AS last_published_post_id,p.published_at AS last_published_at,
+      COALESCE(s.scheduled_count,0)::int AS scheduled_count
+    FROM social_connections c
+    LEFT JOIN users u ON u.id=c.connected_by AND u.workspace_id=c.workspace_id
+    LEFT JOIN latest_publications p ON p.connection_id=c.id
+    LEFT JOIN scheduled_counts s ON s.connection_id=c.id
+    WHERE c.workspace_id=(SELECT id FROM workspace) AND c.state<>'disconnected'
+    ORDER BY c.provider,lower(c.name),c.id`;
+  const items: SocialConnectionSummary[] = rows.map(
+    ({
+      connectorId,
+      connectorName,
+      connectorEmail,
+      lastPublishedPostId,
+      lastPublishedAt,
+      ...connection
+    }) => ({
+      ...connection,
+      connectedBy:
+        connectorId && connectorName && connectorEmail
+          ? {
+              id: connectorId,
+              name: connectorName,
+              avatarUrl: `https://www.gravatar.com/avatar/${createHash("sha256").update(connectorEmail.trim().toLowerCase()).digest("hex")}?s=160&d=404&r=g`,
+            }
+          : null,
+      lastPublished:
+        lastPublishedPostId && lastPublishedAt
+          ? { postId: lastPublishedPostId, publishedAt: lastPublishedAt }
+          : null,
+    }),
+  );
   return c.json({ items });
 });
 domainRoutes.delete("/connections/:id", async (c) => {
@@ -224,7 +310,7 @@ domainRoutes.post("/posts", async (c) => {
     }
     const [group] = await tx<
       { id: string }[]
-    >`INSERT INTO post_groups(workspace_id,created_by,last_edited_by,text,scheduled_at,idempotency_key,request_hash) VALUES(${team.id},${actor.userId},${actor.userId},${input.text},${input.scheduledAt},${input.idempotencyKey},${hash}) RETURNING id`;
+    >`INSERT INTO post_groups(workspace_id,created_by,last_edited_by,text,additional_posts,scheduled_at,idempotency_key,request_hash) VALUES(${team.id},${actor.userId},${actor.userId},${input.text},${sql.json(input.additionalPosts.map(({ mediaIds: _, mediaOverrides: _overrides, ...part }) => part))},${input.scheduledAt},${input.idempotencyKey},${hash}) RETURNING id`;
     await saveTargets(group.id, team.id, input);
     if (input.draftSource)
       await tx`UPDATE post_drafts SET published_post_id=${group.id},updated_at=now() WHERE id=${input.draftSource.id}`;
@@ -272,7 +358,7 @@ domainRoutes.patch("/posts/:id", async (c) => {
     await validateTargets(group.workspaceId, input);
     await tx`DELETE FROM post_deliveries WHERE group_id=${id}`;
     await tx`DELETE FROM post_group_media WHERE group_id=${id}`;
-    await tx`UPDATE post_groups SET text=${input.text},scheduled_at=${input.scheduledAt},last_edited_by=${actor.userId},version=version+1,updated_at=now() WHERE id=${id}`;
+    await tx`UPDATE post_groups SET text=${input.text},additional_posts=${sql.json(input.additionalPosts.map(({ mediaIds: _, mediaOverrides: _overrides, ...part }) => part))},scheduled_at=${input.scheduledAt},last_edited_by=${actor.userId},version=version+1,updated_at=now() WHERE id=${id}`;
     await saveTargets(id, group.workspaceId, input);
     await tx`INSERT INTO post_edit_requests(workspace_id,idempotency_key,group_id,request_hash) VALUES(${team.id},${input.idempotencyKey},${id},${hash})`;
     return c.json({ post: await readPost(id) });

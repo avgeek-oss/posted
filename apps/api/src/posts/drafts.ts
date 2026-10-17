@@ -11,6 +11,13 @@ import type {
   PostMedia,
   SocialConnection,
 } from "../../../../packages/contracts/src/index.js";
+import {
+  allMediaIds,
+  canonicalMediaOverrides,
+  readAccountMedia,
+  saveAccountMedia,
+} from "./account-media.js";
+import { postPartInput } from "./input.js";
 import { requireRole, conflict, type Env } from "../http.js";
 
 const ids = (max: number) =>
@@ -25,18 +32,30 @@ export const draftInput = z
   .object({
     text: z.string().max(64000),
     textOverrides: z.record(z.uuid(), z.string().max(64000)).default({}),
+    additionalPosts: z
+      .array(
+        postPartInput.safeExtend({
+          text: z.string().max(64000),
+          textOverrides: z.record(z.uuid(), z.string().max(64000)).default({}),
+        }),
+      )
+      .default([]),
     connectionIds: ids(50),
     mediaIds: ids(20),
+    mediaOverrides: postPartInput.shape.mediaOverrides,
     version: z.number().int().min(0),
     idempotencyKey: z.string().regex(/^[A-Za-z0-9._:-]{8,128}$/),
   })
   .strict()
   .refine(
     (value) =>
-      Object.keys(value.textOverrides).every((id) =>
-        value.connectionIds.includes(id),
+      [value, ...value.additionalPosts].every((part) =>
+        [
+          ...Object.keys(part.textOverrides),
+          ...Object.keys(part.mediaOverrides),
+        ].every((id) => value.connectionIds.includes(id)),
       ),
-    "Only selected accounts can have custom text",
+    "Only selected accounts can have custom text or media",
   );
 
 async function readDraft(id: string): Promise<PostDraft> {
@@ -46,20 +65,31 @@ async function readDraft(id: string): Promise<PostDraft> {
       editorName: string | null;
       editorEmail: string | null;
     })[]
-  >`SELECT d.id,d.text,d.text_overrides,d.connection_ids,d.version,d.created_at,d.updated_at,u.id AS editor_id,u.name AS editor_name,u.email AS editor_email FROM post_drafts d LEFT JOIN users u ON u.id=d.last_edited_by WHERE d.id=${id} AND d.workspace_id=(SELECT id FROM workspace) AND d.published_post_id IS NULL`;
+  >`SELECT d.id,d.text,d.additional_posts,d.text_overrides,d.connection_ids,d.version,d.created_at,d.updated_at,u.id AS editor_id,u.name AS editor_name,u.email AS editor_email FROM post_drafts d LEFT JOIN users u ON u.id=d.last_edited_by WHERE d.id=${id} AND d.workspace_id=(SELECT id FROM workspace) AND d.published_post_id IS NULL`;
   if (!draft)
     throw new HTTPException(404, { message: "This draft does not exist" });
   const connections = await sql<
     SocialConnection[]
   >`SELECT id,provider,account_id,name,handle,avatar_url,state,created_at FROM social_connections WHERE id=ANY(${draft.connectionIds}::uuid[]) AND workspace_id=(SELECT id FROM workspace)`;
   const images = await sql<
-    PostMedia[]
-  >`SELECT i.id,i.file_name,i.content_type,i.size_bytes,i.width,i.height,i.alt,i.duration_seconds FROM post_draft_media di JOIN post_media i ON i.id=di.media_id WHERE di.draft_id=${id} ORDER BY di.position`;
+    (PostMedia & { postIndex: number })[]
+  >`SELECT di.post_index,i.id,i.file_name,i.content_type,i.size_bytes,i.width,i.height,i.alt,i.duration_seconds FROM post_draft_media di JOIN post_media i ON i.id=di.media_id WHERE di.draft_id=${id} ORDER BY di.post_index,di.position`;
+  const accountMedia = await readAccountMedia("draft", id);
   const { editorId, editorName, editorEmail, ...record } = draft;
   return {
     ...record,
+    mediaOverrides: accountMedia.get(0) ?? {},
     connections,
-    media: images,
+    media: images
+      .filter((image) => image.postIndex === 0)
+      .map(({ postIndex: _, ...image }) => image),
+    additionalPosts: record.additionalPosts.map((part, index) => ({
+      ...part,
+      mediaOverrides: accountMedia.get(index + 1) ?? {},
+      media: images
+        .filter((image) => image.postIndex === index + 1)
+        .map(({ postIndex: _, ...image }) => image),
+    })),
     draftedBy:
       editorId && editorName && editorEmail
         ? {
@@ -104,15 +134,32 @@ draftRoutes.post("/drafts/:id", async (c) => {
   const actor = requireRole(c, "member");
   const id = z.uuid().parse(c.req.param("id"));
   const input = draftInput.parse(await c.req.json());
+  const { additionalPosts, mediaOverrides, ...rootInput } = input;
   const hash = createHash("sha256")
     .update(
       JSON.stringify({
-        ...input,
+        ...rootInput,
+        ...(additionalPosts.length
+          ? {
+              additionalPosts: additionalPosts.map(
+                ({ mediaOverrides, ...part }) => ({
+                  ...part,
+                  ...canonicalMediaOverrides(mediaOverrides),
+                  textOverrides: Object.fromEntries(
+                    Object.entries(part.textOverrides).sort(([a], [b]) =>
+                      a.localeCompare(b),
+                    ),
+                  ),
+                }),
+              ),
+            }
+          : {}),
         textOverrides: Object.fromEntries(
           Object.entries(input.textOverrides).sort(([left], [right]) =>
             left.localeCompare(right),
           ),
         ),
+        ...canonicalMediaOverrides(mediaOverrides),
         connectionIds: [...input.connectionIds].sort(),
       }),
     )
@@ -148,16 +195,20 @@ draftRoutes.post("/drafts/:id", async (c) => {
       throw new HTTPException(400, {
         message: "Select accounts belonging to this team",
       });
+    const parts = [input, ...input.additionalPosts];
+    const mediaIds = allMediaIds(parts);
     const images =
-      await sql`SELECT id FROM post_media WHERE id=ANY(${input.mediaIds}::uuid[]) AND workspace_id=${team.id} AND state='ready' FOR SHARE`;
-    if (images.length !== input.mediaIds.length)
+      await sql`SELECT id FROM post_media WHERE id=ANY(${mediaIds}::uuid[]) AND workspace_id=${team.id} AND state='ready' FOR SHARE`;
+    if (images.length !== mediaIds.length)
       throw new HTTPException(400, {
         message: "Wait for this team's media to finish uploading",
       });
-    await sql`INSERT INTO post_drafts(id,workspace_id,created_by,last_edited_by,text,text_overrides,connection_ids,idempotency_key,request_hash) VALUES(${id},${team.id},${actor.userId},${actor.userId},${input.text},${sql.json(input.textOverrides)},${input.connectionIds},${input.idempotencyKey},${hash}) ON CONFLICT(id) DO UPDATE SET text=excluded.text,text_overrides=excluded.text_overrides,connection_ids=excluded.connection_ids,idempotency_key=excluded.idempotency_key,request_hash=excluded.request_hash,last_edited_by=excluded.last_edited_by,version=post_drafts.version+1,updated_at=now()`;
+    await sql`INSERT INTO post_drafts(id,workspace_id,created_by,last_edited_by,text,additional_posts,text_overrides,connection_ids,idempotency_key,request_hash) VALUES(${id},${team.id},${actor.userId},${actor.userId},${input.text},${sql.json(input.additionalPosts.map(({ mediaIds: _, mediaOverrides: _overrides, ...part }) => part))},${sql.json(input.textOverrides)},${input.connectionIds},${input.idempotencyKey},${hash}) ON CONFLICT(id) DO UPDATE SET text=excluded.text,additional_posts=excluded.additional_posts,text_overrides=excluded.text_overrides,connection_ids=excluded.connection_ids,idempotency_key=excluded.idempotency_key,request_hash=excluded.request_hash,last_edited_by=excluded.last_edited_by,version=post_drafts.version+1,updated_at=now()`;
     await sql`DELETE FROM post_draft_media WHERE draft_id=${id}`;
-    for (let position = 0; position < input.mediaIds.length; position++)
-      await sql`INSERT INTO post_draft_media(draft_id,media_id,workspace_id,position) VALUES(${id},${input.mediaIds[position]},${team.id},${position})`;
+    for (const [postIndex, part] of parts.entries())
+      for (let position = 0; position < part.mediaIds.length; position++)
+        await sql`INSERT INTO post_draft_media(draft_id,media_id,workspace_id,post_index,position) VALUES(${id},${part.mediaIds[position]},${team.id},${postIndex},${position})`;
+    await saveAccountMedia("draft", id, team.id, parts);
     return c.json({ draft: await readDraft(id) }, existing ? 200 : 201);
   });
 });

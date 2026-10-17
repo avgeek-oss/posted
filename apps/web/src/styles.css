@@ -1,17 +1,23 @@
 @import "@avgeek-oss/design-system/styles.css";
+@import "@fontsource-variable/inter/wght-italic.css";
 @import "./posted-theme.css";
 @source "./";
 
-.composer-media .react-aria-DropIndicator {
+.composer-media-drop-indicator {
   position: absolute;
+  inset-block: 0;
+  width: 2px;
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 1;
 }
-.composer-media .react-aria-DropIndicator[data-drop-target] + .composer-image,
+.composer-media-drop-indicator[data-drop-target] {
+  background: var(--accent);
+}
 .composer-media
-  .composer-image:has(
-    + .react-aria-DropIndicator[data-drop-target]:last-child
-  ) {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  [data-media-drag-handle]:is(:focus-visible, [data-focus-visible="true"]) {
+  outline: none;
+  box-shadow: none;
 }
 
 .settings-page {
@@ -45,6 +51,7 @@
   }
   :is(
     .button,
+    .tabs__tab,
     .select__trigger,
     .date-picker__trigger,
     .calendar-year-picker__trigger,
@@ -128,4 +135,44 @@
 .startup-recovery button:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+.composer-posts .react-aria-DropIndicator[data-drop-target] {
+  border-top: 2px solid var(--accent);
+  margin-block: 4px;
+}
+
+.composer-post-disclosure {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 150ms cubic-bezier(0.65, 0, 0.35, 1),
+    opacity 150ms ease-out,
+    visibility 0s 150ms;
+}
+.composer-post-disclosure[data-expanded="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-duration: 200ms, 200ms, 0s;
+  transition-delay: 0s;
+}
+.composer-post-chevron {
+  transition: transform 150ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.composer-post-chevron[data-expanded="true"] {
+  transform: rotate(-180deg);
+  transition-duration: 200ms;
+}
+[data-keyboard="true"] :is(.composer-post-disclosure, .composer-post-chevron) {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .composer-post-disclosure,
+  .composer-post-chevron {
+    transition: none;
+  }
 }

@@ -249,7 +249,7 @@ export type DialogProps = Omit<
 > & {
   open: boolean;
   onClose: () => void;
-  title: string;
+  title: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
   wide?: boolean;

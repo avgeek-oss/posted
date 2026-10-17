@@ -16,7 +16,7 @@
   },
   {
     "name": "drafts",
-    "title": "Drafts",
+    "title": "Pending drafts",
     "description": "Save ideas without creating publishing jobs."
   },
   {
@@ -26,7 +26,7 @@
   },
   {
     "name": "deliveries",
-    "title": "Delivery details and history",
+    "title": "Publish History and delivery details",
     "description": "Inspect progress and handle partial or uncertain publication."
   },
   {
@@ -102,7 +102,7 @@
   {
     "name": "release-notes",
     "title": "Release notes",
-    "description": "Changes in the first Posted release candidate."
+    "description": "Published changes and upgrade guidance for Posted."
   },
   {
     "name": "troubleshooting",

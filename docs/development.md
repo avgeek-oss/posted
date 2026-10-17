@@ -43,9 +43,21 @@ Use a disposable loopback installation with the API and UI origins set to `http:
 ```sh
 node --import tsx tools/local-storage.ts
 node --env-file=.env --import tsx tools/local-preview.ts
+node --env-file=.env --import tsx tools/local-preview-drafts.ts
 ```
 
 The storage helper creates the private `posted-preview` bucket, local CORS and a sample image in `artifacts/posted-preview.png`. Configure the preview's S3 variables to use that bucket and the disposable storage credentials above. The account helper rejects production and non-loopback installations. It creates a verified preview administrator, fake provider connections and display-only API-key/MCP records whose hashes cannot authenticate requests. Sign in with `local@avgeek.ltd` and `test123`. The short password is assigned only by this guarded local fixture; normal setup and password-change validation still apply.
+
+The draft helper adds four editable samples to **Pending Drafts** using the normal authenticated upload and draft APIs:
+
+| Sample            | Posts | Accounts                   | Media                                                   |
+| ----------------- | ----- | -------------------------- | ------------------------------------------------------- |
+| Studio update     | 1     | All four providers         | Three-image carousel                                    |
+| Behind the scenes | 1     | Bluesky, LinkedIn, Threads | Four-second MP4                                         |
+| Field notes       | 3     | Bluesky, Threads, X        | Landscape, portrait and square images across the thread |
+| Shipping notes    | 4     | Bluesky, LinkedIn, Threads | Images, a video reply and a text-only final post        |
+
+Several posts include account-specific copy for testing customization and reset confirmation. Images are generated locally in landscape, portrait and square formats, with alt text; FFmpeg generates and normalizes the video. Media remains in private loopback storage. Stable draft IDs make reruns additive: existing samples and any user edits are preserved. The helper requires the `Posted Preview` workspace, all four fixture accounts, a loopback S3 endpoint and the `posted-preview` bucket. It creates drafts only, with no scheduling or publishing.
 
 Start `pnpm dev:preview` and `pnpm dev:web` for browser review. Add connection uses the production UI and copy. Continue opens a local provider authorization page; Authorize and Cancel return through the production callback, including actor-bound expiring state, one-use authorization codes, verifier checks and connection persistence/reconnection. Only the external provider transport is simulated. The preview API enables all four providers and creates disposable accounts without external sign-in or publishing access. It keeps normal session, administrator and origin checks, rejects production, non-loopback origins and any workspace other than Posted Preview, and does not run an email or delivery worker. Production and ordinary `pnpm dev` still require configured provider OAuth credentials. Preview provider credentials are deliberately unusable; do not run `pnpm dev:worker` against this database. Worker/container verification uses a separate empty database.
 

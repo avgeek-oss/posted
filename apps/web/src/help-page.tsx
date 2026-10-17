@@ -87,17 +87,17 @@ export function HelpPage({ path }: { path: string }) {
             <section>
               <h2 className="text-base font-medium">Compose and schedule</h2>
               <p className="mt-3 text-muted">
-                Start on Home, enter your text, and select Continue or Open
+                Start on Dashboard, enter your text, and select Continue or Open
                 Editor. Choose the accounts to publish to and review each
                 preview. If media storage is configured, you can add JPEG, PNG
                 or WebP images, or MP4/MOV videos. Posted prepares supported
                 media for each provider.
               </p>
               <p className="mt-3 text-muted">
-                Save an incomplete idea as a draft, confirm Post now, or choose
-                Schedule for later. Scheduling uses the timezone in your account
-                preferences. Open Scheduled Posts to edit a future post in the
-                same composer or cancel it.
+                Save an incomplete idea as a draft, confirm publishing to your
+                selected accounts, or choose Schedule for later. Scheduling uses
+                the timezone in your account preferences. Open Scheduled Posts
+                to edit a future post in the same composer or cancel it.
               </p>
             </section>
             <section>
@@ -106,7 +106,7 @@ export function HelpPage({ path }: { path: string }) {
               </h2>
               <p className="mt-3 text-muted">
                 Open a post's details to see each account's result and the group
-                request key. Completed requests appear in Post History. A
+                request key. Completed requests appear in Publish History. A
                 Partial result means some accounts succeeded. An Uncertain
                 result means the provider may have published the post but did
                 not confirm it; check that account before trying again.

@@ -11,11 +11,7 @@ import {
   TooltipText,
 } from "@posted/web-design-system";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Calendar03Icon,
-  Clock01Icon,
-  Edit02Icon,
-} from "@hugeicons/core-free-icons";
+import { Calendar03Icon, QuillWrite01Icon } from "@hugeicons/core-free-icons";
 import type { Page, Post } from "../../../packages/contracts/src/index.js";
 import { api, errorText, type Session } from "./api.js";
 import { PageHeading } from "./page-heading.js";
@@ -63,16 +59,16 @@ export function PostsPage({
   return (
     <section className="min-w-0">
       <PageHeading
-        title={view === "scheduled" ? "Scheduled Posts" : "Post History"}
+        title={view === "scheduled" ? "Scheduled Posts" : "Publish History"}
         icon={
           <HugeiconsIcon
-            icon={view === "scheduled" ? Calendar03Icon : Clock01Icon}
+            icon={view === "scheduled" ? Calendar03Icon : QuillWrite01Icon}
           />
         }
         actions={
           editable ? (
             <ButtonLink href="/posts/new">
-              <HugeiconsIcon icon={Edit02Icon} size={16} aria-hidden />
+              <HugeiconsIcon icon={QuillWrite01Icon} size={16} aria-hidden />
               Create post
             </ButtonLink>
           ) : undefined
@@ -90,7 +86,7 @@ export function PostsPage({
         <div className="grid min-w-0 gap-4">
           <ResourceTable
             ariaLabel={
-              view === "scheduled" ? "Scheduled posts" : "Post history"
+              view === "scheduled" ? "Scheduled posts" : "Publish history"
             }
             mobileLayout="scroll"
             tableClassName="min-w-4xl"
@@ -130,7 +126,7 @@ export function PostsPage({
                         {post.text || "Media post"}
                       </span>
                     }
-                    description={`${post.deliveries.length} ${post.deliveries.length === 1 ? "delivery" : "deliveries"}`}
+                    description={`${post.additionalPosts.length + 1} ${post.additionalPosts.length ? "posts" : "post"} · ${post.deliveries.length} ${post.deliveries.length === 1 ? "delivery" : "deliveries"}`}
                   />
                 ),
               },
@@ -140,17 +136,19 @@ export function PostsPage({
                 className: "whitespace-nowrap",
                 cell: (post) => (
                   <div className="flex w-max gap-2">
-                    {post.deliveries.map((delivery) => (
-                      <span
-                        key={delivery.id}
-                        className="shrink-0"
-                        role="img"
-                        aria-label={`${providerNames[delivery.provider]}: ${delivery.accountName}`}
-                        title={`${providerNames[delivery.provider]}: ${delivery.accountName}`}
-                      >
-                        <ProviderIcon provider={delivery.provider} />
-                      </span>
-                    ))}
+                    {post.deliveries
+                      .filter((delivery) => delivery.postIndex === 0)
+                      .map((delivery) => (
+                        <span
+                          key={delivery.id}
+                          className="shrink-0"
+                          role="img"
+                          aria-label={`${providerNames[delivery.provider]}: ${delivery.accountName}`}
+                          title={`${providerNames[delivery.provider]}: ${delivery.accountName}`}
+                        >
+                          <ProviderIcon provider={delivery.provider} />
+                        </span>
+                      ))}
                   </div>
                 ),
               },

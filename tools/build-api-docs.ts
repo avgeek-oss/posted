@@ -29,7 +29,7 @@ Posting and saving a draft use a content-bound idempotencyKey. Reuse one key acr
 
 A post's scheduledAt is an ISO 8601 timestamp with an offset. A future timestamp schedules delivery; an immediate timestamp requests immediate delivery. A created response records the request, not confirmed provider publication. Inspect deliveries afterward.
 
-Text overrides are keyed by selected connection IDs. Media uploads return signed URLs; PUT bytes using the supplied headers, complete the upload, then poll status until ready. Post and draft bodies use mediaIds, and responses use media.
+Text overrides are keyed by selected connection IDs. Media uploads return signed URLs; PUT bytes using the supplied headers, complete the upload, then poll status until ready. Post and draft bodies use mediaIds, and responses use media. Each root or additional post may supply mediaOverrides keyed by selected connection ID, with an ordered array of media IDs. Omit an account key to inherit master media; an empty array intentionally selects no media for that account. Responses resolve mediaOverrides into media objects. Text and media overrides are independent; resetting both removes both account keys.
 
 ## Operation catalogue
 

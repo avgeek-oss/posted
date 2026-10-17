@@ -93,15 +93,30 @@ export function PostDetailsPage({
                 ),
               },
               {
+                key: "postIndex",
+                header: "Post",
+                cell: (delivery) =>
+                  `${delivery.postIndex + 1} of ${post.additionalPosts.length + 1}`,
+              },
+              {
                 key: "content",
                 header: "Content",
                 className: "min-w-64 max-w-sm",
                 cell: (delivery) => (
                   <TooltipText
-                    tooltip={delivery.textOverride ?? post.text}
+                    tooltip={
+                      delivery.textOverride ??
+                      (delivery.postIndex === 0
+                        ? post.text
+                        : post.additionalPosts[delivery.postIndex - 1].text)
+                    }
                     className="max-w-sm line-clamp-2 whitespace-pre-wrap break-words"
                   >
-                    {(delivery.textOverride ?? post.text) || "Image post"}
+                    {(delivery.textOverride ??
+                      (delivery.postIndex === 0
+                        ? post.text
+                        : post.additionalPosts[delivery.postIndex - 1].text)) ||
+                      "Media post"}
                   </TooltipText>
                 ),
               },

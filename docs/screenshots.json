@@ -25,8 +25,8 @@
   },
   {
     "name": "drafts",
-    "title": "Saved drafts",
-    "alt": "Posted drafts table with sample ideas and Drafted by attribution.",
+    "title": "Pending drafts",
+    "alt": "Posted pending drafts with single posts and sequences, selected accounts, author attribution and last saved times.",
     "width": 1280,
     "height": 900,
     "pages": ["drafts"]
@@ -42,10 +42,58 @@
   {
     "name": "composer-mobile",
     "title": "Mobile composer",
-    "alt": "Posted composer account selection and live preview on mobile.",
+    "alt": "Posted mobile Write and Accounts tabs with Edit and Preview inside Accounts and compact media controls.",
     "width": 390,
     "height": 844,
     "portrait": true,
     "pages": ["composer"]
+  },
+  {
+    "name": "account-edit",
+    "title": "Customize an account",
+    "alt": "Posted account editor with custom text, Reset to master and ordered attachments.",
+    "width": 1280,
+    "height": 900,
+    "pages": ["composer", "drafts"]
+  },
+  {
+    "name": "media-preview",
+    "title": "Inspect an attachment",
+    "alt": "Posted image preview dialog with filename, pixel dimensions and file size.",
+    "width": 1280,
+    "height": 900,
+    "pages": ["media"]
+  },
+  {
+    "name": "publish-confirmation",
+    "title": "Review before publishing",
+    "alt": "Posted publication confirmation listing the selected accounts and post count.",
+    "width": 1280,
+    "height": 900,
+    "pages": ["composer", "drafts", "getting-started"]
+  },
+  {
+    "name": "scheduling-dialog",
+    "title": "Choose a date and time",
+    "alt": "Posted scheduling dialog with a calendar and compact time input.",
+    "width": 1280,
+    "height": 900,
+    "pages": ["scheduling"]
+  },
+  {
+    "name": "sequence",
+    "title": "Compose a sequence",
+    "alt": "Posted numbered master posts and connected account previews for a sample thread.",
+    "width": 1280,
+    "height": 900,
+    "pages": ["composer"]
+  },
+  {
+    "name": "history",
+    "title": "Publish history",
+    "alt": "Posted sample publish history showing confirmed delivery state per delivery set.",
+    "width": 1280,
+    "height": 900,
+    "pages": ["deliveries"]
   }
 ]
