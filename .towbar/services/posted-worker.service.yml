@@ -1,9 +1,9 @@
 id: posted-worker
 name: Posted Worker
-description: Posted v0.1.0 worker from the published immutable release image.
+description: Posted v0.2.0 worker from the published immutable release image.
 deployment:
   type: image
-  image: ghcr.io/avgeek-oss/posted-worker@sha256:56f6d2843682c30b5c6a847fb6183386fd98bff0cdc3c3c156f093f47934bf39
+  image: ghcr.io/avgeek-oss/posted-worker@sha256:9e6b3af02cbb9819a36eadfc43f0d0ec9e8f48d03781eb10052fc4d881ddd1ae
 autoDeploy: false
 container:
   network: posted

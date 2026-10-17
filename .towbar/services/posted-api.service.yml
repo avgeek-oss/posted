@@ -1,9 +1,9 @@
 id: posted-api
 name: Posted API
-description: Posted v0.1.0 api from the published immutable release image.
+description: Posted v0.2.0 api from the published immutable release image.
 deployment:
   type: image
-  image: ghcr.io/avgeek-oss/posted-api@sha256:6f44ed19a2a9c584dfd2b6724f23032925a45ccdb777aef2dbd0f6d58d05caa4
+  image: ghcr.io/avgeek-oss/posted-api@sha256:3a1ac56429a6bd094d989936e8f65ed93d869450767a84913c5229830c089053
 autoDeploy: false
 container:
   network: posted

@@ -60,7 +60,7 @@ docker compose exec worker node -e "fetch('http://127.0.0.1:4343/health/ready').
 
 ## Deploy with Towbar
 
-The repository includes `towbar.yml`, three service manifests in `.towbar/services/`, and a PostgreSQL manifest in `.towbar/datastores/`. They use the published v0.1.0 image digests, run on the registered Platform Services server, and disable automatic deployment. Forks must update the server IP and public domains before connecting the repository.
+The repository includes `towbar.yml`, three service manifests in `.towbar/services/`, and a PostgreSQL manifest in `.towbar/datastores/`. They use the published v0.2.0 image digests, run on the registered Platform Services server, and disable automatic deployment. Forks must update the server IP and public domains before connecting the repository.
 
 1. Connect the repository in Towbar and map `production` to `main`.
 2. Save the declared production runtime values in Towbar. Set `POSTGRES_USER=posted`, `POSTGRES_DB=posted` and a generated `POSTGRES_PASSWORD`. The API and worker share `DATABASE_URL` using host `posted-postgres:5432`, the same stable `POSTED_SECRET`, and the public `POSTED_WEB_URL`/`POSTED_API_URL`. Set `NODE_ENV=production` on all three services and configure the API's declared SMTP values. See [configuration](/configuration) for optional media storage and social-provider settings.
