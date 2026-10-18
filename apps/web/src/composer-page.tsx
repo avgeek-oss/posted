@@ -1166,14 +1166,17 @@ export function ComposerPage({
               onSelectionChange={(key) => setAccountView(String(key))}
             >
               <Tabs.ListContainer>
-                <Tabs.List aria-label="Account workspace">
+                <Tabs.List
+                  aria-label="Account workspace"
+                  className="max-sm:p-0"
+                >
                   <Tabs.Tab id="edit">
                     Edit
-                    <Tabs.Indicator />
+                    <Tabs.Indicator className="max-sm:inset-1 max-sm:size-auto" />
                   </Tabs.Tab>
                   <Tabs.Tab id="preview">
                     Preview
-                    <Tabs.Indicator />
+                    <Tabs.Indicator className="max-sm:inset-1 max-sm:size-auto" />
                   </Tabs.Tab>
                 </Tabs.List>
               </Tabs.ListContainer>
@@ -1270,15 +1273,15 @@ export function ComposerPage({
                 <Tabs.ListContainer>
                   <Tabs.List
                     aria-label="Create post workspace"
-                    className="w-full"
+                    className="w-full max-sm:p-0"
                   >
                     <Tabs.Tab id="write" className="flex-1">
                       Write
-                      <Tabs.Indicator />
+                      <Tabs.Indicator className="max-sm:inset-1 max-sm:size-auto" />
                     </Tabs.Tab>
                     <Tabs.Tab id="accounts" className="flex-1">
                       Accounts
-                      <Tabs.Indicator />
+                      <Tabs.Indicator className="max-sm:inset-1 max-sm:size-auto" />
                     </Tabs.Tab>
                   </Tabs.List>
                 </Tabs.ListContainer>
