@@ -18,6 +18,10 @@ Loopback HTTP is allowed for local development. Public origins require HTTPS. Do
 
 Provider settings are listed in [provider setup](/providers). A provider is enabled only when all its required values are present; partial configuration fails startup. The LinkedIn API version defaults to `202609` and must be kept within the provider's supported versions.
 
+## Towbar
+
+The manifests require the core runtime settings. Social provider credentials are optional; add a complete provider group to both API and Worker runtime secrets when enabling that provider. Towbar passes configured runtime secrets even when they are not listed as required in the manifest.
+
 ## SMTP
 
 Set `POSTED_SMTP_HOST` and `POSTED_SMTP_FROM` together. Supply `POSTED_SMTP_USER` and `POSTED_SMTP_PASSWORD` together when authentication is required. Port defaults to 587; `POSTED_SMTP_SECURE=false` uses STARTTLS for a remote SMTP server, while `true` uses direct TLS, usually on 465. Use a sender such as `Posted <posted@example.com>`.
