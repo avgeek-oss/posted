@@ -8,7 +8,7 @@
     "href": "/"
   },
   "favicon": "/assets/posted-favicon.png",
-  "colors": { "primary": "#1554CC", "light": "#8ABBF2", "dark": "#1554CC" },
+  "colors": { "primary": "#1554CC", "light": "#6FA4FC", "dark": "#1554CC" },
   "navigation": {
     "dropdowns": [
       {
@@ -282,24 +282,45 @@
       {
         "header": "Documentation",
         "items": [
-          { "label": "Install Posted", "href": "/installation" },
-          { "label": "Compose a post", "href": "/composer" },
-          { "label": "MCP connections", "href": "/mcp-connections" },
-          { "label": "Backup and recovery", "href": "/backup" }
+          { "label": "About Posted", "href": "/overview" },
+          { "label": "Self-hosting", "href": "/installation" },
+          { "label": "Configuration", "href": "/configuration" },
+          {
+            "label": "Changelog",
+            "href": "https://github.com/avgeek-oss/posted/releases"
+          }
         ]
       },
       {
-        "header": "Avgeek OSS",
+        "header": "Open Source",
         "items": [
           {
-            "label": "Source code",
+            "label": "GitHub Source",
             "href": "https://github.com/avgeek-oss/posted"
           },
           {
-            "label": "Our OSS philosophy",
-            "href": "https://github.com/avgeek-oss/.github/blob/main/profile/README.md"
+            "label": "License Terms",
+            "href": "https://github.com/avgeek-oss/posted/blob/main/LICENSE"
           },
-          { "label": "Licenses and terms", "href": "/legal" }
+          {
+            "label": "OSS Philosophy",
+            "href": "https://github.com/avgeek-oss/.github/blob/main/profile/README.md"
+          }
+        ]
+      },
+      {
+        "header": "Other OSS Projects",
+        "items": [
+          { "label": "Towbar", "href": "https://www.towbar.dev" },
+          { "label": "Mill", "href": "https://www.mill.fyi" },
+          { "label": "Rootset", "href": "https://www.rootset.app" }
+        ]
+      },
+      {
+        "header": "More links",
+        "items": [
+          { "label": "Company website", "href": "https://www.avgeek.ltd" },
+          { "label": "Write to us", "href": "mailto:support@avgeek.ltd" }
         ]
       }
     ]

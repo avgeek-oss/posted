@@ -14,6 +14,10 @@ flowchart TB
   worker -.-> s3
   worker --> providers("Social providers")
   style services fill:transparent,stroke:transparent
+  class ui,api,worker posted-service
+  class database posted-database
+  class s3 posted-storage
+  class providers posted-provider
 ```
 
 | Component  | What it does                                                                          |

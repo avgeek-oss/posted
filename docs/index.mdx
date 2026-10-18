@@ -1,6 +1,6 @@
 ---
-title: "Social publishing for your team"
-description: "Draft, tailor and schedule posts for X, LinkedIn, Bluesky and Threads. Self-host Posted with PostgreSQL and an S3 source."
+title: "Social intelligence for your team"
+description: "Open-source, self-hosted social publishing and scheduling for your team."
 mode: "custom"
 ---
 
@@ -23,23 +23,27 @@ import { ThemeImage } from "/snippets/oss/screenshot.jsx";
 <Home>
   <Hero id="posted-heading">
     <h1 id="posted-heading">
-      Social publishing
+      Social intelligence
       <br />
       <span>for your team</span>
     </h1>
-    <p className="oss-lead">
+    <p className="oss-lead grid gap-4 md:gap-0">
       <span className="oss-lead-primary">
-        Draft an idea. Choose accounts. Publish when you're ready.
+        From publishing and scheduling content to an intelligent full-fledged
+        social media back-office.
       </span>
       <span>
-        Schedule text, images and videos for X, LinkedIn, Bluesky and Threads
-        from an installation you control.
+        Fully open-source, self-hosted in your servers. Maintained and continued
+        improvements landing every week.
       </span>
     </p>
     <Actions>
-      <ActionLink href="/getting-started">Get started →</ActionLink>
-      <ActionLink href="/installation" variant="secondary">
-        Install Posted →
+      <ActionLink href="/installation">Install Posted →</ActionLink>
+      <ActionLink
+        href="https://github.com/avgeek-oss/posted"
+        variant="secondary"
+      >
+        GitHub Source →
       </ActionLink>
     </Actions>
   </Hero>
