@@ -21,15 +21,7 @@ secrets:
     - POSTED_SECRET
     - POSTED_WEB_URL
     - POSTED_API_URL
-    # Keep provider values identical in API and Worker.
-    - POSTED_X_CLIENT_ID
-    - POSTED_X_CLIENT_SECRET
-    - POSTED_LINKEDIN_CLIENT_ID
-    - POSTED_LINKEDIN_CLIENT_SECRET
-    - POSTED_THREADS_CLIENT_ID
-    - POSTED_THREADS_CLIENT_SECRET
-    - POSTED_BLUESKY_CLIENT_ID
-    - POSTED_BLUESKY_PRIVATE_KEY_JWK
+    # Add optional provider credentials to both API and Worker runtime secrets when enabled.
     - POSTED_SMTP_HOST
     - POSTED_SMTP_PORT
     - POSTED_SMTP_SECURE
