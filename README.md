@@ -12,7 +12,7 @@ Follow the [installation guide](https://www.posted.cc/installation) to run Poste
 
 - [Install with Docker Compose](https://www.posted.cc/installation/docker-compose)
 - [Configure your installation](https://www.posted.cc/configuration)
-- [Connect social accounts](https://www.posted.cc/connections)
+- [Connect social accounts](https://www.posted.cc/composer#connect-accounts)
 - [Compose your first post](https://www.posted.cc/composer)
 
 See the [documentation](https://www.posted.cc) for the full guides and API and MCP references. Published versions are available in [GitHub Releases](https://github.com/avgeek-oss/posted/releases).

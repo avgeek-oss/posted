@@ -50,7 +50,7 @@ These are Posted’s current delivery limits. Use [list_providers](/mcp-referenc
 
 ## Posts, media and threads
 
-GIFs are delivered as animated GIFs. Use one GIF without other attachments in the same post. See [Images, GIFs and videos](/media) for upload limits and preparation.
+GIFs are delivered as animated GIFs. Use one GIF without other attachments in the same post. See [Images, GIFs and videos](/composer#add-media) for upload limits and preparation.
 
 Use images or one video for each post. For a sequence, account previews keep individual posts visually separate. Later posts still wait for the preceding item on that account to publish successfully.
 

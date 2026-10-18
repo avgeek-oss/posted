@@ -32,3 +32,13 @@ For external PostgreSQL, use that provider's consistent snapshot/export tool or 
 Restore into an isolated database and bucket. Keep the publishing worker stopped: a copied due schedule could publish again. Restore the saved secret and configuration, apply the matching release's migrations, and inspect accounts, drafts, scheduled media and delivery history.
 
 A `pg_restore --clean` or database replacement destroys the target's data. Confirm the destination is disposable or has a verified current backup before restoring. A release upgrade is not safe until a restore has been exercised. Never blindly roll back the application binary after a schema migration; restore the tested database, configuration and retained media together.
+
+## Recover an administrator account
+
+Use a private operator shell in the API container:
+
+```sh
+docker compose exec api node dist/apps/api/src/auth/recovery-cli.js --email admin@example.com
+```
+
+The command issues a short-lived private recovery link for an existing active account. It does not reveal a password. Share the link only with that account's owner. API startup and recovery logs may contain credentials; remove them before sharing diagnostic output.

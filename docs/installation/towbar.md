@@ -20,7 +20,7 @@ Copy the YML files listed into your deployment repository in the same folder str
   </Tree.Folder>
 </Tree>
 
-Replace the IP address, TLS mode, and domains as required. The required env variables need to be added to the runtime secrets based on the requirements. The example already has commented-out variables but do refer to the latest [provider configuration docs](/providers) for direct env variables as it might change with different Posted versions.
+Replace the IP address, TLS mode, and domains as required. The required env variables need to be added to the runtime secrets based on the requirements. The example already has commented-out variables but do refer to the latest [provider configuration docs](/configuration#social-providers) for direct env variables as it might change with different Posted versions.
 
 <CodeGroup>
 ```yaml towbar.yml
@@ -211,7 +211,7 @@ Save these values in Towbar:
 
 Use `postgres://posted:YOUR_DATABASE_PASSWORD@posted-postgres:5432/posted` as the database URL. Replace the password placeholder privately. Set `POSTED_WEB_URL` to your UI origin and `POSTED_API_URL` to your API origin.
 
-Fill in the optional keys you uncommented using [provider setup](/providers) and [Configuration](/configuration). Towbar requires a value for every uncommented key.
+Fill in the optional keys you uncommented using [provider configuration](/configuration#social-providers) and [Configuration](/configuration). Towbar requires a value for every uncommented key.
 
 ## 4. Deploy Posted
 
@@ -223,4 +223,4 @@ The examples keep deployment manual. Start each deployment after saving its runt
 
 Open the API startup log in Towbar and find the installation setup secret. Open your Posted URL, enter the secret and create the first administrator. Keep the setup secret private.
 
-Next, [connect a social account](/connections) and [compose your first post](/composer). Follow [Backup and recovery](/backup) and [Upgrades](/upgrades) to maintain your installation.
+Next, [connect a social account](/composer#connect-accounts) and [compose your first post](/composer). Follow [Backup and recovery](/backup) and [Upgrades](/upgrades) to maintain your installation.
