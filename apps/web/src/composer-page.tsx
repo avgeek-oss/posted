@@ -1147,7 +1147,7 @@ export function ComposerPage({
               onActiveChange={setPreviewId}
             />
             {preview && (
-              <div className="min-w-0">
+              <div className="grid min-w-0 gap-0.5">
                 <h2 className="truncate text-base font-medium">
                   {preview.name}
                 </h2>

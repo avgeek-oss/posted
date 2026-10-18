@@ -10,6 +10,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, AlertCircleIcon } from "@hugeicons/core-free-icons";
 import type { SocialConnection } from "../../../packages/contracts/src/index.js";
+import { profileImageUrl } from "../../../packages/contracts/src/avatars.js";
 import { ProviderIcon, providerNames } from "./social-ui.js";
 
 function AccountAvatar({
@@ -30,7 +31,9 @@ function AccountAvatar({
     <span className="relative inline-flex shrink-0" aria-hidden="true">
       <Avatar size="md">
         <Avatar.Image
-          src={account.avatarUrl ?? undefined}
+          src={
+            profileImageUrl(account.provider, account.avatarUrl) ?? undefined
+          }
           alt=""
           referrerPolicy="no-referrer"
         />
@@ -264,7 +267,7 @@ export function ComposerAccounts({
                       <Checkbox.Indicator />
                     </Checkbox.Control>
                     <AccountAvatar account={account} />
-                    <span className="grid min-w-0 gap-1">
+                    <span className="grid min-w-0 gap-0.5">
                       <span
                         className="truncate font-medium"
                         title={account.name}
