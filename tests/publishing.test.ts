@@ -860,12 +860,12 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
         if (status === 0)
           throw new TypeError("Sensitive fixture network details");
         if (status !== 200)
-          return json(
+          return Response.json(
             {
               error: "FixtureRejected",
               message: "Sensitive fixture provider details",
             },
-            status,
+            { status, headers: { "Retry-After": "120" } },
           );
         return json({
           uri: `at://${did}/app.bsky.feed.post/${record.rkey}`,
@@ -999,12 +999,16 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
       (await prepared.publish()).id,
       `at://${did}/app.bsky.feed.post/posted-${delivery.id}`,
     );
-    for (const rejection of [400, 401, 403, 429, 503, 0]) {
+    for (const rejection of [400, 401, 403, 408, 429, 503, 0]) {
       status = rejection;
       await assert.rejects(prepared.publish(), (error) => {
         assert.ok(error instanceof ProviderFailure);
         assert.equal(error.status, rejection === 0 ? 500 : rejection);
-        assert.equal(error.uncertain, rejection === 0 || rejection >= 500);
+        assert.equal(
+          error.uncertain,
+          rejection === 0 || rejection === 408 || rejection >= 500,
+        );
+        if (rejection === 429) assert.equal(error.retryAfterMs, 120000);
         assert.ok(!error.message.includes("Sensitive"));
         return true;
       });
@@ -1012,16 +1016,16 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
     const [row] =
       await sql`SELECT value FROM bluesky_oauth_sessions WHERE key=${did}`;
     assert.ok(!row.value.includes(accessToken));
-    assert.equal(publications, 7);
+    assert.equal(publications, 8);
     status = 200;
     const videoJob = { ...job("bluesky"), accountId: did };
     const preparedVideo = await preparePublication(videoJob, [video()]);
-    assert.equal(publications, 7);
+    assert.equal(publications, 8);
     assert.equal(
       (await preparedVideo.publish()).id,
       `at://${did}/app.bsky.feed.post/posted-${videoJob.id}`,
     );
-    assert.equal(publications, 8);
+    assert.equal(publications, 9);
     const root = {
       id: `at://${did}/app.bsky.feed.post/posted-${delivery.id}`,
       cid,
@@ -1044,7 +1048,7 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
       assert.equal(result.cid, cid);
       parent = { id: result.id, cid };
     }
-    assert.equal(publications, 10);
+    assert.equal(publications, 11);
   } finally {
     process.env.POSTED_API_URL = original.api;
     process.env.POSTED_WEB_URL = original.web;

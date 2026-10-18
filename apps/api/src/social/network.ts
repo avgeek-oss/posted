@@ -56,7 +56,7 @@ export function temporaryFailure(error: unknown): boolean {
   return false;
 }
 
-function retryAfter(response: Response) {
+function retryAfter(response: Pick<Response, "headers" | "status">) {
   const value = response.headers.get("Retry-After");
   const reset = response.headers.get("x-rate-limit-reset");
   const seconds = value === null || !value.trim() ? NaN : Number(value);
@@ -73,7 +73,9 @@ function retryAfter(response: Response) {
   return Math.max(
     0,
     Number.isFinite(milliseconds) ? milliseconds : 0,
-    response.status === 429 ? resetMilliseconds : 0,
+    response.status === 429 && Number.isFinite(resetMilliseconds)
+      ? resetMilliseconds
+      : 0,
   );
 }
 export async function providerRequest(
@@ -90,6 +92,10 @@ export async function providerRequest(
   } catch {
     throw new ProviderFailure(0, true);
   }
+  return checkProviderResponse(response);
+}
+
+export async function checkProviderResponse(response: Response) {
   if (!response.ok) {
     await response.body?.cancel();
     throw new ProviderFailure(
