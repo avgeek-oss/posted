@@ -20,7 +20,7 @@ import { PageHeading } from "./page-heading.js";
 import { useResource } from "./use-resource.js";
 import { QueryFeedback } from "./query-feedback.js";
 import { RelativeDateTime } from "./relative-date-time.js";
-import { ProviderIcon, providerNames } from "./social-ui.js";
+import { AccountLogoGroup } from "./social-ui.js";
 
 export function DraftsPage({ session }: { session: Session }) {
   const [page, setPage] = useState(1);
@@ -106,29 +106,7 @@ export function DraftsPage({ session }: { session: Session }) {
                 header: "Accounts",
                 className: "whitespace-nowrap",
                 cell: (draft) => (
-                  <div className="flex w-max gap-2">
-                    {draft.connections.map((account) => (
-                      <TooltipText
-                        key={account.id}
-                        className="inline-flex size-5 shrink-0 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                        role="img"
-                        aria-label={`${providerNames[account.provider]}: ${account.name}, @${account.handle}`}
-                        tabIndex={0}
-                        openOnPress
-                        tooltip={
-                          <span className="grid gap-0.5">
-                            <span>{account.name}</span>
-                            <span>@{account.handle}</span>
-                          </span>
-                        }
-                      >
-                        <ProviderIcon
-                          provider={account.provider}
-                          className="size-5"
-                        />
-                      </TooltipText>
-                    ))}
-                  </div>
+                  <AccountLogoGroup accounts={draft.connections} />
                 ),
               },
               {

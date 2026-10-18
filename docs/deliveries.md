@@ -8,7 +8,7 @@ Publish history lists your team's posting requests and their results. Open a row
 
 ## Review delivery details
 
-The **Delivery set** Attributes card shows Requested and Scheduled for. The table below it shows each numbered post and account, content, status, published time and result. A successful provider URL opens the published post. Errors are scoped to their account.
+The **Delivery set** Attributes card shows Requested and Scheduled for. The table below it shows each numbered post and account, content, status, attempt count, published time and result. A successful provider URL opens the published post. Errors are scoped to their account.
 
 <!-- screenshot:details -->
 
@@ -39,7 +39,7 @@ A rate-limit rejection can be retried after sending the request because the prov
 
 ## Resume interrupted publishing
 
-Open an interrupted delivery set and choose **Resume publishing** beside the first failed post for an eligible account. Review the account and confirm to continue its remaining posts now. The action preserves already published posts and their links. A resumed thread continues by replying to the last confirmed post; LinkedIn continues with individual posts.
+Open an interrupted delivery set and choose **Resume** in the **Actions** column beside the first failed post for an eligible account. Review the account and confirm to continue its remaining posts now. The action preserves already published posts and their links. A resumed thread continues by replying to the last confirmed post; LinkedIn continues with individual posts.
 
 Resume is available to team members and administrators after all active work for that account has stopped. Reconnect a disconnected account first. Cancelled sequences and accounts with an unconfirmed publishing result cannot be resumed. Inspect the provider directly before taking further action on an uncertain result.
 

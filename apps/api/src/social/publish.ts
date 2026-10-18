@@ -2,6 +2,7 @@ import { firstPostLink } from "../../../../packages/contracts/src/links.js";
 import { getLinkPreview } from "../links/preview.js";
 import { z } from "zod";
 import { Agent, RichText, XRPCError } from "@atproto/api";
+import { isValidTid } from "@atproto/syntax";
 import { setTimeout as delay } from "node:timers/promises";
 import type { DeliveryJob } from "../posts/queue.js";
 import {
@@ -348,6 +349,9 @@ async function prepareBluesky(
   job: DeliveryJob,
   images: DeliveryMedia[],
 ): Promise<PreparedPublication> {
+  const rkey = job.blueskyRecordKey;
+  if (!isValidTid(rkey))
+    throw new Error("This Bluesky delivery has no valid record key");
   const session = await (await blueskyClient()).restore(job.accountId);
   const agent = new Agent({
     did: session.did,
@@ -422,8 +426,7 @@ async function prepareBluesky(
             }
           : {}),
   };
-  // A deterministic record key lets an operator reconcile a lost response without another post.
-  const rkey = `posted-${job.id}`;
+  // Reuse the persisted TID across attempts so a lost response can be reconciled.
   return {
     checkpoint: { rkey },
     publish: async () => {
@@ -434,6 +437,7 @@ async function prepareBluesky(
           rkey,
           record,
           validate: true,
+          swapRecord: null,
         });
         return {
           id: data.uri,

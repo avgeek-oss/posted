@@ -17,7 +17,7 @@ import { api, errorText, type Session } from "./api.js";
 import { PageHeading } from "./page-heading.js";
 import { formatDateTime } from "./date-time-preferences.js";
 import { useResource } from "./use-resource.js";
-import { providerNames, ProviderIcon, StateChip } from "./social-ui.js";
+import { AccountLogoGroup, StateChip } from "./social-ui.js";
 import { RelativeDateTime } from "./relative-date-time.js";
 
 export function PostsPage({
@@ -137,21 +137,17 @@ export function PostsPage({
                 header: "Accounts",
                 className: "whitespace-nowrap",
                 cell: (post) => (
-                  <div className="flex w-max gap-2">
-                    {post.deliveries
+                  <AccountLogoGroup
+                    accounts={post.deliveries
                       .filter((delivery) => delivery.postIndex === 0)
-                      .map((delivery) => (
-                        <span
-                          key={delivery.id}
-                          className="shrink-0"
-                          role="img"
-                          aria-label={`${providerNames[delivery.provider]}: ${delivery.accountName}`}
-                          title={`${providerNames[delivery.provider]}: ${delivery.accountName}`}
-                        >
-                          <ProviderIcon provider={delivery.provider} />
-                        </span>
-                      ))}
-                  </div>
+                      .map((delivery) => ({
+                        id: delivery.connectionId,
+                        provider: delivery.provider,
+                        name: delivery.accountName,
+                        handle: delivery.accountHandle,
+                        avatarUrl: delivery.accountAvatarUrl,
+                      }))}
+                  />
                 ),
               },
               {

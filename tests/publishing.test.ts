@@ -1,5 +1,8 @@
 import { after, afterEach, beforeEach, mock, test } from "node:test";
 import assert from "node:assert/strict";
+import { TID } from "@atproto/common-web";
+import { isValidTid } from "@atproto/syntax";
+import { jsonToLex, lexicons } from "@atproto/api";
 import { createHash, generateKeyPairSync, randomUUID } from "node:crypto";
 import { decodeJwt, decodeProtectedHeader } from "jose";
 import {
@@ -521,6 +524,7 @@ function job(provider: DeliveryJob["provider"]): DeliveryJob {
     text: "Team announcement",
     accountId: "example-account",
     encryptedCredentials: "unused",
+    ...(provider === "bluesky" ? { blueskyRecordKey: TID.nextStr() } : {}),
   };
 }
 test("LinkedIn prepares images and publishes with the fixed API version despite a legacy environment override", async (t) => {
@@ -852,12 +856,22 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
         const record = JSON.parse(body);
         assert.equal(record.repo, did);
         assert.equal(record.collection, "app.bsky.feed.post");
+        assert.ok(isValidTid(record.rkey), "Bluesky post keys must be TIDs");
+        assert.equal(
+          record.swapRecord,
+          null,
+          "Publishing must not overwrite a record",
+        );
+        lexicons.assertValidRecord(
+          "app.bsky.feed.post",
+          jsonToLex(record.record),
+        );
         assert.equal(record.record.text, "Team announcement");
         assert.deepEqual(record.record.reply, expectedReply);
-        if (record.record.embed.$type === "app.bsky.embed.video") {
+        if (record.record.embed?.$type === "app.bsky.embed.video") {
           assert.equal(record.record.embed.video.mimeType, "video/mp4");
           assert.equal(record.record.embed.alt, "Team video");
-        } else {
+        } else if (record.record.embed) {
           assert.equal(record.record.embed.images[0].alt, "Team artwork");
           assert.equal(record.record.embed.images[0].aspectRatio.width, 400);
         }
@@ -1048,10 +1062,10 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
     ]);
     assert.equal(uploads, 1);
     assert.equal(publications, 0);
-    assert.deepEqual(prepared.checkpoint, { rkey: `posted-${delivery.id}` });
+    assert.deepEqual(prepared.checkpoint, { rkey: delivery.blueskyRecordKey });
     assert.equal(
       (await prepared.publish()).id,
-      `at://${did}/app.bsky.feed.post/posted-${delivery.id}`,
+      `at://${did}/app.bsky.feed.post/${delivery.blueskyRecordKey}`,
     );
     for (const rejection of [400, 401, 403, 408, 429, 503, 0]) {
       status = rejection;
@@ -1077,11 +1091,11 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
     assert.equal(publications, 8);
     assert.equal(
       (await preparedVideo.publish()).id,
-      `at://${did}/app.bsky.feed.post/posted-${videoJob.id}`,
+      `at://${did}/app.bsky.feed.post/${videoJob.blueskyRecordKey}`,
     );
     assert.equal(publications, 9);
     const root = {
-      id: `at://${did}/app.bsky.feed.post/posted-${delivery.id}`,
+      id: `at://${did}/app.bsky.feed.post/${delivery.blueskyRecordKey}`,
       cid,
     };
     let parent = root;
@@ -1103,6 +1117,15 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
       parent = { id: result.id, cid };
     }
     assert.equal(publications, 11);
+    const textOnly = { ...job("bluesky"), accountId: did };
+    expectedReply = undefined;
+    const plain = await preparePublication(textOnly, []);
+    assert.equal(uploads, 1, "Text-only posts do not upload media");
+    assert.equal(
+      (await plain.publish()).id,
+      `at://${did}/app.bsky.feed.post/${textOnly.blueskyRecordKey}`,
+    );
+    assert.equal(publications, 12);
   } finally {
     process.env.POSTED_API_URL = original.api;
     process.env.POSTED_WEB_URL = original.web;
