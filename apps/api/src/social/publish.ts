@@ -8,6 +8,7 @@ import {
   providerJson,
   providerRequest,
   ProviderFailure,
+  checkProviderResponse,
 } from "./network.js";
 import { blueskyClient } from "./bluesky.js";
 
@@ -310,7 +311,13 @@ async function prepareBluesky(
   images: DeliveryMedia[],
 ): Promise<PreparedPublication> {
   const session = await (await blueskyClient()).restore(job.accountId);
-  const agent = new Agent(session);
+  const agent = new Agent({
+    did: session.did,
+    fetchHandler: async (url, init) => {
+      // XRPC normalizes HTTP 408 to 400, which would make an uncertain publish resumable.
+      return checkProviderResponse(await session.fetchHandler(url, init));
+    },
+  });
   const video = images.find((item) => item.kind === "video");
   const videoBlob = video ? await uploadBlueskyVideo(agent, video) : undefined;
   const uploaded = [];
@@ -381,6 +388,9 @@ async function prepareBluesky(
 }
 
 function blueskyFailure(error: unknown) {
+  if (error instanceof ProviderFailure) return error;
+  if (error instanceof XRPCError && error.cause instanceof ProviderFailure)
+    return error.cause;
   if (error instanceof XRPCError && error.status >= 400)
     return new ProviderFailure(error.status, error.status >= 500);
   return new ProviderFailure(0, true);

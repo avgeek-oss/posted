@@ -21,7 +21,10 @@ import {
   preparePublication,
   type DeliveryMedia,
 } from "../../api/src/social/publish.js";
-import { ProviderFailure } from "../../api/src/social/network.js";
+import {
+  ProviderFailure,
+  temporaryFailure,
+} from "../../api/src/social/network.js";
 import { validateProviderContent } from "../../api/src/posts/input.js";
 import {
   isVideo,
@@ -154,6 +157,12 @@ export async function deliverNext(): Promise<boolean> {
       job,
       message,
       publishing && (!(error instanceof ProviderFailure) || error.uncertain),
+      temporaryFailure(error)
+        ? {
+            retryAfterMs:
+              error instanceof ProviderFailure ? error.retryAfterMs : 0,
+          }
+        : undefined,
     );
   } finally {
     clearInterval(heartbeat);

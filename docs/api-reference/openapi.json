@@ -5353,6 +5353,10 @@
                       "items": {
                         "type": "object",
                         "properties": {
+                          "resumableConnectionIds": {
+                            "type": "array",
+                            "items": {}
+                          },
                           "id": { "type": "string" },
                           "text": { "type": "string" },
                           "additionalPosts": { "type": "array", "items": {} },
@@ -5404,8 +5408,11 @@
                                 "connectionId": { "type": "string" },
                                 "provider": { "type": "string" },
                                 "accountName": { "type": "string" },
+                                "accountHandle": { "type": "string" },
                                 "textOverride": { "type": ["string", "null"] },
                                 "state": { "type": "string" },
+                                "attempts": { "type": "integer" },
+                                "nextAttemptAt": { "type": ["string", "null"] },
                                 "providerPostId": {
                                   "type": ["string", "null"]
                                 },
@@ -5429,6 +5436,7 @@
                 "example": {
                   "items": [
                     {
+                      "resumableConnectionIds": [],
                       "id": "22222222-2222-4222-8222-222222222222",
                       "text": "A small update from the studio.",
                       "additionalPosts": [],
@@ -5462,8 +5470,11 @@
                           "connectionId": "11111111-1111-4111-8111-111111111111",
                           "provider": "bluesky",
                           "accountName": "Alex Morgan",
+                          "accountHandle": "alex.example.test",
                           "textOverride": null,
                           "state": "scheduled",
+                          "attempts": 0,
+                          "nextAttemptAt": null,
                           "providerPostId": null,
                           "publishedUrl": null,
                           "error": null,
@@ -5662,6 +5673,10 @@
                     "post": {
                       "type": "object",
                       "properties": {
+                        "resumableConnectionIds": {
+                          "type": "array",
+                          "items": {}
+                        },
                         "id": { "type": "string" },
                         "text": { "type": "string" },
                         "additionalPosts": { "type": "array", "items": {} },
@@ -5711,8 +5726,11 @@
                               "connectionId": { "type": "string" },
                               "provider": { "type": "string" },
                               "accountName": { "type": "string" },
+                              "accountHandle": { "type": "string" },
                               "textOverride": { "type": ["string", "null"] },
                               "state": { "type": "string" },
+                              "attempts": { "type": "integer" },
+                              "nextAttemptAt": { "type": ["string", "null"] },
                               "providerPostId": { "type": ["string", "null"] },
                               "publishedUrl": { "type": ["string", "null"] },
                               "error": { "type": ["string", "null"] },
@@ -5729,6 +5747,7 @@
                 },
                 "example": {
                   "post": {
+                    "resumableConnectionIds": [],
                     "id": "22222222-2222-4222-8222-222222222222",
                     "text": "A small update from the studio.",
                     "additionalPosts": [],
@@ -5762,8 +5781,11 @@
                         "connectionId": "11111111-1111-4111-8111-111111111111",
                         "provider": "bluesky",
                         "accountName": "Alex Morgan",
+                        "accountHandle": "alex.example.test",
                         "textOverride": null,
                         "state": "scheduled",
+                        "attempts": 0,
+                        "nextAttemptAt": null,
                         "providerPostId": null,
                         "publishedUrl": null,
                         "error": null,
@@ -5785,6 +5807,10 @@
                     "post": {
                       "type": "object",
                       "properties": {
+                        "resumableConnectionIds": {
+                          "type": "array",
+                          "items": {}
+                        },
                         "id": { "type": "string" },
                         "text": { "type": "string" },
                         "additionalPosts": { "type": "array", "items": {} },
@@ -5834,8 +5860,11 @@
                               "connectionId": { "type": "string" },
                               "provider": { "type": "string" },
                               "accountName": { "type": "string" },
+                              "accountHandle": { "type": "string" },
                               "textOverride": { "type": ["string", "null"] },
                               "state": { "type": "string" },
+                              "attempts": { "type": "integer" },
+                              "nextAttemptAt": { "type": ["string", "null"] },
                               "providerPostId": { "type": ["string", "null"] },
                               "publishedUrl": { "type": ["string", "null"] },
                               "error": { "type": ["string", "null"] },
@@ -5852,6 +5881,7 @@
                 },
                 "example": {
                   "post": {
+                    "resumableConnectionIds": [],
                     "id": "22222222-2222-4222-8222-222222222222",
                     "text": "A small update from the studio.",
                     "additionalPosts": [],
@@ -5885,8 +5915,11 @@
                         "connectionId": "11111111-1111-4111-8111-111111111111",
                         "provider": "bluesky",
                         "accountName": "Alex Morgan",
+                        "accountHandle": "alex.example.test",
                         "textOverride": null,
                         "state": "scheduled",
+                        "attempts": 0,
+                        "nextAttemptAt": null,
                         "providerPostId": null,
                         "publishedUrl": null,
                         "error": null,
@@ -5936,6 +5969,10 @@
                     "post": {
                       "type": "object",
                       "properties": {
+                        "resumableConnectionIds": {
+                          "type": "array",
+                          "items": {}
+                        },
                         "id": { "type": "string" },
                         "text": { "type": "string" },
                         "additionalPosts": { "type": "array", "items": {} },
@@ -5985,8 +6022,11 @@
                               "connectionId": { "type": "string" },
                               "provider": { "type": "string" },
                               "accountName": { "type": "string" },
+                              "accountHandle": { "type": "string" },
                               "textOverride": { "type": ["string", "null"] },
                               "state": { "type": "string" },
+                              "attempts": { "type": "integer" },
+                              "nextAttemptAt": { "type": ["string", "null"] },
                               "providerPostId": { "type": ["string", "null"] },
                               "publishedUrl": { "type": ["string", "null"] },
                               "error": { "type": ["string", "null"] },
@@ -6003,6 +6043,7 @@
                 },
                 "example": {
                   "post": {
+                    "resumableConnectionIds": [],
                     "id": "22222222-2222-4222-8222-222222222222",
                     "text": "A small update from the studio.",
                     "additionalPosts": [],
@@ -6036,8 +6077,11 @@
                         "connectionId": "11111111-1111-4111-8111-111111111111",
                         "provider": "bluesky",
                         "accountName": "Alex Morgan",
+                        "accountHandle": "alex.example.test",
                         "textOverride": null,
                         "state": "scheduled",
+                        "attempts": 0,
+                        "nextAttemptAt": null,
                         "providerPostId": null,
                         "publishedUrl": null,
                         "error": null,
@@ -6248,6 +6292,10 @@
                     "post": {
                       "type": "object",
                       "properties": {
+                        "resumableConnectionIds": {
+                          "type": "array",
+                          "items": {}
+                        },
                         "id": { "type": "string" },
                         "text": { "type": "string" },
                         "additionalPosts": { "type": "array", "items": {} },
@@ -6297,8 +6345,11 @@
                               "connectionId": { "type": "string" },
                               "provider": { "type": "string" },
                               "accountName": { "type": "string" },
+                              "accountHandle": { "type": "string" },
                               "textOverride": { "type": ["string", "null"] },
                               "state": { "type": "string" },
+                              "attempts": { "type": "integer" },
+                              "nextAttemptAt": { "type": ["string", "null"] },
                               "providerPostId": { "type": ["string", "null"] },
                               "publishedUrl": { "type": ["string", "null"] },
                               "error": { "type": ["string", "null"] },
@@ -6315,6 +6366,7 @@
                 },
                 "example": {
                   "post": {
+                    "resumableConnectionIds": [],
                     "id": "22222222-2222-4222-8222-222222222222",
                     "text": "A small update from the studio.",
                     "additionalPosts": [],
@@ -6348,8 +6400,11 @@
                         "connectionId": "11111111-1111-4111-8111-111111111111",
                         "provider": "bluesky",
                         "accountName": "Alex Morgan",
+                        "accountHandle": "alex.example.test",
                         "textOverride": null,
                         "state": "scheduled",
+                        "attempts": 0,
+                        "nextAttemptAt": null,
                         "providerPostId": null,
                         "publishedUrl": null,
                         "error": null,
@@ -6397,6 +6452,10 @@
                     "post": {
                       "type": "object",
                       "properties": {
+                        "resumableConnectionIds": {
+                          "type": "array",
+                          "items": {}
+                        },
                         "id": { "type": "string" },
                         "text": { "type": "string" },
                         "additionalPosts": { "type": "array", "items": {} },
@@ -6446,8 +6505,11 @@
                               "connectionId": { "type": "string" },
                               "provider": { "type": "string" },
                               "accountName": { "type": "string" },
+                              "accountHandle": { "type": "string" },
                               "textOverride": { "type": ["string", "null"] },
                               "state": { "type": "string" },
+                              "attempts": { "type": "integer" },
+                              "nextAttemptAt": { "type": ["string", "null"] },
                               "providerPostId": { "type": ["string", "null"] },
                               "publishedUrl": { "type": ["string", "null"] },
                               "error": { "type": ["string", "null"] },
@@ -6464,6 +6526,7 @@
                 },
                 "example": {
                   "post": {
+                    "resumableConnectionIds": [],
                     "id": "22222222-2222-4222-8222-222222222222",
                     "text": "A small update from the studio.",
                     "additionalPosts": [],
@@ -6497,8 +6560,206 @@
                         "connectionId": "11111111-1111-4111-8111-111111111111",
                         "provider": "bluesky",
                         "accountName": "Alex Morgan",
+                        "accountHandle": "alex.example.test",
                         "textOverride": null,
                         "state": "cancelled",
+                        "attempts": 0,
+                        "nextAttemptAt": null,
+                        "providerPostId": null,
+                        "publishedUrl": null,
+                        "error": null,
+                        "publishedAt": null
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/posts/{postId}/resume": {
+      "post": {
+        "operationId": "post_api_posts_by_postId_resume",
+        "summary": "Resume interrupted publishing",
+        "description": "Resume an interrupted account's unpublished posts using its current version. Confirm the account and remaining content with the user. Published posts are preserved; uncertain results cannot be resumed. Reuse the same idempotencyKey for retries.\n\nResume one connected account's failed remainder without creating a new posting group. Confirmed posts, their IDs and original request key are preserved. Active, cancelled or uncertain sequences cannot be resumed. Reuse the same resume key and payload after a lost response. A new failure requires a new key and the latest group version.\n\nWrite access: a member/administrator with a write-enabled credential, or an authorized signed-in user.",
+        "tags": ["Posts"],
+        "security": [{ "bearerAuth": [] }, { "sessionCookie": [] }],
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "The postId from the corresponding list, record or authorization response."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "connectionId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "version": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "idempotencyKey": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9._:-]{8,128}$"
+                  }
+                },
+                "required": ["connectionId", "version", "idempotencyKey"],
+                "additionalProperties": false
+              },
+              "example": {
+                "connectionId": "11111111-1111-4111-8111-111111111111",
+                "version": 1,
+                "idempotencyKey": "studio-resume-2027-01-18"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "post": {
+                      "type": "object",
+                      "properties": {
+                        "resumableConnectionIds": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "id": { "type": "string" },
+                        "text": { "type": "string" },
+                        "additionalPosts": { "type": "array", "items": {} },
+                        "mediaOverrides": {
+                          "type": "object",
+                          "properties": {},
+                          "additionalProperties": true
+                        },
+                        "scheduledAt": { "type": "string" },
+                        "idempotencyKey": { "type": "string" },
+                        "state": { "type": "string" },
+                        "version": { "type": "integer" },
+                        "createdAt": { "type": "string" },
+                        "media": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string" },
+                              "fileName": { "type": "string" },
+                              "contentType": { "type": "string" },
+                              "sizeBytes": { "type": "integer" },
+                              "width": { "type": "integer" },
+                              "height": { "type": "integer" },
+                              "alt": { "type": "string" },
+                              "durationSeconds": { "type": ["string", "null"] }
+                            },
+                            "additionalProperties": true
+                          }
+                        },
+                        "managedBy": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string" },
+                            "name": { "type": "string" },
+                            "avatarUrl": { "type": ["string", "null"] }
+                          },
+                          "additionalProperties": true
+                        },
+                        "deliveries": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string" },
+                              "postIndex": { "type": "integer" },
+                              "connectionId": { "type": "string" },
+                              "provider": { "type": "string" },
+                              "accountName": { "type": "string" },
+                              "accountHandle": { "type": "string" },
+                              "textOverride": { "type": ["string", "null"] },
+                              "state": { "type": "string" },
+                              "attempts": { "type": "integer" },
+                              "nextAttemptAt": { "type": ["string", "null"] },
+                              "providerPostId": { "type": ["string", "null"] },
+                              "publishedUrl": { "type": ["string", "null"] },
+                              "error": { "type": ["string", "null"] },
+                              "publishedAt": { "type": ["string", "null"] }
+                            },
+                            "additionalProperties": true
+                          }
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "example": {
+                  "post": {
+                    "resumableConnectionIds": [],
+                    "id": "22222222-2222-4222-8222-222222222222",
+                    "text": "A small update from the studio.",
+                    "additionalPosts": [],
+                    "mediaOverrides": {},
+                    "scheduledAt": "2027-01-18T09:30:00.000Z",
+                    "idempotencyKey": "studio-update-2027-01-18",
+                    "state": "scheduled",
+                    "version": 2,
+                    "createdAt": "2027-01-18T09:30:00.000Z",
+                    "media": [
+                      {
+                        "id": "44444444-4444-4444-8444-444444444444",
+                        "fileName": "studio.jpg",
+                        "contentType": "image/jpeg",
+                        "sizeBytes": 245760,
+                        "width": 1600,
+                        "height": 900,
+                        "alt": "A bright studio desk beside a window",
+                        "durationSeconds": null
+                      }
+                    ],
+                    "managedBy": {
+                      "id": "66666666-6666-4666-8666-666666666666",
+                      "name": "Alex Morgan",
+                      "avatarUrl": null
+                    },
+                    "deliveries": [
+                      {
+                        "id": "77777777-7777-4777-8777-777777777777",
+                        "postIndex": 0,
+                        "connectionId": "11111111-1111-4111-8111-111111111111",
+                        "provider": "bluesky",
+                        "accountName": "Alex Morgan",
+                        "accountHandle": "alex.example.test",
+                        "textOverride": null,
+                        "state": "scheduled",
+                        "attempts": 0,
+                        "nextAttemptAt": null,
                         "providerPostId": null,
                         "publishedUrl": null,
                         "error": null,

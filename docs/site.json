@@ -106,7 +106,8 @@
                   "mcp-reference/get_post",
                   "mcp-reference/create_post",
                   "mcp-reference/update_post",
-                  "mcp-reference/cancel_post"
+                  "mcp-reference/cancel_post",
+                  "mcp-reference/resume_post"
                 ]
               },
               {
@@ -194,7 +195,8 @@
                   "api-reference/get_api_posts_by_postId",
                   "api-reference/post_api_posts",
                   "api-reference/patch_api_posts_by_postId",
-                  "api-reference/delete_api_posts_by_postId"
+                  "api-reference/delete_api_posts_by_postId",
+                  "api-reference/post_api_posts_by_postId_resume"
                 ]
               },
               {

@@ -46,6 +46,7 @@ export const exampleConnection = {
   scheduledCount: 1,
 };
 export const examplePost = {
+  resumableConnectionIds: [],
   id: ids.post,
   text: "A small update from the studio.",
   additionalPosts: [],
@@ -64,8 +65,11 @@ export const examplePost = {
       connectionId: ids.connection,
       provider: "bluesky",
       accountName: "Alex Morgan",
+      accountHandle: "alex.example.test",
       textOverride: null,
       state: "scheduled",
+      attempts: 0,
+      nextAttemptAt: null,
       providerPostId: null,
       publishedUrl: null,
       error: null,
@@ -359,6 +363,23 @@ export const illustrations: Record<
       "Inspect which deliveries were cancelled",
     ],
     note: "Cancellation stops pending deliveries. It does not remove provider-side publications, and a group with work already preparing or publishing cannot be cancelled safely.",
+  },
+  resume_post: {
+    title: "Resume interrupted publishing",
+    input: {
+      postId: ids.post,
+      connectionId: ids.connection,
+      version: 1,
+      idempotencyKey: "studio-resume-2027-01-18",
+    },
+    result: { post: { ...examplePost, version: 2 } },
+    workflow: [
+      "Read current outcomes and resumableConnectionIds",
+      "Confirm the account and remaining content",
+      "Resume with version and request key",
+      "Inspect each delivery",
+    ],
+    note: "Resume one connected account's failed remainder without creating a new posting group. Confirmed posts, their IDs and original request key are preserved. Active, cancelled or uncertain sequences cannot be resumed. Reuse the same resume key and payload after a lost response. A new failure requires a new key and the latest group version.",
   },
   disconnect_account: {
     title: "Disconnect an account",

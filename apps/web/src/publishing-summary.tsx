@@ -6,7 +6,7 @@ export function PublishingSummary({
   accounts,
   postCount,
 }: {
-  accounts: SocialConnection[];
+  accounts: Pick<SocialConnection, "id" | "name" | "handle" | "provider">[];
   postCount: number;
 }) {
   return (

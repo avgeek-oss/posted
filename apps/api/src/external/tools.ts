@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { postInput } from "../posts/input.js";
+import { resumeInput } from "../posts/retry.js";
 import { draftInput } from "../posts/drafts.js";
 import { uploadInput } from "../media/input.js";
 export type Tool = {
@@ -149,6 +150,13 @@ export const tools: Tool[] = [
     z.object({ postId: id }).strict(),
     false,
     true,
+  ),
+  tool(
+    "resume_post",
+    "Resume an interrupted account's unpublished posts using its current version. Confirm the account and remaining content with the user. Published posts are preserved; uncertain results cannot be resumed. Reuse the same idempotencyKey for retries.",
+    "POST",
+    "/api/posts/:postId/resume",
+    resumeInput.safeExtend({ postId: id }),
   ),
   tool(
     "disconnect_account",

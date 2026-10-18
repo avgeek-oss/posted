@@ -479,10 +479,17 @@ test("only one worker claims each delivery; expired publishing is uncertain and 
   assert.ok(job);
   await sql`UPDATE post_deliveries SET lease_until=now()-interval '1 second'`;
   const recovered = await claimDelivery();
-  assert.ok(recovered);
-  assert.notEqual(recovered.leaseToken, job.leaseToken);
+  assert.equal(recovered, null);
+  assert.equal(
+    (await sql`SELECT state FROM post_deliveries`)[0].state,
+    "scheduled",
+  );
+  await sql`UPDATE post_deliveries SET available_at=now()-interval '1 second'`;
+  const retried = await claimDelivery();
+  assert.ok(retried);
+  assert.notEqual(retried.leaseToken, job.leaseToken);
   assert.equal(await publishingBoundary(job), false);
-  assert.equal(await publishingBoundary(recovered), true);
+  assert.equal(await publishingBoundary(retried), true);
   await sql`UPDATE post_deliveries SET lease_until=now()-interval '1 second'`;
   assert.equal(await claimDelivery(), null);
   assert.equal(

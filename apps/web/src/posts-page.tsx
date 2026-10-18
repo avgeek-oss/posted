@@ -97,7 +97,9 @@ export function PostsPage({
                 ? (post) =>
                     editable &&
                     post.deliveries.every(
-                      (delivery) => delivery.state === "scheduled",
+                      (delivery) =>
+                        delivery.state === "scheduled" &&
+                        delivery.attempts === 0,
                     )
                       ? `/posts/${post.id}/edit`
                       : `/posts/${post.id}`
@@ -215,12 +217,18 @@ export function PostsPage({
                     )}
                     {editable && post.state === "scheduled" && (
                       <>
-                        <ButtonLink
-                          href={`/posts/${post.id}/edit`}
-                          variant="secondary"
-                        >
-                          Edit
-                        </ButtonLink>
+                        {post.deliveries.every(
+                          (delivery) =>
+                            delivery.state === "scheduled" &&
+                            delivery.attempts === 0,
+                        ) && (
+                          <ButtonLink
+                            href={`/posts/${post.id}/edit`}
+                            variant="secondary"
+                          >
+                            Edit
+                          </ButtonLink>
+                        )}
                         <Button
                           variant="danger-soft"
                           onPress={() => setCancel(post)}

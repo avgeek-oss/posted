@@ -102,6 +102,85 @@ async function mcp(token: string) {
   return client;
 }
 
+test("MCP resume requires write consent and replays one account's resume without duplicates", async () => {
+  const admin = await setupUser();
+  const [connection] =
+    await sql`INSERT INTO social_connections(workspace_id,provider,account_id,name,handle,encrypted_credentials) VALUES((SELECT id FROM workspace),'x',${randomUUID()},'Resume account','example','fixture') RETURNING id`;
+  const response = await request("/api/posts", {
+    cookie: admin.cookie,
+    body: {
+      text: "Confirmed first post",
+      additionalPosts: [{ text: "Remaining reply", mediaIds: [] }],
+      mediaIds: [],
+      connectionIds: [connection.id],
+      scheduledAt: new Date().toISOString(),
+      idempotencyKey: randomUUID(),
+    },
+  });
+  assert.equal(response.status, 201);
+  const post = (await response.json()).post;
+  await sql`UPDATE post_deliveries SET state='published',provider_post_id='confirmed-root',published_at=now() WHERE group_id=${post.id} AND post_index=0`;
+  await sql`UPDATE post_deliveries SET state='failed',error='Provider rejected request' WHERE group_id=${post.id} AND post_index=1`;
+  const input = {
+    postId: post.id,
+    connectionId: connection.id,
+    version: 1,
+    idempotencyKey: randomUUID(),
+  };
+  const readGrant = await approve(admin.cookie, "read");
+  const readClient = await mcp(readGrant.token);
+  try {
+    assert.ok(
+      !(await readClient.listTools()).tools.some(
+        (tool) => tool.name === "resume_post",
+      ),
+    );
+    await assert.rejects(
+      readClient.callTool({ name: "resume_post", arguments: input }),
+      /insufficient_scope/,
+    );
+  } finally {
+    await readClient.close();
+  }
+  const writeGrant = await approve(admin.cookie, "write");
+  const client = await mcp(writeGrant.token);
+  try {
+    assert.ok(
+      (await client.listTools()).tools.some(
+        (tool) => tool.name === "resume_post",
+      ),
+    );
+    for (let attempt = 0; attempt < 2; attempt++)
+      assert.equal(
+        (await client.callTool({ name: "resume_post", arguments: input }))
+          .isError,
+        false,
+      );
+    const rows =
+      await sql`SELECT state,provider_post_id FROM post_deliveries WHERE group_id=${post.id} ORDER BY post_index`;
+    assert.equal(rows[0].state, "published");
+    assert.equal(rows[0].providerPostId, "confirmed-root");
+    assert.equal(rows[1].state, "scheduled");
+    assert.equal(
+      (await sql`SELECT count(*)::int AS count FROM post_resume_requests`)[0]
+        .count,
+      1,
+    );
+    assert.equal((await sql`SELECT version FROM post_groups`)[0].version, 2);
+    assert.equal(
+      (
+        await client.callTool({
+          name: "resume_post",
+          arguments: { ...input, connectionId: randomUUID() },
+        })
+      ).isError,
+      true,
+    );
+  } finally {
+    await client.close();
+  }
+});
+
 test("the user chooses administrator even when the client only requests read", async () => {
   const admin = await setupUser();
   const { token, grant } = await approve(admin.cookie, "admin");

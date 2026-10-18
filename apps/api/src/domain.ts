@@ -18,6 +18,7 @@ import {
   validateProviderContent,
 } from "./posts/input.js";
 import { postState } from "./posts/state.js";
+import { interruptedSequence, resumeInput } from "./posts/retry.js";
 import { draftRoutes } from "./posts/drafts.js";
 import { enabledProviders } from "./social/capabilities.js";
 import type {
@@ -40,8 +41,14 @@ domainRoutes.route("/", draftRoutes);
 const uuid = z.uuid();
 type Group = Omit<
   Post,
-  "state" | "deliveries" | "media" | "managedBy" | "additionalPosts"
+  | "state"
+  | "deliveries"
+  | "media"
+  | "managedBy"
+  | "additionalPosts"
+  | "resumableConnectionIds"
 > & {
+  cancelledAt: Date | null;
   additionalPosts: Omit<PostPart, "media">[];
   managerId: string | null;
   managerName: string | null;
@@ -50,19 +57,39 @@ type Group = Omit<
 async function readPost(id: string): Promise<Post> {
   const [record] = await sql<
     Group[]
-  >`SELECT g.id,g.text,g.additional_posts,g.scheduled_at,g.idempotency_key,g.version,g.created_at,u.id AS manager_id,u.name AS manager_name,u.email AS manager_email FROM post_groups g LEFT JOIN users u ON u.id=g.last_edited_by WHERE g.id=${id}`;
+  >`SELECT g.id,g.text,g.additional_posts,g.scheduled_at,g.idempotency_key,g.version,g.cancelled_at,g.created_at,u.id AS manager_id,u.name AS manager_name,u.email AS manager_email FROM post_groups g LEFT JOIN users u ON u.id=g.last_edited_by WHERE g.id=${id}`;
   if (!record)
     throw new HTTPException(404, { message: "This post does not exist" });
-  const { managerId, managerName, managerEmail, ...post } = record;
-  const deliveries = await sql<
-    PostDelivery[]
-  >`SELECT d.id,d.post_index,d.connection_id,c.provider,c.name AS account_name,d.text_override,d.state,d.provider_post_id,d.published_url,d.error,d.published_at FROM post_deliveries d JOIN social_connections c ON c.id=d.connection_id WHERE d.group_id=${id} ORDER BY d.post_index,c.provider,c.id,d.id`;
+  const { managerId, managerName, managerEmail, cancelledAt, ...post } = record;
+  const records = await sql<
+    (PostDelivery & {
+      connectionState: string;
+      providerPostCid: string | null;
+    })[]
+  >`SELECT d.id,d.post_index,d.connection_id,c.provider,c.state AS connection_state,c.name AS account_name,c.handle AS account_handle,d.text_override,d.state,d.attempts,CASE WHEN d.state='scheduled' AND d.retry_attempts>0 AND d.error IS NOT NULL THEN d.available_at ELSE NULL END AS next_attempt_at,d.provider_post_id,d.provider_post_cid,d.published_url,d.error,d.published_at FROM post_deliveries d JOIN social_connections c ON c.id=d.connection_id WHERE d.group_id=${id} ORDER BY d.post_index,c.provider,c.id,d.id`;
+  const resumableConnectionIds = cancelledAt
+    ? []
+    : [...new Set(records.map((item) => item.connectionId))].filter(
+        (connectionId) => {
+          const sequence = records.filter(
+            (item) => item.connectionId === connectionId,
+          );
+          return (
+            sequence[0].connectionState === "connected" &&
+            interruptedSequence(sequence, sequence[0].provider)
+          );
+        },
+      );
+  const deliveries = records.map(
+    ({ connectionState: _, providerPostCid: _cid, ...delivery }) => delivery,
+  );
   const accountMedia = await readAccountMedia("group", id);
   const images = await sql<
     (PostMedia & { postIndex: number })[]
   >`SELECT gi.post_index,i.id,i.file_name,i.content_type,i.size_bytes,i.width,i.height,i.alt,i.duration_seconds FROM post_group_media gi JOIN post_media i ON i.id=gi.media_id WHERE gi.group_id=${id} ORDER BY gi.post_index,gi.position`;
   return {
     ...post,
+    resumableConnectionIds,
     mediaOverrides: accountMedia.get(0) ?? {},
     managedBy:
       managerId && managerName && managerEmail
@@ -350,10 +377,13 @@ domainRoutes.patch("/posts/:id", async (c) => {
     if (!group)
       throw new HTTPException(404, { message: "This post does not exist" });
     const states = await tx<
-      { state: string }[]
-    >`SELECT state FROM post_deliveries WHERE group_id=${id} FOR UPDATE`;
+      { state: string; attempts: number }[]
+    >`SELECT state,attempts FROM post_deliveries WHERE group_id=${id} FOR UPDATE`;
     if (group.version !== input.version) conflict();
-    if (group.cancelledAt || states.some((item) => item.state !== "scheduled"))
+    if (
+      group.cancelledAt ||
+      states.some((item) => item.state !== "scheduled" || item.attempts > 0)
+    )
       conflict("This post has started publishing and can no longer be edited");
     await validateTargets(group.workspaceId, input);
     await tx`DELETE FROM post_deliveries WHERE group_id=${id}`;
@@ -361,6 +391,67 @@ domainRoutes.patch("/posts/:id", async (c) => {
     await tx`UPDATE post_groups SET text=${input.text},additional_posts=${sql.json(input.additionalPosts.map(({ mediaIds: _, mediaOverrides: _overrides, ...part }) => part))},scheduled_at=${input.scheduledAt},last_edited_by=${actor.userId},version=version+1,updated_at=now() WHERE id=${id}`;
     await saveTargets(id, group.workspaceId, input);
     await tx`INSERT INTO post_edit_requests(workspace_id,idempotency_key,group_id,request_hash) VALUES(${team.id},${input.idempotencyKey},${id},${hash})`;
+    return c.json({ post: await readPost(id) });
+  });
+});
+domainRoutes.post("/posts/:id/resume", async (c) => {
+  const actor = requireRole(c, "member");
+  const id = uuid.parse(c.req.param("id"));
+  const input = resumeInput.parse(await c.req.json());
+  return withDatabaseTransaction(async () => {
+    const [team] = await sql<
+      { id: string }[]
+    >`SELECT id FROM workspace FOR UPDATE`;
+    const hash = createHash("sha256")
+      .update(
+        JSON.stringify({
+          id,
+          connectionId: input.connectionId,
+          version: input.version,
+        }),
+      )
+      .digest("hex");
+    const [replay] = await sql<
+      { groupId: string; requestHash: string }[]
+    >`SELECT group_id,request_hash FROM post_resume_requests WHERE workspace_id=${team.id} AND idempotency_key=${input.idempotencyKey}`;
+    if (replay) {
+      if (replay.groupId !== id || replay.requestHash !== hash)
+        conflict(
+          "This resume request key was already used for another request",
+        );
+      c.header("Idempotency-Replayed", "true");
+      return c.json({ post: await readPost(id) });
+    }
+    const [group] = await sql<
+      { version: number; cancelledAt: Date | null }[]
+    >`SELECT version,cancelled_at FROM post_groups WHERE id=${id} AND workspace_id=${team.id} FOR UPDATE`;
+    if (!group)
+      throw new HTTPException(404, { message: "This post does not exist" });
+    if (group.version !== input.version) conflict();
+    if (group.cancelledAt) conflict("Cancelled posts cannot be resumed");
+    const sequence = await sql<
+      (PostDelivery & { providerPostCid: string | null })[]
+    >`SELECT post_index,state,provider_post_id,provider_post_cid,published_at FROM post_deliveries WHERE group_id=${id} AND connection_id=${input.connectionId} FOR UPDATE`;
+    if (!sequence.length)
+      throw new HTTPException(404, {
+        message: "This account is not part of the post",
+      });
+    if (sequence.some((item) => item.state === "uncertain"))
+      conflict(
+        "This account has an unconfirmed publishing result. Check the account before taking further action; automatic resume is unavailable.",
+      );
+    const [connection] = await sql<
+      { provider: string; state: string }[]
+    >`SELECT provider,state FROM social_connections WHERE id=${input.connectionId} AND workspace_id=${team.id} FOR SHARE`;
+    if (connection?.state !== "connected")
+      conflict("Reconnect this account before resuming publishing");
+    if (!interruptedSequence(sequence, connection.provider))
+      conflict(
+        "Only an interrupted sequence with confirmed earlier posts can be resumed",
+      );
+    await sql`UPDATE post_deliveries SET state='scheduled',available_at=now(),retry_attempts=0,error=NULL,provider_checkpoint=NULL,lease_token=NULL,lease_until=NULL,updated_at=now() WHERE group_id=${id} AND connection_id=${input.connectionId} AND state='failed' AND provider_post_id IS NULL AND provider_post_cid IS NULL AND published_at IS NULL`;
+    await sql`UPDATE post_groups SET version=version+1,last_edited_by=${actor.userId},updated_at=now() WHERE id=${id}`;
+    await sql`INSERT INTO post_resume_requests(workspace_id,idempotency_key,group_id,connection_id,request_hash) VALUES(${team.id},${input.idempotencyKey},${id},${input.connectionId},${hash})`;
     return c.json({ post: await readPost(id) });
   });
 });
