@@ -29,6 +29,7 @@ import type {
 export const providerNames: Record<Provider, string> = {
   x: "X",
   linkedin: "LinkedIn",
+  "linkedin-pages": "LinkedIn Pages",
   bluesky: "Bluesky",
   threads: "Threads",
 };
@@ -155,7 +156,8 @@ export function SocialPreview({
   text: string;
   media: PreviewMedia[];
 }) {
-  const linkedIn = account.provider === "linkedin";
+  const linkedIn =
+    account.provider === "linkedin" || account.provider === "linkedin-pages";
   const x = account.provider === "x";
   const singleImage =
     media.length === 1 && media[0]?.contentType.startsWith("image/");

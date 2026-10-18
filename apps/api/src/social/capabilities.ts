@@ -28,6 +28,16 @@ export const capabilities: Record<Provider, ProviderCapabilities> = {
     maxImageBytes: 5_000_000,
     maxImageDimension: 4096,
   },
+  "linkedin-pages": {
+    id: "linkedin-pages",
+    name: "LinkedIn Pages",
+    maxCharacters: 3000,
+    maxImages: imageLimits.linkedin,
+    maxVideos: 1,
+    maxVideoDurationSeconds: videoDurationLimits.linkedin,
+    maxImageBytes: 5_000_000,
+    maxImageDimension: 4096,
+  },
   bluesky: {
     id: "bluesky",
     name: "Bluesky",
@@ -56,6 +66,10 @@ export function enabledProviders(
   const required: Record<Provider, string[]> = {
     x: ["POSTED_X_CLIENT_ID", "POSTED_X_CLIENT_SECRET"],
     linkedin: ["POSTED_LINKEDIN_CLIENT_ID", "POSTED_LINKEDIN_CLIENT_SECRET"],
+    "linkedin-pages": [
+      "POSTED_LINKEDIN_PAGES_CLIENT_ID",
+      "POSTED_LINKEDIN_PAGES_CLIENT_SECRET",
+    ],
     threads: ["POSTED_THREADS_CLIENT_ID", "POSTED_THREADS_CLIENT_SECRET"],
     bluesky: ["POSTED_BLUESKY_CLIENT_ID", "POSTED_BLUESKY_PRIVATE_KEY_JWK"],
   };

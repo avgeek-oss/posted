@@ -1,0 +1,12 @@
+---
+title: "Connect selected LinkedIn Pages"
+description: "Rechecks current Page access and connects only the selected Page IDs to the team. Consumes the pending authorization atomically; repeated requests cannot create duplicate connections."
+playground: simple
+openapi: "/api-reference/openapi.json POST /api/social/linkedin-pages/authorizations/{id}"
+---
+
+A signed-in human administrator is required. API keys and MCP credentials cannot replace that session. Sensitive operations can also require recent authentication.
+
+Rechecks current Page access and connects only the selected Page IDs to the team. Consumes the pending authorization atomically; repeated requests cannot create duplicate connections.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

@@ -43,6 +43,11 @@ export function clientCredentials(provider: Exclude<Provider, "bluesky">) {
         id: value.POSTED_LINKEDIN_CLIENT_ID,
         secret: value.POSTED_LINKEDIN_CLIENT_SECRET,
       };
+    case "linkedin-pages":
+      return {
+        id: value.POSTED_LINKEDIN_PAGES_CLIENT_ID,
+        secret: value.POSTED_LINKEDIN_PAGES_CLIENT_SECRET,
+      };
     case "threads":
       return {
         id: value.POSTED_THREADS_CLIENT_ID,
@@ -73,6 +78,7 @@ export async function exchangeCode(
       headers.Authorization = `Basic ${Buffer.from(`${client.id}:${client.secret}`).toString("base64")}`;
       break;
     case "linkedin":
+    case "linkedin-pages":
       url = "https://www.linkedin.com/oauth/v2/accessToken";
       form.set("client_secret", client.secret);
       break;
@@ -147,7 +153,7 @@ async function refreshToken(url: string | URL, options?: RequestInit) {
   }
 }
 export async function accountProfile(
-  provider: Exclude<Provider, "bluesky">,
+  provider: Exclude<Provider, "bluesky" | "linkedin-pages">,
   accessToken: string,
 ) {
   const options = { headers: bearer(accessToken) };

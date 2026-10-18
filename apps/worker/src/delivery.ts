@@ -37,7 +37,8 @@ import {
 } from "../../../packages/contracts/src/media.js";
 
 async function accessToken(job: DeliveryJob) {
-  if (job.provider === "bluesky") return undefined;
+  const provider = job.provider;
+  if (provider === "bluesky") return undefined;
   return withDatabaseTransaction(async () => {
     const [connection] = await sql<
       { encryptedCredentials: string; state: string }[]
@@ -50,10 +51,7 @@ async function accessToken(job: DeliveryJob) {
         `social-connection:${job.connectionId}`,
       ),
     );
-    const next = await refreshCredentials(
-      job.provider as "x" | "linkedin" | "threads",
-      current,
-    );
+    const next = await refreshCredentials(provider, current);
     if (next !== current)
       await sql`UPDATE social_connections SET encrypted_credentials=${seal(next, `social-connection:${job.connectionId}`)},updated_at=now() WHERE id=${job.connectionId}`;
     return next.accessToken;

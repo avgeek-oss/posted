@@ -523,70 +523,75 @@ function job(provider: DeliveryJob["provider"]): DeliveryJob {
     encryptedCredentials: "unused",
   };
 }
-test("LinkedIn prepares images and publishes with the fixed API version despite a legacy environment override", async (t) => {
-  const previousVersion = process.env.POSTED_LINKEDIN_API_VERSION;
-  process.env.POSTED_LINKEDIN_API_VERSION = "203001";
-  t.after(() => {
-    if (previousVersion === undefined)
-      delete process.env.POSTED_LINKEDIN_API_VERSION;
-    else process.env.POSTED_LINKEDIN_API_VERSION = previousVersion;
-  });
-  const requests: string[] = [];
-  mock.method(
-    globalThis,
-    "fetch",
-    async (input: string | URL | Request, init?: RequestInit) => {
-      const url = urlOf(input);
-      requests.push(url.pathname);
-      if (url.pathname.startsWith("/rest/"))
-        assert.equal(
-          new Headers(init?.headers).get("LinkedIn-Version"),
-          "202609",
-        );
-      if (url.pathname === "/rest/images")
-        return json({
-          value: {
-            image: "urn:li:image:fixture",
-            uploadUrl: "https://www.linkedin.com/upload/fixture",
-          },
-        });
-      if (url.pathname === "/upload/fixture") {
-        assert.equal(init?.method, "PUT");
-        return new Response(null, { status: 201 });
-      }
-      if (url.pathname === "/rest/posts") {
-        const payload = JSON.parse(String(init?.body));
-        assert.equal(payload.author, "urn:li:person:example-account");
-        assert.equal(payload.content.media.id, "urn:li:image:fixture");
-        assert.equal(
-          new Headers(init?.headers).get("X-Restli-Protocol-Version"),
-          "2.0.0",
-        );
-        return new Response(null, {
-          status: 201,
-          headers: { "x-restli-id": "urn:li:share:fixture" },
-        });
-      }
-      throw new Error("Unexpected LinkedIn request");
-    },
-  );
-  const prepared = await preparePublication(
-    job("linkedin"),
-    [
-      {
-        id: randomUUID(),
-        bytes: Buffer.from("prepared-image"),
-        width: 100,
-        height: 100,
-        alt: "A team image",
+for (const provider of ["linkedin", "linkedin-pages"] as const) {
+  test(`${provider} prepares images and publishes with the fixed API version despite a legacy environment override`, async (t) => {
+    const previousVersion = process.env.POSTED_LINKEDIN_API_VERSION;
+    process.env.POSTED_LINKEDIN_API_VERSION = "203001";
+    t.after(() => {
+      if (previousVersion === undefined)
+        delete process.env.POSTED_LINKEDIN_API_VERSION;
+      else process.env.POSTED_LINKEDIN_API_VERSION = previousVersion;
+    });
+    const requests: string[] = [];
+    mock.method(
+      globalThis,
+      "fetch",
+      async (input: string | URL | Request, init?: RequestInit) => {
+        const url = urlOf(input);
+        requests.push(url.pathname);
+        if (url.pathname.startsWith("/rest/"))
+          assert.equal(
+            new Headers(init?.headers).get("LinkedIn-Version"),
+            "202609",
+          );
+        if (url.pathname === "/rest/images")
+          return json({
+            value: {
+              image: "urn:li:image:fixture",
+              uploadUrl: "https://www.linkedin.com/upload/fixture",
+            },
+          });
+        if (url.pathname === "/upload/fixture") {
+          assert.equal(init?.method, "PUT");
+          return new Response(null, { status: 201 });
+        }
+        if (url.pathname === "/rest/posts") {
+          const payload = JSON.parse(String(init?.body));
+          assert.equal(
+            payload.author,
+            `urn:li:${provider === "linkedin-pages" ? "organization" : "person"}:example-account`,
+          );
+          assert.equal(payload.content.media.id, "urn:li:image:fixture");
+          assert.equal(
+            new Headers(init?.headers).get("X-Restli-Protocol-Version"),
+            "2.0.0",
+          );
+          return new Response(null, {
+            status: 201,
+            headers: { "x-restli-id": "urn:li:share:fixture" },
+          });
+        }
+        throw new Error("Unexpected LinkedIn request");
       },
-    ],
-    "fixture-token",
-  );
-  assert.deepEqual(requests, ["/rest/images", "/upload/fixture"]);
-  assert.equal((await prepared.publish()).id, "urn:li:share:fixture");
-  assert.equal(requests.length, 3);
-});
+    );
+    const prepared = await preparePublication(
+      job(provider),
+      [
+        {
+          id: randomUUID(),
+          bytes: Buffer.from("prepared-image"),
+          width: 100,
+          height: 100,
+          alt: "A team image",
+        },
+      ],
+      "fixture-token",
+    );
+    assert.deepEqual(requests, ["/rest/images", "/upload/fixture"]);
+    assert.equal((await prepared.publish()).id, "urn:li:share:fixture");
+    assert.equal(requests.length, 3);
+  });
+}
 
 test("LinkedIn cannot direct image uploads to an unrelated host", async () => {
   mock.method(globalThis, "fetch", async () =>
@@ -1179,70 +1184,74 @@ test("failed video processing never reaches X publishing", async () => {
   await assert.rejects(preparePublication(job("x"), [video()], "disposable"));
   assert.equal(publishes, 0);
 });
-test("LinkedIn finalizes all video parts and waits for AVAILABLE before publishing", async () => {
-  const media = video();
-  const chunks: Buffer[] = [];
-  let publishes = 0;
-  mock.method(
-    globalThis,
-    "fetch",
-    async (input: string | URL | Request, init?: RequestInit) => {
-      const url = urlOf(input);
-      if (url.searchParams.get("action") === "initializeUpload")
-        return json({
-          value: {
-            video: "urn:li:video:fixture",
-            uploadToken: "disposable-upload",
-            uploadInstructions: [
-              {
-                firstByte: 0,
-                lastByte: 4,
-                uploadUrl: "https://www.linkedin.com/parts/0",
-              },
-              {
-                firstByte: 5,
-                lastByte: media.bytes.length - 1,
-                uploadUrl: "https://www.linkedin.com/parts/1",
-              },
-            ],
-          },
+for (const provider of ["linkedin", "linkedin-pages"] as const) {
+  test(`${provider} finalizes all video parts and waits for AVAILABLE before publishing`, async () => {
+    const media = video();
+    const chunks: Buffer[] = [];
+    let publishes = 0;
+    mock.method(
+      globalThis,
+      "fetch",
+      async (input: string | URL | Request, init?: RequestInit) => {
+        const url = urlOf(input);
+        if (url.searchParams.get("action") === "initializeUpload")
+          return json({
+            value: {
+              video: "urn:li:video:fixture",
+              uploadToken: "disposable-upload",
+              uploadInstructions: [
+                {
+                  firstByte: 0,
+                  lastByte: 4,
+                  uploadUrl: "https://www.linkedin.com/parts/0",
+                },
+                {
+                  firstByte: 5,
+                  lastByte: media.bytes.length - 1,
+                  uploadUrl: "https://www.linkedin.com/parts/1",
+                },
+              ],
+            },
+          });
+        if (url.pathname.startsWith("/parts/")) {
+          chunks.push(Buffer.from(init?.body as Uint8Array));
+          return new Response(null, {
+            status: 200,
+            headers: { etag: `"part-${chunks.length}"` },
+          });
+        }
+        if (url.searchParams.get("action") === "finalizeUpload") {
+          assert.deepEqual(
+            JSON.parse(String(init?.body)).finalizeUploadRequest
+              .uploadedPartIds,
+            ["part-1", "part-2"],
+          );
+          return new Response(null, { status: 200 });
+        }
+        if (url.pathname.startsWith("/rest/videos/"))
+          return json({ status: "AVAILABLE" });
+        assert.equal(url.pathname, "/rest/posts");
+        assert.deepEqual(JSON.parse(String(init?.body)).content.media, {
+          id: "urn:li:video:fixture",
         });
-      if (url.pathname.startsWith("/parts/")) {
-        chunks.push(Buffer.from(init?.body as Uint8Array));
+        publishes++;
         return new Response(null, {
-          status: 200,
-          headers: { etag: `"part-${chunks.length}"` },
+          status: 201,
+          headers: { "x-restli-id": "urn:li:share:video" },
         });
-      }
-      if (url.searchParams.get("action") === "finalizeUpload") {
-        assert.deepEqual(
-          JSON.parse(String(init?.body)).finalizeUploadRequest.uploadedPartIds,
-          ["part-1", "part-2"],
-        );
-        return new Response(null, { status: 200 });
-      }
-      if (url.pathname.startsWith("/rest/videos/"))
-        return json({ status: "AVAILABLE" });
-      assert.equal(url.pathname, "/rest/posts");
-      assert.deepEqual(JSON.parse(String(init?.body)).content.media, {
-        id: "urn:li:video:fixture",
-      });
-      publishes++;
-      return new Response(null, {
-        status: 201,
-        headers: { "x-restli-id": "urn:li:share:video" },
-      });
-    },
-  );
-  const prepared = await preparePublication(
-    job("linkedin"),
-    [media],
-    "disposable",
-  );
-  assert.equal(publishes, 0);
-  assert.deepEqual(Buffer.concat(chunks), media.bytes);
-  assert.equal((await prepared.publish()).id, "urn:li:share:video");
-});
+      },
+    );
+    const prepared = await preparePublication(
+      job(provider),
+      [media],
+      "disposable",
+    );
+    assert.equal(publishes, 0);
+    assert.deepEqual(Buffer.concat(chunks), media.bytes);
+    assert.equal((await prepared.publish()).id, "urn:li:share:video");
+  });
+}
+
 test("Threads prepares mixed image and video carousel children before publishing", async () => {
   const kinds: string[] = [];
   let publishes = 0;

@@ -1,3 +1,4 @@
+import { LinkedInPagesDialog } from "./linkedin-pages-dialog.js";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -46,6 +47,9 @@ export function ConnectionsPage({
   const providers = useResource<{
     providers: ProviderCapabilities[];
   }>("/providers");
+  const [pageAuthorization, setPageAuthorization] = useState(() =>
+    new URLSearchParams(window.location.search).get("linkedinPages"),
+  );
   const [open, setOpen] = useState(false);
   const [provider, setProvider] = useState<Provider | "">("");
   const [handle, setHandle] = useState("");
@@ -93,6 +97,20 @@ export function ConnectionsPage({
   }
   return (
     <section className="min-w-0">
+      {canManage && pageAuthorization && (
+        <LinkedInPagesDialog
+          authorizationId={pageAuthorization}
+          onDone={() => {
+            setPageAuthorization(null);
+            window.history.replaceState(
+              window.history.state,
+              "",
+              "/connections",
+            );
+            connections.refresh();
+          }}
+        />
+      )}
       <PageHeading
         title="Connections"
         icon={<HugeiconsIcon icon={Link01Icon} />}

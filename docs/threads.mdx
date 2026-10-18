@@ -5,7 +5,7 @@ description: "Create ordered posts, customize each account and understand linked
 
 import { Screenshot } from "/snippets/oss/screenshot.jsx";
 
-A thread starts with a root post and continues with ordered posts. Posted keeps one master sequence and lets each selected account customize text and attachments for every post. X, Threads and Bluesky publish linked replies. LinkedIn publishes the sequence as separate individual posts in the same order.
+A thread starts with a root post and continues with ordered posts. Posted keeps one master sequence and lets each selected account customize text and attachments for every post. X, Threads and Bluesky publish linked replies. LinkedIn and LinkedIn Pages publish the sequence as separate individual posts in the same order.
 
 ## Build the sequence
 
@@ -89,3 +89,5 @@ Temporary failures are retried with increasing delays when Posted can safely sen
 The root request is the first post; `additionalPosts` contains the remaining items. Each can have `textOverrides`, `mediaIds` and `mediaOverrides`. `connectionIds`, `scheduledAt` and `idempotencyKey` belong to the whole sequence. Use the latest draft or post version when saving an edit.
 
 See [create_post](/mcp-reference/create_post), [save_draft](/mcp-reference/save_draft) and the [HTTP request conventions](/api-reference/overview).
+
+LinkedIn Pages follows the same sequence behavior as LinkedIn: individual Page posts are published in order, without reply links.

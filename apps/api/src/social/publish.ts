@@ -1,3 +1,4 @@
+import { linkedinHeaders } from "./linkedin-pages.js";
 import { firstPostLink } from "../../../../packages/contracts/src/links.js";
 import { getLinkPreview } from "../links/preview.js";
 import { z } from "zod";
@@ -39,11 +40,6 @@ export type PreparedPublication = {
   publish: () => Promise<Publication>;
 };
 const idResponse = z.object({ id: z.string().min(1) });
-const linkedinHeaders = (token: string) => ({
-  ...bearer(token),
-  "LinkedIn-Version": "202609",
-  "X-Restli-Protocol-Version": "2.0.0",
-});
 export async function preparePublication(
   job: DeliveryJob,
   images: DeliveryMedia[],
@@ -62,6 +58,7 @@ export async function preparePublication(
     case "x":
       return prepareX(job, images, accessToken);
     case "linkedin":
+    case "linkedin-pages":
       return prepareLinkedIn(job, images, accessToken);
     case "threads":
       return prepareThreads(job, images, accessToken);
@@ -130,7 +127,7 @@ async function prepareLinkedIn(
   images: DeliveryMedia[],
   token: string,
 ): Promise<PreparedPublication> {
-  const owner = `urn:li:person:${job.accountId}`;
+  const owner = `urn:li:${job.provider === "linkedin-pages" ? "organization" : "person"}:${job.accountId}`;
   const media: { id: string; altText?: string }[] = [];
   for (const image of images) {
     if (image.kind === "video") {
