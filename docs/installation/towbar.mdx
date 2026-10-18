@@ -38,10 +38,10 @@ environments:
 ```yaml .towbar/services/posted-api.service.yml
 id: posted-api
 name: Posted API
-description: Posted v0.2.2 api from the published immutable release image.
+description: Posted v0.2.3 api from the published immutable release image.
 deployment:
   type: image
-  image: ghcr.io/avgeek-oss/posted-api@sha256:acc78ab85aa59e7723e8c549455cbd9064095ce9e9531561dc4282842cc94219
+  image: ghcr.io/avgeek-oss/posted-api@sha256:1c8b01ee05cd956c18e7f2fc8c976a8b116e5ac09b5a8701a27d982d5a83e75c
 autoDeploy: false
 container:
   network: posted
@@ -94,10 +94,10 @@ tls:
 ```yaml .towbar/services/posted-worker.service.yml
 id: posted-worker
 name: Posted Worker
-description: Posted v0.2.2 worker from the published immutable release image.
+description: Posted v0.2.3 worker from the published immutable release image.
 deployment:
   type: image
-  image: ghcr.io/avgeek-oss/posted-worker@sha256:c797071ca2e0b1f0617181afceb9f93de20a14ebc44c0eac9b4a7d0b5ad02cf0
+  image: ghcr.io/avgeek-oss/posted-worker@sha256:69835d02dc23df1a96c91ec60aa57801be34419886f4bb5a1181e67ed9224bb7
 autoDeploy: false
 container:
   network: posted
@@ -138,10 +138,10 @@ environments:
 ```yaml .towbar/services/posted-web.service.yml
 id: posted-web
 name: Posted UI
-description: Posted v0.2.2 web from the published immutable release image.
+description: Posted v0.2.3 web from the published immutable release image.
 deployment:
   type: image
-  image: ghcr.io/avgeek-oss/posted-web@sha256:28a5477c8352c6f978e79db345069c043331e7da76806fae006b231c0a84abb4
+  image: ghcr.io/avgeek-oss/posted-web@sha256:ee938e0ee7b91e25cd9e0d2e7c47f5e9a3b5bc01c3f7b1c6ca4abf332ac0a578
 autoDeploy: false
 container:
   network: posted
