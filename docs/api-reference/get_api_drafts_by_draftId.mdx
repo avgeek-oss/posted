@@ -1,0 +1,16 @@
+---
+title: "Get a draft"
+description: "Read a draft's text, selected accounts, overrides and ordered media."
+playground: simple
+openapi: "/api-reference/openapi.json GET /api/drafts/{draftId}"
+---
+
+Read access: a read-enabled personal or team REST API key, or a signed-in user. OAuth clients use the corresponding MCP tool through /mcp.
+
+Read a draft's text, selected accounts, overrides and ordered media.
+
+Resolved media and mediaOverrides contain media objects. Saving uses mediaIds and mediaOverrides containing IDs.
+
+MCP clients can use [`get_draft`](/mcp-reference/get_draft) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

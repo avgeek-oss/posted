@@ -1,0 +1,16 @@
+---
+title: "Get a post"
+description: "Read a posting group, its media and individual account outcomes."
+playground: simple
+openapi: "/api-reference/openapi.json GET /api/posts/{postId}"
+---
+
+Read access: a read-enabled personal or team REST API key, or a signed-in user. OAuth clients use the corresponding MCP tool through /mcp.
+
+Read a posting group, its media and individual account outcomes.
+
+The root and additionalPosts represent the ordered sequence. deliveries contains a separate state for every account and postIndex. A group can be partial even if some posts were published.
+
+MCP clients can use [`get_post`](/mcp-reference/get_post) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

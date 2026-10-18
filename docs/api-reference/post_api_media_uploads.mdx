@@ -1,0 +1,16 @@
+---
+title: "Reserve a media upload"
+description: "Reserve a private image or video upload. PUT the approved file to the returned URL using its headers, then complete the upload. No post is created."
+playground: simple
+openapi: "/api-reference/openapi.json POST /api/media/uploads"
+---
+
+Write access: a member/administrator with a write-enabled credential, or an authorized signed-in user.
+
+Reserve a private image or video upload. PUT the approved file to the returned URL using its headers, then complete the upload. No post is created.
+
+Use the returned uploadUrl and headers for the separate storage PUT. Reserving an upload does not create a post. Keep signed URLs private and use them before expiry.
+
+MCP clients can use [`reserve_media_upload`](/mcp-reference/reserve_media_upload) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

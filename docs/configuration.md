@@ -21,6 +21,44 @@ Set `POSTED_SMTP_HOST` and `POSTED_SMTP_FROM` together. Supply `POSTED_SMTP_USER
 
 Verify the sender domain and its SPF, DKIM and DMARC configuration with your email service. A display name and application theme do not guarantee delivery outside spam folders. Posted sends branded account emails through the API's durable email outbox, not the publishing worker.
 
-## Storage
+## Private media storage
 
-Configure the endpoint, region, bucket and credentials as described in [storage](/storage). Leave the complete storage group blank to disable uploads. The worker includes FFmpeg and has a 256 MiB writable `/tmp`; its root filesystem stays read-only.
+Leave the complete storage group blank to disable uploads. The worker includes FFmpeg and has a 256 MiB writable `/tmp`; its root filesystem stays read-only.
+
+Use a private S3-compatible bucket, such as Cloudflare R2. Create an object read/write credential limited to that bucket. Keep it in the API/worker runtime environment; the UI must not receive it.
+
+Set these values together:
+
+```dotenv
+POSTED_S3_ENDPOINT=https://YOUR_ACCOUNT_ID.r2.cloudflarestorage.com
+POSTED_S3_REGION=auto
+POSTED_S3_BUCKET=posted-data
+POSTED_S3_ACCESS_KEY_ID=YOUR_BUCKET_SCOPED_KEY
+POSTED_S3_SECRET_ACCESS_KEY=YOUR_BUCKET_SCOPED_SECRET
+```
+
+Use your storage service's correct endpoint and region. R2 uses `auto`; other providers may require a region name. Replace placeholders privately.
+
+### CORS
+
+Allow the exact UI origin to PUT and GET signed objects. Expose ETag and allow headers used by S3 signing. For R2:
+
+```json
+[
+  {
+    "AllowedOrigins": ["https://posted.example.com"],
+    "AllowedMethods": ["GET", "PUT", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+Do not enable a public bucket domain. A successful upload in the UI confirms CORS and signing; container health alone does not.
+
+### Retention
+
+Temporary uploads use `posted/uploads/`; expire that prefix after one day. Prepared delivery copies use `posted/delivery/`; expire them after two days. Retain immutable originals in `posted/originals/` and normalized, ready videos in `posted/media/` for saved drafts and future schedules.
+
+Never use bucket-wide expiry. It can remove files needed by a future scheduled post or saved draft. Back up private retained media alongside PostgreSQL and `POSTED_SECRET`.

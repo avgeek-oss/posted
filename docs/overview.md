@@ -1,4 +1,4 @@
-# Posted
+# About Posted
 
 Posted is a self-hosted social media scheduler for X, LinkedIn, Bluesky and Threads. Connect accounts to your team, write a single post or ordered sequence, tailor text and media for each account and publish now or schedule it for later.
 
@@ -14,3 +14,5 @@ An installation runs three version-matched containers: API, worker and UI. Postg
 </CardGroup>
 
 Posted's source is Apache-2.0 licensed. Provider terms, access plans and application approval apply separately. See [security](/security) for the boundaries of an installation.
+
+Start with [installation](/installation) if you are hosting Posted, or [compose a post](/composer) if your team already has an installation. Read [compose threads](/threads) for linked replies, [account and team access](/authentication) for roles, or [API keys](/api-keys) and [MCP connections](/mcp-connections) to connect a client.

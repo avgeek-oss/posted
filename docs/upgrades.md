@@ -21,6 +21,6 @@ Use the same Compose overlays as the original installation. If a migration or st
 
 This release adds migrations `009_post_sequences.sql` and `010_account_media.sql`. Existing posts, drafts and attachments become the first post in a sequence; account media continues to inherit the master unless customized. Back up the database and private media before upgrading all three images together.
 
-The API adds optional `additionalPosts` and `mediaOverrides` fields. Existing single-post requests continue to work, including replay of their original request keys. An omitted account media override inherits the master; an explicit empty list means no media for that account. See the [REST reference](/rest-reference) for the generated request schemas.
+The API adds optional `additionalPosts` and `mediaOverrides` fields. Existing single-post requests continue to work, including replay of their original request keys. An omitted account media override inherits the master; an explicit empty list means no media for that account. See the [REST reference](/api-reference/overview) for the generated request schemas.
 
 Towbar installations should pin API, worker and UI to the matching digests from `posted-images.json`. Keep deployment manual, retain the existing datastore and stable secret, deploy the API migration before the worker, then update the UI. Check an existing draft, its media, account previews and scheduled delivery state before reopening writes. A source or manifest PR does not itself deploy the application.

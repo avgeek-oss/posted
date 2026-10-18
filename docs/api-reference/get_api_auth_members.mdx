@@ -1,0 +1,16 @@
+---
+title: "List members"
+description: "List team members within the current access role."
+playground: simple
+openapi: "/api-reference/openapi.json GET /api/auth/members"
+---
+
+Read access: a read-enabled personal or team REST API key, or a signed-in user. OAuth clients use the corresponding MCP tool through /mcp.
+
+List team members within the current access role.
+
+limit is at most 1000. The REST endpoint also supports a cursor; the MCP tool currently accepts limit only. A changed member collection can return a conflict.
+
+MCP clients can use [`list_members`](/mcp-reference/list_members) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

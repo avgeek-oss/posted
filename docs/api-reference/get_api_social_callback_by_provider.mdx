@@ -1,0 +1,12 @@
+---
+title: "Complete a social OAuth callback"
+description: "Provider callback handler. Verifies the stored state, verifier, initiating user and provider, saves encrypted tokens, then redirects to Posted. Do not fabricate callbacks or log authorization codes."
+playground: simple
+openapi: "/api-reference/openapi.json GET /api/social/callback/{provider}"
+---
+
+A signed-in human session is required. API keys and MCP bearer credentials cannot replace that session.
+
+Provider callback handler. Verifies the stored state, verifier, initiating user and provider, saves encrypted tokens, then redirects to Posted. Do not fabricate callbacks or log authorization codes.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

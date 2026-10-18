@@ -1,0 +1,16 @@
+---
+title: "Disconnect an account"
+description: "Disconnect a team social account. Pending deliveries will fail. Ask the user before disconnecting."
+playground: simple
+openapi: "/api-reference/openapi.json DELETE /api/connections/{connectionId}"
+---
+
+Administrator access with explicit administrator permission on API keys or MCP credentials, or a signed-in administrator.
+
+Disconnect a team social account. Pending deliveries will fail. Ask the user before disconnecting.
+
+Requires Administrator access. Scheduled deliveries for this account fail after disconnection. Previously published provider posts remain in place.
+
+MCP clients can use [`disconnect_account`](/mcp-reference/disconnect_account) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

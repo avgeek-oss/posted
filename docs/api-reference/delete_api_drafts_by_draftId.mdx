@@ -1,0 +1,16 @@
+---
+title: "Delete a draft"
+description: "Delete a team draft using its current version. Ask the user before deleting their draft."
+playground: simple
+openapi: "/api-reference/openapi.json DELETE /api/drafts/{draftId}"
+---
+
+Write access: a member/administrator with a write-enabled credential, or an authorized signed-in user.
+
+Delete a team draft using its current version. Ask the user before deleting their draft.
+
+Deletion removes the draft for the team. A stale version returns a conflict; read again before asking the user to confirm a new deletion.
+
+MCP clients can use [`delete_draft`](/mcp-reference/delete_draft) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

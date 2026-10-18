@@ -1,0 +1,255 @@
+---
+title: "save_draft"
+description: "Save a draft with Posted MCP."
+---
+
+Save incomplete content without publishing. Use version 0 and a new draftId for a new draft, or its current version to update. Reuse the request key for retries.
+
+## Workflow
+
+```mermaid
+flowchart LR
+  step0["Choose a new draft ID or read a draft"] --> step1
+  step1["Save with version and request key"] --> step2
+  step2["Keep the returned version"]
+```
+
+## Access and behavior
+
+Write or Administrator OAuth consent and a member/administrator team role are required. Tools are listed and callable only when the current grant and role permit them.
+
+Use version 0 for a new UUID, or the latest version for an update. Reuse the same idempotencyKey and identical content when retrying. Incomplete content is allowed. Saving does not publish.
+
+## Arguments
+
+| Argument          | Required | Type or meaning                                                                             |
+| ----------------- | -------- | ------------------------------------------------------------------------------------------- |
+| `text`            | Yes      | Master text for this post. Account overrides take precedence.                               |
+| `textOverrides`   | No       | Selected connection ID to custom text; omit a key to inherit the master.                    |
+| `additionalPosts` | No       | Later posts in order; each has text, mediaIds and optional account overrides.               |
+| `connectionIds`   | Yes      | Selected connected accounts belonging to this team; applies to the complete sequence.       |
+| `mediaIds`        | Yes      | Ready media IDs in attachment order for this master post.                                   |
+| `mediaOverrides`  | No       | Selected connection ID to ordered media IDs; omit to inherit, or use [] for no attachments. |
+| `version`         | Yes      | Latest record version; use 0 only when creating a new draft.                                |
+| `idempotencyKey`  | Yes      | One content-bound request key; reuse with the identical payload when retrying.              |
+| `draftId`         | Yes      | Draft UUID; choose a new UUID when creating, or read the saved draft before updating.       |
+
+<Accordion title="Complete input schema">
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "text": {
+      "type": "string",
+      "maxLength": 64000
+    },
+    "textOverrides": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 64000
+      }
+    },
+    "additionalPosts": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 64000
+          },
+          "textOverrides": {
+            "default": {},
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 64000
+            }
+          },
+          "mediaIds": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "mediaOverrides": {
+            "default": {},
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "additionalProperties": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            }
+          }
+        },
+        "required": ["text", "mediaIds"],
+        "additionalProperties": false
+      }
+    },
+    "connectionIds": {
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+      }
+    },
+    "mediaIds": {
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+      }
+    },
+    "mediaOverrides": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+      },
+      "additionalProperties": {
+        "maxItems": 20,
+        "type": "array",
+        "items": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      }
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{8,128}$"
+    },
+    "draftId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    }
+  },
+  "required": [
+    "text",
+    "connectionIds",
+    "mediaIds",
+    "version",
+    "idempotencyKey",
+    "draftId"
+  ],
+  "additionalProperties": false
+}
+```
+
+</Accordion>
+
+## Example call
+
+The client initializes the MCP connection before sending this JSON-RPC call. Example records are fictional.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "save_draft",
+    "arguments": {
+      "draftId": "33333333-3333-4333-8333-333333333333",
+      "text": "An unfinished studio update.",
+      "connectionIds": ["11111111-1111-4111-8111-111111111111"],
+      "mediaIds": ["44444444-4444-4444-8444-444444444444"],
+      "textOverrides": {},
+      "version": 0,
+      "idempotencyKey": "studio-draft-2027-01-18"
+    }
+  }
+}
+```
+
+## Example result
+
+Posted returns this object in `structuredContent` and a JSON text content block. A tool failure sets `isError`; never treat an error as a completed mutation.
+
+```json
+{
+  "draft": {
+    "id": "33333333-3333-4333-8333-333333333333",
+    "text": "An unfinished studio update.",
+    "additionalPosts": [],
+    "mediaOverrides": {},
+    "textOverrides": {},
+    "connectionIds": ["11111111-1111-4111-8111-111111111111"],
+    "connections": [
+      {
+        "id": "11111111-1111-4111-8111-111111111111",
+        "provider": "bluesky",
+        "accountId": "did:plc:example",
+        "name": "Alex Morgan",
+        "handle": "alex.example.test",
+        "avatarUrl": null,
+        "state": "connected",
+        "createdAt": "2027-01-18T09:30:00.000Z"
+      }
+    ],
+    "media": [
+      {
+        "id": "44444444-4444-4444-8444-444444444444",
+        "fileName": "studio.jpg",
+        "contentType": "image/jpeg",
+        "sizeBytes": 245760,
+        "width": 1600,
+        "height": 900,
+        "alt": "A bright studio desk beside a window",
+        "durationSeconds": null
+      }
+    ],
+    "version": 1,
+    "createdAt": "2027-01-18T09:30:00.000Z",
+    "updatedAt": "2027-01-18T09:30:00.000Z",
+    "draftedBy": {
+      "id": "66666666-6666-4666-8666-666666666666",
+      "name": "Alex Morgan",
+      "avatarUrl": null
+    }
+  }
+}
+```
+
+## Related reference
+
+[HTTP operation](/api-reference/post_api_drafts_by_draftId) · [Connect an MCP client](/mcp-connections) · [Request conventions](/api-reference/overview)

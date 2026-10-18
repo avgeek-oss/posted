@@ -1,0 +1,16 @@
+---
+title: "List connections"
+description: "List this team's connected social accounts. Credentials are never returned."
+playground: simple
+openapi: "/api-reference/openapi.json GET /api/connections"
+---
+
+Read access: a read-enabled personal or team REST API key, or a signed-in user. OAuth clients use the corresponding MCP tool through /mcp.
+
+List this team's connected social accounts. Credentials are never returned.
+
+Credentials are never returned. Each account includes connection attribution, last confirmed publication and its pending-delivery count.
+
+MCP clients can use [`list_connections`](/mcp-reference/list_connections) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

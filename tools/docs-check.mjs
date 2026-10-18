@@ -8,8 +8,15 @@ const dir = resolve(root, "docs");
 const site = JSON.parse(await readFile(resolve(dir, "docs.json"), "utf8"));
 assert.equal(site.name, "Posted");
 assert.equal(site.seo.metatags.canonical, "https://www.posted.cc");
-const routes = site.navigation.dropdowns.flatMap((item) =>
-  item.groups.flatMap((group) => group.pages),
+function pageRoutes(items) {
+  return items.flatMap((item) =>
+    typeof item === "string"
+      ? [item]
+      : pageRoutes(item.pages ?? item.groups ?? []),
+  );
+}
+const routes = pageRoutes(
+  site.navigation.dropdowns.flatMap((item) => item.groups),
 );
 assert.equal(new Set(routes).size, routes.length);
 for (const route of routes) {

@@ -1,6 +1,6 @@
 # Images and videos
 
-An operator enables [private S3-compatible storage](/storage). Uploads use short-lived signed URLs. Original objects remain private and separate from temporary upload objects.
+An operator enables [private S3-compatible storage](/configuration#private-media-storage). Uploads use short-lived signed URLs. Original objects remain private and separate from temporary upload objects.
 
 | Input                 | Upload limit                      | Processing                                                                               |
 | --------------------- | --------------------------------- | ---------------------------------------------------------------------------------------- |

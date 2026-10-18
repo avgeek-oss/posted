@@ -1,0 +1,87 @@
+---
+title: "list_connections"
+description: "List connections with Posted MCP."
+---
+
+List this team's connected social accounts. Credentials are never returned.
+
+## Workflow
+
+```mermaid
+flowchart LR
+  step0["Read team accounts"] --> step1
+  step1["Select connected account IDs"] --> step2
+  step2["Use them in a draft or post"]
+```
+
+## Access and behavior
+
+A Read-only, Write or Administrator OAuth grant can call this tool within the user’s current team role. Tools are listed and callable only when the current grant and role permit them.
+
+Credentials are never returned. Each account includes connection attribution, last confirmed publication and its pending-delivery count.
+
+## Arguments
+
+| Argument | Required | Type or meaning       |
+| -------- | -------- | --------------------- |
+| None     | No       | Pass an empty object. |
+
+<Accordion title="Complete input schema">
+
+```json
+{
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
+```
+
+</Accordion>
+
+## Example call
+
+The client initializes the MCP connection before sending this JSON-RPC call. Example records are fictional.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "list_connections",
+    "arguments": {}
+  }
+}
+```
+
+## Example result
+
+Posted returns this object in `structuredContent` and a JSON text content block. A tool failure sets `isError`; never treat an error as a completed mutation.
+
+```json
+{
+  "items": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "provider": "bluesky",
+      "accountId": "did:plc:example",
+      "name": "Alex Morgan",
+      "handle": "alex.example.test",
+      "avatarUrl": null,
+      "state": "connected",
+      "createdAt": "2027-01-18T09:30:00.000Z",
+      "connectedBy": {
+        "id": "66666666-6666-4666-8666-666666666666",
+        "name": "Alex Morgan",
+        "avatarUrl": null
+      },
+      "lastPublished": null,
+      "scheduledCount": 1
+    }
+  ]
+}
+```
+
+## Related reference
+
+[HTTP operation](/api-reference/get_api_connections) · [Connect an MCP client](/mcp-connections) · [Request conventions](/api-reference/overview)

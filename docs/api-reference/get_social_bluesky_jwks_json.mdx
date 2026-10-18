@@ -1,0 +1,12 @@
+---
+title: "Read Bluesky public signing keys"
+description: "Serves public signing keys only. The private P-256 signing key is never returned. Returns 404 when Bluesky is disabled."
+playground: simple
+openapi: "/api-reference/openapi.json GET /social/bluesky/jwks.json"
+---
+
+No signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.
+
+Serves public signing keys only. The private P-256 signing key is never returned. Returns 404 when Bluesky is disabled.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

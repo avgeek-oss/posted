@@ -8,20 +8,23 @@
     "href": "/"
   },
   "favicon": "/assets/posted-favicon.png",
-  "colors": {
-    "primary": "#1554CC",
-    "light": "#8ABBF2",
-    "dark": "#1554CC"
-  },
+  "colors": { "primary": "#1554CC", "light": "#8ABBF2", "dark": "#1554CC" },
   "navigation": {
     "dropdowns": [
       {
         "dropdown": "Introduction",
         "icon": "book-open",
         "groups": [
+          { "group": "Get Started", "pages": ["overview"] },
           {
-            "group": "Get started",
-            "pages": ["overview", "getting-started"]
+            "group": "Self-hosting",
+            "pages": [
+              "installation",
+              "configuration",
+              "backup",
+              "upgrades",
+              "troubleshooting"
+            ]
           }
         ]
       },
@@ -30,53 +33,203 @@
         "icon": "send",
         "groups": [
           {
-            "group": "Posts and accounts",
+            "group": "Common Concepts",
             "pages": [
               "composer",
-              "drafts",
+              "threads",
               "scheduling",
-              "deliveries",
-              "media",
-              "connections",
-              "authentication"
+              "drafts",
+              "deliveries"
+            ]
+          },
+          {
+            "group": "Supported Providers",
+            "pages": [
+              "providers/x",
+              "providers/threads",
+              "providers/linkedin",
+              "providers/bluesky"
             ]
           }
         ]
       },
       {
-        "dropdown": "API and MCP",
+        "dropdown": "API & MCP",
         "icon": "plug",
         "groups": [
           {
             "group": "Connect a client",
-            "pages": ["api-keys", "mcp-connections", "rest-reference"]
-          }
-        ]
-      },
-      {
-        "dropdown": "Self-hosting",
-        "icon": "server",
-        "groups": [
+            "pages": ["api-keys", "mcp-connections"]
+          },
           {
-            "group": "Install and configure",
+            "group": "MCP reference",
             "pages": [
-              "installation",
-              "configuration",
-              "providers",
-              "storage",
-              "security"
+              "mcp-reference/list_drafts",
+              "mcp-reference/get_draft",
+              "mcp-reference/save_draft",
+              "mcp-reference/delete_draft",
+              "mcp-reference/list_connections",
+              "mcp-reference/list_providers",
+              "mcp-reference/reserve_media_upload",
+              "mcp-reference/complete_media_upload",
+              "mcp-reference/get_media_status",
+              "mcp-reference/get_media_preview",
+              "mcp-reference/list_posts",
+              "mcp-reference/get_post",
+              "mcp-reference/create_post",
+              "mcp-reference/update_post",
+              "mcp-reference/cancel_post",
+              "mcp-reference/disconnect_account",
+              "mcp-reference/get_team",
+              "mcp-reference/update_team",
+              "mcp-reference/list_members"
             ]
           },
           {
-            "group": "Operate Posted",
+            "group": "API Reference",
             "pages": [
-              "operations",
-              "backup",
-              "upgrades",
-              "troubleshooting",
-              "release-notes",
-              "development",
-              "legal"
+              "api-reference/overview",
+              {
+                "group": "Health",
+                "pages": [
+                  "api-reference/get_health_live",
+                  "api-reference/get_health_ready"
+                ]
+              },
+              {
+                "group": "Account and sessions",
+                "pages": [
+                  "api-reference/get_api_auth_status",
+                  "api-reference/post_api_auth_setup",
+                  "api-reference/post_api_auth_login",
+                  "api-reference/post_api_auth_reauth",
+                  "api-reference/post_api_auth_logout",
+                  "api-reference/get_api_auth_me",
+                  "api-reference/patch_api_auth_profile",
+                  "api-reference/get_api_auth_sessions",
+                  "api-reference/delete_api_auth_sessions_by_id",
+                  "api-reference/post_api_auth_password"
+                ]
+              },
+              {
+                "group": "Passkeys and recovery",
+                "pages": [
+                  "api-reference/post_api_auth_passkeys_recovery_verify",
+                  "api-reference/post_api_auth_passkeys_recovery_codes",
+                  "api-reference/get_api_auth_passkeys",
+                  "api-reference/post_api_auth_passkeys_register_options",
+                  "api-reference/post_api_auth_passkeys_register_verify",
+                  "api-reference/delete_api_auth_passkeys_by_id",
+                  "api-reference/post_api_auth_passkeys_authenticate_options",
+                  "api-reference/post_api_auth_passkeys_authenticate_verify",
+                  "api-reference/post_api_auth_recovery_reset"
+                ]
+              },
+              {
+                "group": "Members and invitations",
+                "pages": [
+                  "api-reference/get_api_auth_invitations",
+                  "api-reference/post_api_auth_invitations",
+                  "api-reference/delete_api_auth_invitations_by_id",
+                  "api-reference/get_api_auth_invitation",
+                  "api-reference/post_api_auth_accept_invitation",
+                  "api-reference/patch_api_auth_members_by_id",
+                  "api-reference/delete_api_auth_members_by_id"
+                ]
+              },
+              {
+                "group": "Account email",
+                "pages": [
+                  "api-reference/post_api_auth_email_verification_request",
+                  "api-reference/post_api_auth_verification_email",
+                  "api-reference/post_api_auth_password_reset_request",
+                  "api-reference/post_api_auth_email_verification_confirm",
+                  "api-reference/get_api_auth_email_change",
+                  "api-reference/post_api_auth_email_change",
+                  "api-reference/delete_api_auth_email_change",
+                  "api-reference/post_api_auth_email_change_confirm",
+                  "api-reference/post_api_auth_invitation_verification_request",
+                  "api-reference/post_api_auth_invitation_verification_confirm"
+                ]
+              },
+              {
+                "group": "Posts",
+                "pages": [
+                  "api-reference/get_api_posts_counts",
+                  "api-reference/get_api_posts",
+                  "api-reference/get_api_posts_by_postId",
+                  "api-reference/post_api_posts",
+                  "api-reference/patch_api_posts_by_postId",
+                  "api-reference/delete_api_posts_by_postId"
+                ]
+              },
+              {
+                "group": "Media",
+                "pages": [
+                  "api-reference/get_api_media_config",
+                  "api-reference/post_api_media_uploads",
+                  "api-reference/post_api_media_by_mediaId_complete",
+                  "api-reference/get_api_media_by_mediaId_status",
+                  "api-reference/get_api_media_by_mediaId_preview"
+                ]
+              },
+              {
+                "group": "Social connections",
+                "pages": [
+                  "api-reference/post_api_social_connect_by_provider",
+                  "api-reference/get_api_social_callback_by_provider",
+                  "api-reference/get_social_bluesky_client_metadata_json",
+                  "api-reference/get_social_bluesky_jwks_json",
+                  "api-reference/get_api_connections",
+                  "api-reference/get_api_providers",
+                  "api-reference/delete_api_connections_by_connectionId"
+                ]
+              },
+              {
+                "group": "API key management",
+                "pages": [
+                  "api-reference/get_api_credentials",
+                  "api-reference/post_api_credentials",
+                  "api-reference/delete_api_credentials_by_id",
+                  "api-reference/get_api_team_credentials",
+                  "api-reference/post_api_team_credentials",
+                  "api-reference/delete_api_team_credentials_by_id"
+                ]
+              },
+              {
+                "group": "OAuth and MCP transport",
+                "pages": [
+                  "api-reference/get_well_known_oauth_authorization_server",
+                  "api-reference/get_well_known_oauth_protected_resource",
+                  "api-reference/get_well_known_oauth_protected_resource_mcp",
+                  "api-reference/post_oauth_register",
+                  "api-reference/get_oauth_authorize",
+                  "api-reference/get_api_oauth_consent_by_id",
+                  "api-reference/post_api_oauth_consent_by_id",
+                  "api-reference/post_oauth_token",
+                  "api-reference/post_oauth_revoke",
+                  "api-reference/post_mcp",
+                  "api-reference/get_mcp",
+                  "api-reference/delete_mcp"
+                ]
+              },
+              {
+                "group": "Drafts",
+                "pages": [
+                  "api-reference/get_api_drafts",
+                  "api-reference/get_api_drafts_by_draftId",
+                  "api-reference/post_api_drafts_by_draftId",
+                  "api-reference/delete_api_drafts_by_draftId"
+                ]
+              },
+              {
+                "group": "Team",
+                "pages": [
+                  "api-reference/get_api_workspace",
+                  "api-reference/patch_api_workspace",
+                  "api-reference/get_api_auth_members"
+                ]
+              }
             ]
           }
         ]
@@ -85,45 +238,21 @@
   },
   "navbar": {
     "links": [
-      {
-        "label": "Release notes",
-        "href": "/release-notes"
-      },
-      {
-        "type": "github",
-        "href": "https://github.com/avgeek-oss/posted"
-      }
+      { "label": "Release notes", "href": "/release-notes" },
+      { "type": "github", "href": "https://github.com/avgeek-oss/posted" }
     ],
-    "primary": {
-      "type": "button",
-      "label": "Get started",
-      "href": "/getting-started"
-    }
+    "primary": { "type": "button", "label": "Get started", "href": "/overview" }
   },
   "footer": {
-    "socials": {
-      "github": "https://github.com/avgeek-oss/posted"
-    },
+    "socials": { "github": "https://github.com/avgeek-oss/posted" },
     "links": [
       {
         "header": "Documentation",
         "items": [
-          {
-            "label": "Install Posted",
-            "href": "/installation"
-          },
-          {
-            "label": "Compose a post",
-            "href": "/composer"
-          },
-          {
-            "label": "MCP connections",
-            "href": "/mcp-connections"
-          },
-          {
-            "label": "Backup and recovery",
-            "href": "/backup"
-          }
+          { "label": "Install Posted", "href": "/installation" },
+          { "label": "Compose a post", "href": "/composer" },
+          { "label": "MCP connections", "href": "/mcp-connections" },
+          { "label": "Backup and recovery", "href": "/backup" }
         ]
       },
       {
@@ -137,10 +266,7 @@
             "label": "Our OSS philosophy",
             "href": "https://github.com/avgeek-oss/.github/blob/main/profile/README.md"
           },
-          {
-            "label": "Licenses and terms",
-            "href": "/legal"
-          }
+          { "label": "Licenses and terms", "href": "/legal" }
         ]
       }
     ]
@@ -160,5 +286,12 @@
       "logo": "https://www.posted.cc/assets/posted-mark.png",
       "sameAs": ["https://github.com/avgeek-oss/posted"]
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/storage",
+      "destination": "/configuration#private-media-storage"
+    },
+    { "source": "/rest-reference", "destination": "/api-reference/overview" }
+  ]
 }
