@@ -1,0 +1,16 @@
+---
+title: "List posts"
+description: "List scheduled posts or post history with per-account delivery states."
+playground: simple
+openapi: "/api-reference/openapi.json GET /api/posts"
+---
+
+Read access: a read-enabled personal or team REST API key, or a signed-in user. OAuth clients use the corresponding MCP tool through /mcp.
+
+List scheduled posts or post history with per-account delivery states.
+
+Scheduled includes groups with a scheduled, preparing or publishing delivery. History includes the remaining groups, including failed, uncertain and cancelled outcomes. It is not a list of confirmed publications alone.
+
+MCP clients can use [`list_posts`](/mcp-reference/list_posts) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

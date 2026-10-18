@@ -1,0 +1,16 @@
+---
+title: "Update a scheduled post"
+description: "Edit an entirely scheduled post using its current version. Publishing posts cannot be edited."
+playground: simple
+openapi: "/api-reference/openapi.json PATCH /api/posts/{postId}"
+---
+
+Write access: a member/administrator with a write-enabled credential, or an authorized signed-in user.
+
+Edit an entirely scheduled post using its current version. Publishing posts cannot be edited.
+
+Only entirely scheduled groups can be edited. A stale version conflicts instead of overwriting a teammate's change. Changes apply to the complete sequence and its account overrides.
+
+MCP clients can use [`update_post`](/mcp-reference/update_post) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

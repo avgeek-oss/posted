@@ -1,7 +1,7 @@
 [
   {
     "name": "overview",
-    "title": "Posted",
+    "title": "About Posted",
     "description": "Self-hosted social publishing for a team."
   },
   {
@@ -26,7 +26,7 @@
   },
   {
     "name": "deliveries",
-    "title": "Publish History and delivery details",
+    "title": "Publish history",
     "description": "Inspect progress and handle partial or uncertain publication."
   },
   {
@@ -70,11 +70,6 @@
     "description": "Register approved applications and exact callback URLs."
   },
   {
-    "name": "storage",
-    "title": "Private media storage",
-    "description": "Configure S3-compatible access, CORS and safe retention."
-  },
-  {
     "name": "operations",
     "title": "Operations",
     "description": "Inspect health, schedules, account emails and recovery."
@@ -108,5 +103,35 @@
     "name": "troubleshooting",
     "title": "Troubleshooting",
     "description": "Diagnose configuration, media and publishing problems."
+  },
+  {
+    "name": "threads",
+    "title": "Compose threads",
+    "description": "Create ordered posts, customize each account and understand linked replies."
+  },
+  {
+    "name": "providers/x",
+    "title": "X",
+    "description": "Connect an X account and prepare posts, media and reply threads."
+  },
+  {
+    "name": "providers/threads",
+    "title": "Threads",
+    "description": "Connect Threads accounts and publish text, carousels and linked replies."
+  },
+  {
+    "name": "providers/linkedin",
+    "title": "LinkedIn",
+    "description": "Connect a LinkedIn member account and publish individual posts in order."
+  },
+  {
+    "name": "providers/bluesky",
+    "title": "Bluesky",
+    "description": "Connect through Bluesky OAuth and publish posts, media and reply threads."
+  },
+  {
+    "name": "api-reference/overview",
+    "title": "Request conventions",
+    "description": "Authentication, pagination, retries, versions and delivery outcomes for the HTTP API."
   }
 ]

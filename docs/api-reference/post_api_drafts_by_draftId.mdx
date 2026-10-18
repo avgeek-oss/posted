@@ -1,0 +1,16 @@
+---
+title: "Save a draft"
+description: "Save incomplete content without publishing. Use version 0 and a new draftId for a new draft, or its current version to update. Reuse the request key for retries."
+playground: simple
+openapi: "/api-reference/openapi.json POST /api/drafts/{draftId}"
+---
+
+Write access: a member/administrator with a write-enabled credential, or an authorized signed-in user.
+
+Save incomplete content without publishing. Use version 0 and a new draftId for a new draft, or its current version to update. Reuse the request key for retries.
+
+Use version 0 for a new UUID, or the latest version for an update. Reuse the same idempotencyKey and identical content when retrying. Incomplete content is allowed. Saving does not publish.
+
+MCP clients can use [`save_draft`](/mcp-reference/save_draft) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

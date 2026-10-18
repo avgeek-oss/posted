@@ -83,7 +83,7 @@ The browser preview processes media through the same preparation function, but c
 
 ## Documentation and release preparation
 
-Edit the guide sources in `docs/*.md` and product configuration in `docs/site.json`. Run `pnpm docs:build` to generate Mintlify pages with the shared docs kit. `pnpm docs:check` checks generated consistency, schemas, links and screenshot dimensions; `pnpm docs:validate` runs the pinned Mintlify build and broken-link checks. Review `pnpm docs:dev` on desktop and mobile.
+Edit the guide sources in `docs/**/*.md`, page metadata in `docs/pages.json` and category/group navigation in `docs/site.json`. Run `pnpm docs:build` to generate Mintlify pages with the shared docs kit. The reference generator reads registered HTTP routes and MCP tool validators; `tools/docs-reference-data.ts` supplies fictional examples and supplemental account/OAuth descriptions. Every HTTP operation must have one reference page, and every MCP example must pass its runtime input schema. Generated API/MCP navigation is updated during the build. `pnpm docs:check` checks generated consistency, schemas, links and screenshot dimensions; `pnpm docs:validate` runs the pinned Mintlify build and broken-link checks. Review `pnpm docs:dev` on desktop and mobile.
 
 `pnpm docs:preview` starts an isolated fixture schema and bucket at `http://127.0.0.1:4392` with its API on port 4391 for documentation captures. Its separate loopback hostname keeps its browser session cookies apart from the main localhost preview. It uses sample accounts and media, processes media only and removes its owned data when stopped. It does not reset an existing preview installation.
 

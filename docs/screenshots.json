@@ -82,11 +82,11 @@
   },
   {
     "name": "sequence",
-    "title": "Compose a sequence",
+    "title": "Thread composer",
     "alt": "Posted numbered master posts and connected account previews for a sample thread.",
     "width": 1280,
     "height": 900,
-    "pages": ["composer"]
+    "pages": ["threads"]
   },
   {
     "name": "history",

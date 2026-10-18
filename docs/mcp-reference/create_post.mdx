@@ -1,0 +1,268 @@
+---
+title: "create_post"
+description: "Create a post with Posted MCP."
+---
+
+Schedule or publish a post for selected team accounts. Confirm content, accounts and time with the user. Reuse the same idempotencyKey for retries.
+
+## Workflow
+
+```mermaid
+flowchart LR
+  step0["Confirm copy, accounts and time"] --> step1
+  step1["Create with one request key"] --> step2
+  step2["Inspect delivery state"]
+```
+
+## Access and behavior
+
+Write or Administrator OAuth consent and a member/administrator team role are required. Tools are listed and callable only when the current grant and role permit them.
+
+A future scheduledAt schedules delivery. For immediate publication, use the current timestamp after the user's confirmation. Creation acknowledges a queued request, not confirmed provider publication. Use draftSource with its current version when converting a saved draft.
+
+## Arguments
+
+| Argument          | Required | Type or meaning                                                                                                  |
+| ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
+| `text`            | Yes      | Master text for this post. Account overrides take precedence.                                                    |
+| `textOverrides`   | No       | Selected connection ID to custom text; omit a key to inherit the master.                                         |
+| `connectionIds`   | Yes      | Selected connected accounts belonging to this team; applies to the complete sequence.                            |
+| `mediaIds`        | Yes      | Ready media IDs in attachment order for this master post.                                                        |
+| `mediaOverrides`  | No       | Selected connection ID to ordered media IDs; omit to inherit, or use [] for no attachments.                      |
+| `additionalPosts` | No       | Later posts in order; each has text, mediaIds and optional account overrides.                                    |
+| `scheduledAt`     | Yes      | ISO 8601 UTC timestamp. Use a future time to schedule; use the current time only after publication confirmation. |
+| `idempotencyKey`  | Yes      | One content-bound request key; reuse with the identical payload when retrying.                                   |
+| `draftSource`     | No       | Saved draft ID and current version, for one-time conversion into a posting group.                                |
+
+<Accordion title="Complete input schema">
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "text": {
+      "type": "string",
+      "maxLength": 3000
+    },
+    "textOverrides": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 3000
+      }
+    },
+    "connectionIds": {
+      "minItems": 1,
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+      }
+    },
+    "mediaIds": {
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+      }
+    },
+    "mediaOverrides": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+      },
+      "additionalProperties": {
+        "maxItems": 20,
+        "type": "array",
+        "items": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      }
+    },
+    "additionalPosts": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 3000
+          },
+          "textOverrides": {
+            "default": {},
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 3000
+            }
+          },
+          "mediaIds": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "mediaOverrides": {
+            "default": {},
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "additionalProperties": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            }
+          }
+        },
+        "required": ["text", "mediaIds"],
+        "additionalProperties": false
+      }
+    },
+    "scheduledAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{8,128}$"
+    },
+    "draftSource": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "version": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": ["id", "version"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "text",
+    "connectionIds",
+    "mediaIds",
+    "scheduledAt",
+    "idempotencyKey"
+  ],
+  "additionalProperties": false
+}
+```
+
+</Accordion>
+
+## Example call
+
+The client initializes the MCP connection before sending this JSON-RPC call. Example records are fictional.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "create_post",
+    "arguments": {
+      "text": "A small update from the studio.",
+      "connectionIds": ["11111111-1111-4111-8111-111111111111"],
+      "mediaIds": ["44444444-4444-4444-8444-444444444444"],
+      "scheduledAt": "2027-01-18T09:30:00.000Z",
+      "idempotencyKey": "studio-update-2027-01-18"
+    }
+  }
+}
+```
+
+## Example result
+
+Posted returns this object in `structuredContent` and a JSON text content block. A tool failure sets `isError`; never treat an error as a completed mutation.
+
+```json
+{
+  "post": {
+    "id": "22222222-2222-4222-8222-222222222222",
+    "text": "A small update from the studio.",
+    "additionalPosts": [],
+    "mediaOverrides": {},
+    "scheduledAt": "2027-01-18T09:30:00.000Z",
+    "idempotencyKey": "studio-update-2027-01-18",
+    "state": "scheduled",
+    "version": 1,
+    "createdAt": "2027-01-18T09:30:00.000Z",
+    "media": [
+      {
+        "id": "44444444-4444-4444-8444-444444444444",
+        "fileName": "studio.jpg",
+        "contentType": "image/jpeg",
+        "sizeBytes": 245760,
+        "width": 1600,
+        "height": 900,
+        "alt": "A bright studio desk beside a window",
+        "durationSeconds": null
+      }
+    ],
+    "managedBy": {
+      "id": "66666666-6666-4666-8666-666666666666",
+      "name": "Alex Morgan",
+      "avatarUrl": null
+    },
+    "deliveries": [
+      {
+        "id": "77777777-7777-4777-8777-777777777777",
+        "postIndex": 0,
+        "connectionId": "11111111-1111-4111-8111-111111111111",
+        "provider": "bluesky",
+        "accountName": "Alex Morgan",
+        "textOverride": null,
+        "state": "scheduled",
+        "providerPostId": null,
+        "publishedUrl": null,
+        "error": null,
+        "publishedAt": null
+      }
+    ]
+  }
+}
+```
+
+## Related reference
+
+[HTTP operation](/api-reference/post_api_posts) · [Connect an MCP client](/mcp-connections) · [Request conventions](/api-reference/overview)

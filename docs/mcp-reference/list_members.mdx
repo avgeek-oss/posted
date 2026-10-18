@@ -1,0 +1,87 @@
+---
+title: "list_members"
+description: "List members with Posted MCP."
+---
+
+List team members within the current access role.
+
+## Workflow
+
+```mermaid
+flowchart LR
+  step0["Read team members"] --> step1
+  step1["Inspect roles and passkey status"]
+```
+
+## Access and behavior
+
+A Read-only, Write or Administrator OAuth grant can call this tool within the user’s current team role. Tools are listed and callable only when the current grant and role permit them.
+
+limit is at most 1000. The REST endpoint also supports a cursor; the MCP tool currently accepts limit only. A changed member collection can return a conflict.
+
+## Arguments
+
+| Argument | Required | Type or meaning                                                   |
+| -------- | -------- | ----------------------------------------------------------------- |
+| `limit`  | No       | Maximum records to return; use the endpoint-specific upper bound. |
+
+<Accordion title="Complete input schema">
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    }
+  },
+  "additionalProperties": false
+}
+```
+
+</Accordion>
+
+## Example call
+
+The client initializes the MCP connection before sending this JSON-RPC call. Example records are fictional.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "list_members",
+    "arguments": {
+      "limit": 100
+    }
+  }
+}
+```
+
+## Example result
+
+Posted returns this object in `structuredContent` and a JSON text content block. A tool failure sets `isError`; never treat an error as a completed mutation.
+
+```json
+{
+  "items": [
+    {
+      "id": "66666666-6666-4666-8666-666666666666",
+      "name": "Alex Morgan",
+      "email": "alex@example.test",
+      "role": "member",
+      "timeZone": "UTC",
+      "passkeyEnabled": false
+    }
+  ],
+  "hasMore": false,
+  "nextCursor": null
+}
+```
+
+## Related reference
+
+[HTTP operation](/api-reference/get_api_auth_members) · [Connect an MCP client](/mcp-connections) · [Request conventions](/api-reference/overview)

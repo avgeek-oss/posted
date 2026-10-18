@@ -1,0 +1,16 @@
+---
+title: "Complete a media upload"
+description: "Validate uploaded media and queue video preparation. Read its status until ready before scheduling it."
+playground: simple
+openapi: "/api-reference/openapi.json POST /api/media/{mediaId}/complete"
+---
+
+Write access: a member/administrator with a write-enabled credential, or an authorized signed-in user.
+
+Validate uploaded media and queue video preparation. Read its status until ready before scheduling it.
+
+Images can become ready immediately. Videos normally return state processing with HTTP 202 and must finish preparation before a post can use them. Invalid bytes or size are rejected.
+
+MCP clients can use [`complete_media_upload`](/mcp-reference/complete_media_upload) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

@@ -16,15 +16,9 @@ Click an image or video thumbnail in the expanded master or account editor to op
 
 Empty previews show an italic “Your post will appear here.” placeholder with a red alert triangle. Hover or focus the icon to see “Post copy missing, type in the composer to reflect in the preview.” The hint also opens when pressed on touch devices. Previews show content and supported media, but they do not replace provider validation. Providers may reject a request because of account access, quota or policy.
 
-## Multiple posts and threads
+## Compose a thread
 
-Choose **Add Another Post** below the last card to append another numbered post. Each post has its own master text, media and account-specific text. The active post stays expanded; other posts show their full text, wrapping within the card and preserving line breaks, along with media thumbnails. Use the separate chevron icon button to expand or collapse a master post; the title and summary have no button hover treatment. Add as many posts as you need, or remove a post using its remove button and confirming the dialog. Removal discards that post’s master text, media and account overrides; Cancel keeps them. Insert between existing posts using the always-visible inline insert control or the post actions menu. Drag a post by its handle, use the keyboard drag controls, or choose **Move up** / **Move down** from its actions menu to reorder the complete post, including media and account overrides. Media order and provider limits apply separately to each post.
-
-Selecting an account shows its numbered posts in **Edit** and the full sequence in **Preview**. All account posts remain expanded for editing, independently of the master outline. Editing or previewing an account does not open its master posts. X, Bluesky and Threads publish the sequence as linked replies, with short inset connectors between preview cards and reply labels beside them. LinkedIn publishes numbered individual posts in the same order, with a larger gap between their preview cards. The account heading shows only the provider and handle. Editing an account's text or ordered media changes only that post for that account; **Reset to master** restores both text and media inheritance for it after confirmation.
-
-Saving a draft, scheduling, editing or cancelling applies to the whole sequence. Delivery details show each post's result separately. A later post waits for the previous post on that account to finish successfully. If an earlier post fails or its result is uncertain, subsequent posts on that account are not sent. Confirmed publications remain visible, and replaying the original request does not publish them again.
-
-On mobile, switch between **Write** and **Accounts**. Inside **Accounts**, use **Preview** to review the selected account or **Edit** to customize it, just as on desktop. Mobile attachment thumbnails are wider, with filenames truncated to one line. Tab content aligns with its surrounding content without an extra horizontal inset.
+A composition can contain several ordered posts. Read [Compose threads](/threads) for inserting, reordering, account-specific content and provider reply behavior.
 
 ## Media performance
 

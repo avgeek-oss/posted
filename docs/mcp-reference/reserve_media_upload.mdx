@@ -1,0 +1,108 @@
+---
+title: "reserve_media_upload"
+description: "Reserve a media upload with Posted MCP."
+---
+
+Reserve a private image or video upload. PUT the approved file to the returned URL using its headers, then complete the upload. No post is created.
+
+## Workflow
+
+```mermaid
+flowchart LR
+  step0["Reserve the exact file type and byte size"] --> step1
+  step1["PUT bytes to the signed URL"] --> step2
+  step2["Complete the upload"]
+```
+
+## Access and behavior
+
+Write or Administrator OAuth consent and a member/administrator team role are required. Tools are listed and callable only when the current grant and role permit them.
+
+Use the returned uploadUrl and headers for the separate storage PUT. Reserving an upload does not create a post. Keep signed URLs private and use them before expiry.
+
+## Arguments
+
+| Argument      | Required | Type or meaning                                         |
+| ------------- | -------- | ------------------------------------------------------- |
+| `fileName`    | Yes      | Original file name, including its extension.            |
+| `contentType` | Yes      | Supported MIME type matching the exact uploaded bytes.  |
+| `sizeBytes`   | Yes      | Exact file size in bytes; the uploaded body must match. |
+| `alt`         | No       | Alternative text describing the image or video.         |
+
+<Accordion title="Complete input schema">
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "fileName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "contentType": {
+      "type": "string",
+      "enum": [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "video/mp4",
+        "video/quicktime"
+      ]
+    },
+    "sizeBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 104857600
+    },
+    "alt": {
+      "default": "",
+      "type": "string",
+      "maxLength": 2000
+    }
+  },
+  "required": ["fileName", "contentType", "sizeBytes"],
+  "additionalProperties": false
+}
+```
+
+</Accordion>
+
+## Example call
+
+The client initializes the MCP connection before sending this JSON-RPC call. Example records are fictional.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "reserve_media_upload",
+    "arguments": {
+      "fileName": "studio.jpg",
+      "contentType": "image/jpeg",
+      "sizeBytes": 245760,
+      "alt": "A bright studio desk beside a window"
+    }
+  }
+}
+```
+
+## Example result
+
+Posted returns this object in `structuredContent` and a JSON text content block. A tool failure sets `isError`; never treat an error as a completed mutation.
+
+```json
+{
+  "mediaId": "44444444-4444-4444-8444-444444444444",
+  "uploadUrl": "https://storage.example.test/signed-upload",
+  "headers": {
+    "Content-Type": "image/jpeg"
+  }
+}
+```
+
+## Related reference
+
+[HTTP operation](/api-reference/post_api_media_uploads) · [Connect an MCP client](/mcp-connections) · [Request conventions](/api-reference/overview)

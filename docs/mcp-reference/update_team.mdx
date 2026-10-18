@@ -1,0 +1,82 @@
+---
+title: "update_team"
+description: "Update team settings with Posted MCP."
+---
+
+Update the team name.
+
+## Workflow
+
+```mermaid
+flowchart LR
+  step0["Confirm the team name"] --> step1
+  step1["Update team settings"] --> step2
+  step2["Read the saved name"]
+```
+
+## Access and behavior
+
+Administrator consent and a current administrator team role are required. Tools are listed and callable only when the current grant and role permit them.
+
+Requires Administrator access. This changes the team name, not membership or provider ownership.
+
+## Arguments
+
+| Argument | Required | Type or meaning                         |
+| -------- | -------- | --------------------------------------- |
+| `name`   | Yes      | The name to save for the target record. |
+
+<Accordion title="Complete input schema">
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    }
+  },
+  "required": ["name"],
+  "additionalProperties": false
+}
+```
+
+</Accordion>
+
+## Example call
+
+The client initializes the MCP connection before sending this JSON-RPC call. Example records are fictional.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "update_team",
+    "arguments": {
+      "name": "Studio team"
+    }
+  }
+}
+```
+
+## Example result
+
+Posted returns this object in `structuredContent` and a JSON text content block. A tool failure sets `isError`; never treat an error as a completed mutation.
+
+```json
+{
+  "workspace": {
+    "id": "55555555-5555-4555-8555-555555555555",
+    "name": "Studio team",
+    "createdAt": "2027-01-18T09:30:00.000Z"
+  }
+}
+```
+
+## Related reference
+
+[HTTP operation](/api-reference/patch_api_workspace) · [Connect an MCP client](/mcp-connections) · [Request conventions](/api-reference/overview)

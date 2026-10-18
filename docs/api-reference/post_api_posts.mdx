@@ -1,0 +1,16 @@
+---
+title: "Create a post"
+description: "Schedule or publish a post for selected team accounts. Confirm content, accounts and time with the user. Reuse the same idempotencyKey for retries."
+playground: simple
+openapi: "/api-reference/openapi.json POST /api/posts"
+---
+
+Write access: a member/administrator with a write-enabled credential, or an authorized signed-in user.
+
+Schedule or publish a post for selected team accounts. Confirm content, accounts and time with the user. Reuse the same idempotencyKey for retries.
+
+A future scheduledAt schedules delivery. For immediate publication, use the current timestamp after the user's confirmation. Creation acknowledges a queued request, not confirmed provider publication. Use draftSource with its current version when converting a saved draft.
+
+MCP clients can use [`create_post`](/mcp-reference/create_post) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

@@ -1,0 +1,16 @@
+---
+title: "Get media status"
+description: "Read media preparation status and its metadata when ready."
+playground: simple
+openapi: "/api-reference/openapi.json GET /api/media/{mediaId}/status"
+---
+
+Read access: a read-enabled personal or team REST API key, or a signed-in user. OAuth clients use the corresponding MCP tool through /mcp.
+
+Read media preparation status and its metadata when ready.
+
+A processing result contains the state only. A ready result includes metadata. Failed video preparation returns an error instead of making media publishable.
+
+MCP clients can use [`get_media_status`](/mcp-reference/get_media_status) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

@@ -1,0 +1,16 @@
+---
+title: "Cancel a post"
+description: "Cancel pending deliveries. Ask the user before cancelling their post. Published posts remain in history."
+playground: simple
+openapi: "/api-reference/openapi.json DELETE /api/posts/{postId}"
+---
+
+Write access: a member/administrator with a write-enabled credential, or an authorized signed-in user.
+
+Cancel pending deliveries. Ask the user before cancelling their post. Published posts remain in history.
+
+Cancellation stops pending deliveries. It does not remove provider-side publications, and a group with work already preparing or publishing cannot be cancelled safely.
+
+MCP clients can use [`cancel_post`](/mcp-reference/cancel_post) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)
