@@ -163,14 +163,11 @@ export const ComposerMedia = memo(function ComposerMedia({
                   </span>
                 )}
                 {isGif(image) && (
-                  <Chip
-                    size="sm"
-                    color="accent"
-                    variant="soft"
-                    className="absolute bottom-1 right-1"
-                  >
-                    <Chip.Label>GIF</Chip.Label>
-                  </Chip>
+                  <span className="pointer-events-none absolute bottom-1 right-1 rounded-full bg-surface">
+                    <Chip size="sm" color="accent" variant="soft">
+                      <Chip.Label>GIF</Chip.Label>
+                    </Chip>
+                  </span>
                 )}
               </Button>
               <div className="flex min-w-0 items-center gap-1 py-1 pl-1 pr-2">
