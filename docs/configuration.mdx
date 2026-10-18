@@ -16,6 +16,10 @@ Configuration belongs in the operator's private environment, not in a client bun
 
 Provider settings are listed in [provider setup](/providers). A provider is enabled only when all its required values are present.
 
+## Towbar
+
+Social provider credentials are optional. When enabling a provider, add its complete set of environment variables to both the API and worker runtime secrets. Towbar passes configured runtime secrets even when the manifest does not list them as required.
+
 ## SMTP
 
 Connect an email service so Posted can send team invitations, password resets and other account emails. Use the SMTP details from your email provider. Leave these settings blank if you do not want to send email.
