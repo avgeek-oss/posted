@@ -1168,7 +1168,7 @@ export function ComposerPage({
               <Tabs.ListContainer>
                 <Tabs.List
                   aria-label="Account workspace"
-                  className="max-sm:p-0"
+                  className="composer-tab-list max-sm:p-0"
                 >
                   <Tabs.Tab id="edit">
                     Edit
@@ -1273,7 +1273,7 @@ export function ComposerPage({
                 <Tabs.ListContainer>
                   <Tabs.List
                     aria-label="Create post workspace"
-                    className="w-full max-sm:p-0"
+                    className="composer-tab-list w-full max-sm:p-0"
                   >
                     <Tabs.Tab id="write" className="flex-1">
                       Write
