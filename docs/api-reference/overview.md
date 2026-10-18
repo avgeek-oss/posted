@@ -32,7 +32,7 @@ The root text/media form post index 0. `additionalPosts` holds later posts in or
 
 X, Threads and Bluesky form linked replies; LinkedIn publishes individual posts in order. A preceding failure or uncertain outcome prevents later posts on that account from being sent. See [Compose threads](/threads).
 
-## Private media workflow
+## S3 source workflow
 
 ```mermaid
 flowchart LR
@@ -42,7 +42,7 @@ flowchart LR
   poll --> post["Use media ID in a draft or post"]
 ```
 
-Use the upload reservation's exact headers and byte size. Video completion can return HTTP 202 while preparation runs; wait for ready before creating a post. Preview URLs are short-lived. See [media configuration](/configuration#private-media-storage) and the individual media endpoints.
+Use the upload reservation's exact headers and byte size. Video completion can return HTTP 202 while preparation runs; wait for ready before creating a post. Preview URLs are short-lived. See [media configuration](/configuration#s3-source) and the individual media endpoints.
 
 ## Pagination
 

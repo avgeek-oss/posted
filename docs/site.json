@@ -19,8 +19,17 @@
           {
             "group": "Self-hosting",
             "pages": [
-              "installation",
+              {
+                "group": "Installation",
+                "pages": [
+                  "installation",
+                  "installation/docker-compose",
+                  "installation/towbar"
+                ],
+                "icon": "network"
+              },
               "configuration",
+              "security",
               "backup",
               "upgrades",
               "troubleshooting"
@@ -64,25 +73,50 @@
           {
             "group": "MCP reference",
             "pages": [
-              "mcp-reference/list_drafts",
-              "mcp-reference/get_draft",
-              "mcp-reference/save_draft",
-              "mcp-reference/delete_draft",
-              "mcp-reference/list_connections",
-              "mcp-reference/list_providers",
-              "mcp-reference/reserve_media_upload",
-              "mcp-reference/complete_media_upload",
-              "mcp-reference/get_media_status",
-              "mcp-reference/get_media_preview",
-              "mcp-reference/list_posts",
-              "mcp-reference/get_post",
-              "mcp-reference/create_post",
-              "mcp-reference/update_post",
-              "mcp-reference/cancel_post",
-              "mcp-reference/disconnect_account",
-              "mcp-reference/get_team",
-              "mcp-reference/update_team",
-              "mcp-reference/list_members"
+              {
+                "group": "Drafts",
+                "pages": [
+                  "mcp-reference/list_drafts",
+                  "mcp-reference/get_draft",
+                  "mcp-reference/save_draft",
+                  "mcp-reference/delete_draft"
+                ]
+              },
+              {
+                "group": "Social connections",
+                "pages": [
+                  "mcp-reference/list_connections",
+                  "mcp-reference/list_providers",
+                  "mcp-reference/disconnect_account"
+                ]
+              },
+              {
+                "group": "Media",
+                "pages": [
+                  "mcp-reference/reserve_media_upload",
+                  "mcp-reference/complete_media_upload",
+                  "mcp-reference/get_media_status",
+                  "mcp-reference/get_media_preview"
+                ]
+              },
+              {
+                "group": "Posts",
+                "pages": [
+                  "mcp-reference/list_posts",
+                  "mcp-reference/get_post",
+                  "mcp-reference/create_post",
+                  "mcp-reference/update_post",
+                  "mcp-reference/cancel_post"
+                ]
+              },
+              {
+                "group": "Team",
+                "pages": [
+                  "mcp-reference/get_team",
+                  "mcp-reference/update_team",
+                  "mcp-reference/list_members"
+                ]
+              }
             ]
           },
           {
@@ -238,7 +272,6 @@
   },
   "navbar": {
     "links": [
-      { "label": "Release notes", "href": "/release-notes" },
       { "type": "github", "href": "https://github.com/avgeek-oss/posted" }
     ],
     "primary": { "type": "button", "label": "Get started", "href": "/overview" }
@@ -288,10 +321,7 @@
     }
   },
   "redirects": [
-    {
-      "source": "/storage",
-      "destination": "/configuration#private-media-storage"
-    },
+    { "source": "/storage", "destination": "/configuration#s3-source" },
     { "source": "/rest-reference", "destination": "/api-reference/overview" }
   ]
 }

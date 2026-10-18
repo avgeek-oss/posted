@@ -1,6 +1,7 @@
 ---
 title: "Configuration"
 description: "Required settings and optional provider, storage and email configuration."
+icon: "settings"
 ---
 
 Configuration belongs in the operator's private environment, not in a client bundle or image. The API and worker share the database, stable secret, public origins, provider settings and private storage credentials. The UI receives only the public API and storage origins.
@@ -11,22 +12,30 @@ Configuration belongs in the operator's private environment, not in a client bun
 | `POSTED_SECRET`     | At least 32 random characters; protects sessions and encrypted provider credentials. |
 | `POSTED_WEB_URL`    | Exact public HTTPS UI origin, without a path or trailing configuration data.         |
 | `POSTED_API_URL`    | Separate public HTTPS API origin used for API, MCP and provider callbacks.           |
-| `POSTED_VERSION`    | One published version for API, worker and UI.                                        |
 | `POSTGRES_PASSWORD` | Required only for bundled PostgreSQL; use a random alphanumeric value.               |
 
-Loopback HTTP is allowed for local development. Public origins require HTTPS. Do not use the Mintlify documentation domain as the application API origin: `posted.cc` hosts documentation, while your installation has its own UI and API origins.
-
-Provider settings are listed in [provider setup](/providers). A provider is enabled only when all its required values are present; partial configuration fails startup. The LinkedIn API version defaults to `202609` and must be kept within the provider's supported versions.
+Provider settings are listed in [provider setup](/providers). A provider is enabled only when all its required values are present.
 
 ## SMTP
 
-Set `POSTED_SMTP_HOST` and `POSTED_SMTP_FROM` together. Supply `POSTED_SMTP_USER` and `POSTED_SMTP_PASSWORD` together when authentication is required. Port defaults to 587; `POSTED_SMTP_SECURE=false` uses STARTTLS for a remote SMTP server, while `true` uses direct TLS, usually on 465. Use a sender such as `Posted <posted@example.com>`.
+Connect an email service so Posted can send team invitations, password resets and other account emails. Use the SMTP details from your email provider. Leave these settings blank if you do not want to send email.
 
-Verify the sender domain and its SPF, DKIM and DMARC configuration with your email service. A display name and application theme do not guarantee delivery outside spam folders. Posted sends branded account emails through the API's durable email outbox, not the publishing worker.
+```dotenv
+POSTED_SMTP_HOST=smtp.example.com
+POSTED_SMTP_PORT=587
+POSTED_SMTP_SECURE=false
+POSTED_SMTP_USER=posted@example.com
+POSTED_SMTP_PASSWORD=YOUR_SMTP_PASSWORD
+POSTED_SMTP_FROM="Posted <posted@example.com>"
+```
 
-## Private media storage
+Verify your sender domain with your email service. Set these values on the API service.
 
-Leave the complete storage group blank to disable uploads. The worker includes FFmpeg and has a 256 MiB writable `/tmp`; its root filesystem stays read-only.
+<span id="private-media-storage" />
+
+## S3 source
+
+Leave the complete storage group blank to disable uploads.
 
 Use a private S3-compatible bucket, such as Cloudflare R2. Create an object read/write credential limited to that bucket. Keep it in the API/worker runtime environment; the UI must not receive it.
 
@@ -59,9 +68,3 @@ Allow the exact UI origin to PUT and GET signed objects. Expose ETag and allow h
 ```
 
 Do not enable a public bucket domain. A successful upload in the UI confirms CORS and signing; container health alone does not.
-
-### Retention
-
-Temporary uploads use `posted/uploads/`; expire that prefix after one day. Prepared delivery copies use `posted/delivery/`; expire them after two days. Retain immutable originals in `posted/originals/` and normalized, ready videos in `posted/media/` for saved drafts and future schedules.
-
-Never use bucket-wide expiry. It can remove files needed by a future scheduled post or saved draft. Back up private retained media alongside PostgreSQL and `POSTED_SECRET`.

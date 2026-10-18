@@ -1,13 +1,45 @@
 # API keys
 
-Personal keys are bounded by their owner's current role. Administrators can create team keys with a stored team policy. Use the smallest useful access level and an appropriate expiry.
+Use an API key to connect a script or application to Posted. Choose a personal key for your own scripts or a team key for shared automation.
 
-Create keys in the corresponding Account Settings or Team Settings page. A key is shown once; keep it in the client's secret store. The table lists active keys and their permissions. Revocation prevents further use.
+## Create a personal API key
 
-REST requests use the key in the Authorization header:
+1. Open **Account Settings → API Keys** and choose **Create API key**.
+2. Give the key a name, such as **Draft reader**, then choose its permissions and expiry.
+3. Choose **Create key** and copy it. Posted shows the full key only once.
 
-```sh
-curl --fail --header "Authorization: Bearer $POSTED_REST_KEY"   https://posted-api.example.com/api/providers
+A personal key follows your current team role. Start with **Read-only** if your client only needs to read posts and accounts. Use **Edit** to create or update content, or **Administrative permissions** for team management when your role allows it.
+
+The list shows your keys, permissions and expiry. You can revoke a key here when you no longer need it.
+
+<!-- screenshot:personal-api-keys -->
+
+## Create a team API key
+
+Administrators can create keys for shared scripts and services. A team key belongs to the team and uses the permissions chosen when it was created.
+
+1. Open **Team Settings → Team API Keys** and choose **Create API key**.
+2. Name the service, such as **Publishing automation**, and choose its permissions and expiry.
+3. Choose **Create key** and save the key in the service's secret settings.
+
+Team keys appear in a separate list so administrators can review and revoke access to shared automation.
+
+<!-- screenshot:team-api-keys -->
+
+## Make your first request
+
+Set your installation's API URL and the key you copied, then run this read-only request:
+
+```sh title="Read available providers"
+export POSTED_API_URL="https://posted-api.example.com"
+export POSTED_API_KEY="YOUR_API_KEY"
+
+curl --fail-with-body "$POSTED_API_URL/api/providers" \
+  --header "Authorization: Bearer $POSTED_API_KEY"
 ```
 
-`POSTED_REST_KEY` is a private value supplied by you, not an operator environment setting. Do not put a key in a URL, screenshot, issue or public repository. OAuth is the [MCP connection method](/mcp-connections); a REST key is not its replacement.
+The response lists the providers enabled for your installation. Use the same `Authorization` header with other endpoints in the [API reference](/api-reference/overview).
+
+These variables belong to your client. Keep the key in its secret store and out of source code. If a key expires or is revoked, create a replacement and update the client. A `401` response means the key was not accepted; a `403` response means it does not have permission for that action.
+
+To connect an AI assistant, use [MCP connections](/mcp-connections).

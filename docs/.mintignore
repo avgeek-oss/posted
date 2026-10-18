@@ -1,0 +1,2 @@
+# Publish generated MDX pages; editable Markdown sources use the same routes.
+**/*.md

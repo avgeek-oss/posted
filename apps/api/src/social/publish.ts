@@ -2,7 +2,6 @@ import { z } from "zod";
 import { Agent, RichText, XRPCError } from "@atproto/api";
 import { setTimeout as delay } from "node:timers/promises";
 import type { DeliveryJob } from "../posts/queue.js";
-import { config } from "../config.js";
 import {
   bearer,
   jsonBody,
@@ -38,7 +37,7 @@ export type PreparedPublication = {
 const idResponse = z.object({ id: z.string().min(1) });
 const linkedinHeaders = (token: string) => ({
   ...bearer(token),
-  "LinkedIn-Version": config().POSTED_LINKEDIN_API_VERSION,
+  "LinkedIn-Version": "202609",
   "X-Restli-Protocol-Version": "2.0.0",
 });
 export async function preparePublication(

@@ -519,7 +519,14 @@ function job(provider: DeliveryJob["provider"]): DeliveryJob {
     encryptedCredentials: "unused",
   };
 }
-test("LinkedIn prepares images before the public post boundary and supplies its versioned Posts API payload", async () => {
+test("LinkedIn prepares images and publishes with the fixed API version despite a legacy environment override", async (t) => {
+  const previousVersion = process.env.POSTED_LINKEDIN_API_VERSION;
+  process.env.POSTED_LINKEDIN_API_VERSION = "203001";
+  t.after(() => {
+    if (previousVersion === undefined)
+      delete process.env.POSTED_LINKEDIN_API_VERSION;
+    else process.env.POSTED_LINKEDIN_API_VERSION = previousVersion;
+  });
   const requests: string[] = [];
   mock.method(
     globalThis,
@@ -527,6 +534,11 @@ test("LinkedIn prepares images before the public post boundary and supplies its 
     async (input: string | URL | Request, init?: RequestInit) => {
       const url = urlOf(input);
       requests.push(url.pathname);
+      if (url.pathname.startsWith("/rest/"))
+        assert.equal(
+          new Headers(init?.headers).get("LinkedIn-Version"),
+          "202609",
+        );
       if (url.pathname === "/rest/images")
         return json({
           value: {

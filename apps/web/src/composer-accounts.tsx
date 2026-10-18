@@ -204,8 +204,10 @@ export function ComposerAccounts({
                       <>
                         <ProviderIcon provider={account.provider} />
                         <span>
-                          {account.name} · {providerNames[account.provider]} · @
-                          {account.handle}
+                          <span className="sr-only">
+                            {providerNames[account.provider]}:{" "}
+                          </span>
+                          {account.name} · @{account.handle}
                         </span>
                       </>
                     ) : (
@@ -269,7 +271,7 @@ export function ComposerAccounts({
                         {account.name}
                       </span>
                       <span className="truncate text-xs text-muted">
-                        {providerNames[account.provider]} · @{account.handle}
+                        @{account.handle}
                       </span>
                       {account.state !== "connected" && (
                         <span className="text-xs text-muted">

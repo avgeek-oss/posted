@@ -9,11 +9,7 @@ Publish text, images, videos, mixed carousels and linked reply sequences to team
 
 <Steps>
   <Step title="Configure the provider">
-    The installation operator supplies `POSTED_THREADS_CLIENT_ID` and
-    `POSTED_THREADS_CLIENT_SECRET` to both API and worker. Configure a Threads
-    application with permission to read the account identity and publish
-    content. Complete the provider’s approval or account-access steps for the
-    accounts you intend to connect.
+    Add the required environment variables below to your Posted installation.
   </Step>
   <Step title="Authorize the account">
     A team administrator opens **Connections → Add connection**, chooses
@@ -28,19 +24,28 @@ Publish text, images, videos, mixed carousels and linked reply sequences to team
 
 Accounts belong to the team. Connecting the same provider account again refreshes the existing connection. Members can compose for connected accounts; only administrators can add or disconnect them.
 
-## Application configuration
+## Required environment variables
 
-Register the exact API callback in your provider application:
+Add these values to both the API and worker services, then restart them to apply the configuration.
 
-```text
-https://posted-api.example.com/api/social/callback/threads
+```dotenv title="Environment variables"
+POSTED_THREADS_CLIENT_ID=YOUR_THREADS_CLIENT_ID
+POSTED_THREADS_CLIENT_SECRET=YOUR_THREADS_CLIENT_SECRET
 ```
 
-Replace the example origin with your API origin. For the hosted installation, it is `https://posted-api.avgeek.ltd/api/social/callback/threads`.
+## Application configuration
 
-Posted requests `threads_basic,threads_content_publish`. Configure a Threads application with permission to read the account identity and publish content. Complete the provider’s approval or account-access steps for the accounts you intend to connect.
+Create a Threads application with permission to read account identity and publish content. Complete any approval steps required for the accounts you want to connect.
 
-See [configuration](/configuration) for the shared runtime environment and [Towbar provider setup](/providers#configure-the-hosted-installation-in-towbar) for private value entry. Follow the provider's [official authorization documentation](https://developers.facebook.com/docs/threads/) for its registration and approval process.
+Register this callback URL in your Threads application:
+
+```text title="Callback URL"
+{{POSTED_API_URL}}/api/social/callback/threads
+```
+
+Posted requests `threads_basic`, `threads_content_publish`.
+
+Follow the provider's [official authorization documentation](https://developers.facebook.com/docs/threads/) to register your application and complete any approval steps.
 
 ## Limits enforced by Posted
 
@@ -57,7 +62,7 @@ These are Posted’s current delivery limits. Use [list_providers](/mcp-referenc
 
 A Threads post can use the first 20 attachments in its chosen order, including a mixture of images and videos. For a sequence, each later post replies to the previous confirmed post on that account.
 
-Each post has independent text and attachment order. Account-specific edits affect only that account and post. **Reset to master** restores text and media inheritance after confirmation. Image or video publishing requires [private media storage](/configuration#private-media-storage).
+Each post has independent text and attachment order. Account-specific edits affect only that account and post. **Reset to master** restores text and media inheritance after confirmation. Image or video publishing requires [S3 source](/configuration#s3-source).
 
 ```mermaid
 flowchart LR

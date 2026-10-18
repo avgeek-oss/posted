@@ -46,7 +46,7 @@ jobs:
           test "$(jq -r .version apps/web-server/package.json)" = "$version"
           for component in api worker web; do
             image="$(sed -n "s/^    image: ghcr.io\/avgeek-oss\/posted-$component://p" docker-compose.yml)"
-            test "$image" = "\${POSTED_VERSION:-$version}"
+            test "$image" = "$version"
           done
           commit="$(git rev-parse 'HEAD^{commit}')"
           test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$commit"

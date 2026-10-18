@@ -37,6 +37,7 @@ import {
   TextField,
   toast,
   Tabs,
+  Tooltip,
 } from "@posted/web-design-system";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -875,9 +876,10 @@ export function ComposerPage({
     if (ambiguous || postId) void submit(ambiguous ? mode : "schedule");
     else setPostNowOpen(true);
   }
-  const publishLabel = selected.length
-    ? `Post in ${selected.length} ${selected.length === 1 ? "account" : "accounts"}`
-    : "Post now";
+  const publishLabel =
+    desktop && selected.length
+      ? `Post in ${selected.length} ${selected.length === 1 ? "account" : "accounts"}`
+      : "Post now";
   const publishAction = (
     <ButtonGroup
       size="md"
@@ -1150,7 +1152,10 @@ export function ComposerPage({
                   {preview.name}
                 </h2>
                 <p className="truncate text-xs text-muted">
-                  {providerNames[preview.provider]} · @{preview.handle}
+                  <span className="sr-only">
+                    {providerNames[preview.provider]}:{" "}
+                  </span>
+                  @{preview.handle}
                 </p>
               </div>
             )}
@@ -1197,18 +1202,33 @@ export function ComposerPage({
       actions={
         <div className="flex flex-wrap items-center gap-2">
           {!postId && (
-            <Button
-              size="md"
-              variant="secondary"
-              isPending={busy && !!draftSave.current}
-              isDisabled={
-                !canEdit || busy || uploading || (ambiguous && !draftRetry)
-              }
-              onPress={() => void saveDraft()}
-            >
-              <HugeiconsIcon icon={FloppyDiskIcon} size={16} aria-hidden />
-              {draftRetry ? "Retry draft save" : "Save as draft"}
-            </Button>
+            <Tooltip>
+              <Tooltip.Trigger<"span">
+                className="inline-flex shrink-0"
+                role="presentation"
+                tabIndex={-1}
+                render={(props) => <span {...props} />}
+              >
+                <Button
+                  isIconOnly={!desktop}
+                  size="md"
+                  variant="secondary"
+                  aria-label={draftRetry ? "Retry draft save" : "Save as draft"}
+                  isPending={busy && !!draftSave.current}
+                  isDisabled={
+                    !canEdit || busy || uploading || (ambiguous && !draftRetry)
+                  }
+                  onPress={() => void saveDraft()}
+                >
+                  <HugeiconsIcon icon={FloppyDiskIcon} size={16} aria-hidden />
+                  {desktop &&
+                    (draftRetry ? "Retry draft save" : "Save as draft")}
+                </Button>
+              </Tooltip.Trigger>
+              <Tooltip.Content>
+                {draftRetry ? "Retry draft save" : "Save as draft"}
+              </Tooltip.Content>
+            </Tooltip>
           )}
           {publishAction}
         </div>

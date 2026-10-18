@@ -1,6 +1,6 @@
 # Backup and recovery
 
-A usable backup includes PostgreSQL, `POSTED_SECRET`, operator configuration and retained private media. Losing the secret prevents encrypted tokens and email payloads from being decrypted. A database dump alone does not preserve uploaded media.
+A usable backup includes PostgreSQL, `POSTED_SECRET`, operator configuration and retained S3 source objects. Losing the secret prevents encrypted tokens and email payloads from being decrypted. A database dump alone does not preserve uploaded media.
 
 ## Make a consistent backup
 

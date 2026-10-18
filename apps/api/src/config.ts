@@ -55,10 +55,6 @@ const schema = z
     POSTED_X_CLIENT_SECRET: z.string().default(""),
     POSTED_LINKEDIN_CLIENT_ID: z.string().trim().default(""),
     POSTED_LINKEDIN_CLIENT_SECRET: z.string().default(""),
-    POSTED_LINKEDIN_API_VERSION: z
-      .string()
-      .regex(/^20\d{4}$/)
-      .default("202609"),
     POSTED_THREADS_CLIENT_ID: z.string().trim().default(""),
     POSTED_THREADS_CLIENT_SECRET: z.string().default(""),
     POSTED_BLUESKY_CLIENT_ID: z.string().trim().default(""),

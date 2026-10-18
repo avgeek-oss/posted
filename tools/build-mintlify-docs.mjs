@@ -23,15 +23,8 @@ async function emit(path, content) {
       throw new Error(`Generated documentation differs: ${path}`);
   } else await writeFile(path, formatted);
 }
-for (const page of [
-  ...pages,
-  {
-    name: "development",
-    title: "Development",
-    description: "Source builds and disposable local verification.",
-  },
-]) {
-  const body = (await readFile(resolve(dir, `${page.name}.md`), "utf8"))
+for (const page of pages) {
+  let body = (await readFile(resolve(dir, `${page.name}.md`), "utf8"))
     .replace(/^# [^\n]+\n\n/, "")
     .replace(/\]\(([^)]+)\.md\)/g, (match, destination) =>
       /^(https?:|mailto:)/.test(destination) ? match : `](/${destination})`,
@@ -40,14 +33,19 @@ for (const page of [
     capture.pages.includes(page.name),
   );
   const frames = images
-    .map(
-      (capture) =>
-        `\n## ${capture.title}\n\n<Screenshot light="/assets/screenshots/${capture.name}-light.jpg" dark="/assets/screenshots/${capture.name}-dark.jpg" alt=${JSON.stringify(capture.alt)} width={${capture.width}} height={${capture.height}}${capture.portrait ? " portrait" : ""} />\n`,
-    )
+    .map((capture) => {
+      const frame = `<Screenshot light="/assets/screenshots/${capture.name}-light@${capture.pixelRatio}x.png" dark="/assets/screenshots/${capture.name}-dark@${capture.pixelRatio}x.png" alt=${JSON.stringify(capture.alt)} width={${capture.width}} height={${capture.height}}${capture.portrait ? " portrait" : ""} />\n`;
+      const marker = `<!-- screenshot:${capture.name} -->`;
+      if (body.includes(marker)) {
+        body = body.replace(marker, frame);
+        return "";
+      }
+      return `\n## ${capture.title}\n\n${frame}`;
+    })
     .join("\n");
   await emit(
     resolve(dir, `${page.name}.mdx`),
-    `---\ntitle: ${JSON.stringify(page.title)}\ndescription: ${JSON.stringify(page.description)}\n---\n\n${images.length ? 'import { Screenshot } from "/snippets/oss/screenshot.jsx";\n\n' : ""}${body}${frames}`,
+    `---\ntitle: ${JSON.stringify(page.title)}\ndescription: ${JSON.stringify(page.description)}\n${page.sidebarTitle ? `sidebarTitle: ${JSON.stringify(page.sidebarTitle)}\n` : ""}${page.icon ? `icon: ${JSON.stringify(page.icon)}\n` : ""}---\n\n${images.length ? 'import { Screenshot } from "/snippets/oss/screenshot.jsx";\n\n' : ""}${body}${frames}`,
   );
 }
 await mkdir(resolve(dir, "assets"), { recursive: true });

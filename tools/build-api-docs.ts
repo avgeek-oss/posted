@@ -81,7 +81,7 @@ const argumentDescriptions: Record<string, string> = {
   draftId:
     "Draft UUID; choose a new UUID when creating, or read the saved draft before updating.",
   connectionId: "Team social-account UUID returned by list_connections.",
-  mediaId: "Private media UUID returned by reserve_media_upload.",
+  mediaId: "Uploaded media UUID returned by reserve_media_upload.",
   page: "One-based page number.",
   pageSize: "Records per numbered page, at most 100.",
   view: "scheduled for pending work, history for groups without active deliveries.",
@@ -120,11 +120,17 @@ const emit = async (
   const formatted = await format(body, { parser });
   generated.set(path, formatted);
 };
+const mcpNavigation = new Map<string, string[]>();
 const endpoints: (Endpoint & {
   toolName?: string;
   inputExample?: Record<string, unknown>;
 })[] = [...supplementalEndpoints];
 for (const tool of tools) {
+  const group = groupFor(tool.path);
+  mcpNavigation.set(group, [
+    ...(mcpNavigation.get(group) ?? []),
+    `mcp-reference/${tool.name}`,
+  ]);
   const example = illustrations[tool.name];
   assert(example, `Missing illustration for ${tool.name}`);
   tool.input.parse(example.input);
@@ -147,7 +153,7 @@ for (const tool of tools) {
     method: tool.method,
     path: tool.path,
     title: example.title,
-    group: groupFor(tool.path),
+    group,
     auth: tool.admin ? "admin" : tool.readOnly ? "read" : "write",
     description: `${tool.description}\n\n${example.note}`,
     ...(tool.method === "GET"
@@ -179,7 +185,7 @@ for (const tool of tools) {
     .join("\n");
   await emit(
     `docs/mcp-reference/${tool.name}.mdx`,
-    `---\ntitle: ${JSON.stringify(tool.name)}\ndescription: ${JSON.stringify(example.title + " with Posted MCP.")}\n---\n\n${tool.description}\n\n## Workflow\n\n${block("mermaid", `flowchart LR\n${flow}`)}\n\n## Access and behavior\n\n${tool.admin ? "Administrator consent and a current administrator team role are required." : tool.readOnly ? "A Read-only, Write or Administrator OAuth grant can call this tool within the user’s current team role." : "Write or Administrator OAuth consent and a member/administrator team role are required."} Tools are listed and callable only when the current grant and role permit them.\n\n${example.note}\n\n${tool.destructive ? "<Warning>Confirm the exact target and consequence with the user before calling this tool.</Warning>\n\n" : ""}## Arguments\n\n| Argument | Required | Type or meaning |\n| --- | --- | --- |\n${fields || "| None | No | Pass an empty object. |"}\n\n<Accordion title="Complete input schema">\n${block("json", input)}\n</Accordion>\n\n## Example call\n\nThe client initializes the MCP connection before sending this JSON-RPC call. Example records are fictional.\n${block("json", { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: tool.name, arguments: example.input } })}\n\n## Example result\n\nPosted returns this object in \`structuredContent\` and a JSON text content block. A tool failure sets \`isError\`; never treat an error as a completed mutation.\n${block("json", example.result)}\n\n## Related reference\n\n[HTTP operation](/api-reference/${slug(tool.method, tool.path)}) · [Connect an MCP client](/mcp-connections) · [Request conventions](/api-reference/overview)\n`,
+    `---\ntitle: ${JSON.stringify(tool.name)}\ndescription: ${JSON.stringify(example.title + " with Posted MCP.")}\nicon: "/assets/icons/mcp.svg"\n---\n\n${tool.description}\n\n## Workflow\n\n${block("mermaid", `flowchart LR\n${flow}`)}\n\n## Access and behavior\n\n${tool.admin ? "Administrator consent and a current administrator team role are required." : tool.readOnly ? "A Read-only, Write or Administrator OAuth grant can call this tool within the user’s current team role." : "Write or Administrator OAuth consent and a member/administrator team role are required."} Tools are listed and callable only when the current grant and role permit them.\n\n${example.note}\n\n${tool.destructive ? "<Warning>Confirm the exact target and consequence with the user before calling this tool.</Warning>\n\n" : ""}## Arguments\n\n| Argument | Required | Type or meaning |\n| --- | --- | --- |\n${fields || "| None | No | Pass an empty object. |"}\n\n<Accordion title="Complete input schema">\n${block("json", input)}\n</Accordion>\n\n## Example call\n\nThe client initializes the MCP connection before sending this JSON-RPC call. Example records are fictional.\n${block("json", { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: tool.name, arguments: example.input } })}\n\n## Example result\n\nPosted returns this object in \`structuredContent\` and a JSON text content block. A tool failure sets \`isError\`; never treat an error as a completed mutation.\n${block("json", example.result)}\n\n## Related reference\n\n[HTTP operation](/api-reference/${slug(tool.method, tool.path)}) · [Connect an MCP client](/mcp-connections) · [Request conventions](/api-reference/overview)\n`,
   );
 }
 const expected = new Set(
@@ -467,7 +473,7 @@ await emit("docs/api-reference/openapi.json", JSON.stringify(openapi), "json");
 await emit("docs/api-contract.json", JSON.stringify(snapshot), "json");
 await emit(
   "docs/rest-reference.mdx",
-  `---\ntitle: "Publishing API reference"\ndescription: "Find individual HTTP operations and illustrated MCP tools."\n---\n\nThe reference is now split into [HTTP operations](/api-reference/overview) and [MCP tools](/mcp-connections#tool-reference).\n\nUse [API keys](/api-keys) for REST clients, or [OAuth MCP connections](/mcp-connections) for agents.\n`,
+  `---\ntitle: "Publishing API reference"\ndescription: "Find individual HTTP operations and illustrated MCP tools."\n---\n\nThe reference is now split into [HTTP operations](/api-reference/overview) and [MCP tools](/mcp-reference/list_providers).\n\nUse [API keys](/api-keys) for REST clients, or [OAuth MCP connections](/mcp-connections) for agents.\n`,
 );
 const site = JSON.parse(await readFile("docs/site.json", "utf8"));
 const apiCategory = site.navigation.dropdowns.find(
@@ -476,7 +482,10 @@ const apiCategory = site.navigation.dropdowns.find(
 assert(apiCategory, "API & MCP navigation category is required");
 for (const group of apiCategory.groups) {
   if (group.group === "MCP reference")
-    group.pages = tools.map((tool) => `mcp-reference/${tool.name}`);
+    group.pages = [...mcpNavigation].map(([group, pages]) => ({
+      group,
+      pages,
+    }));
   if (group.group === "API Reference")
     group.pages = [
       "api-reference/overview",

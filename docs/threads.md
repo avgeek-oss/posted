@@ -4,6 +4,10 @@ A thread starts with a root post and continues with ordered posts. Posted keeps 
 
 ## Build the sequence
 
+Build your thread on the left and review each account's version on the right. Each numbered card is one post. The preview connects replies so you can see how the thread will read.
+
+<!-- screenshot:sequence -->
+
 <Steps>
   <Step title="Write the first post">Open **Create post**, write the root text and choose accounts. Each provider applies its own text and media limits.</Step>
   <Step title="Add another post">Choose **Add Another Post** below the final card. Each numbered master post has its own text and ordered media. The label shows character and word counts.</Step>

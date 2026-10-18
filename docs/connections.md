@@ -10,4 +10,4 @@ Members can select connected accounts when composing. Viewers can inspect accoun
 
 If a connection needs reconnection, an administrator completes the provider authorization again. Disconnecting prevents future use of that connection; it does not delete posts already published on the provider. Drafts may retain a disconnected account for later editing, but publishing validation prevents delivery through it.
 
-See [provider application setup](/providers) for callback URLs, permissions and signing-key requirements. Local preview accounts are demonstration data and cannot publish to real providers.
+See [provider application setup](/providers) for callback URLs, permissions and signing-key requirements.

@@ -7,6 +7,16 @@ import { Screenshot } from "/snippets/oss/screenshot.jsx";
 
 A draft keeps an idea without creating delivery jobs. Use **Save as draft** in the composer whenever you want to keep working later. You can save an empty post, no selected accounts, disconnected accounts or text that exceeds a provider limit.
 
+The draft list shows your team's saved work, with the selected accounts and last saved time. Open a post title to continue editing.
+
+<Screenshot
+  light="/assets/screenshots/drafts-light@2x.png"
+  dark="/assets/screenshots/drafts-dark@2x.png"
+  alt="Posted pending drafts with single posts and sequences, selected accounts, author attribution and last saved times."
+  width={1280}
+  height={900}
+/>
+
 ## Save and reopen
 
 1. Start from **Dashboard** or **Create post** and write the master text. Use **Add Another Post** or **Insert post** to build a sequence.
@@ -27,33 +37,3 @@ If validation fails, the draft remains available. A stale browser cannot overwri
 **Reset to master** asks for confirmation before discarding an account post's custom text and media. Removing a master post also asks for confirmation and removes that post's account overrides. Removing an account through the chooser asks for confirmation when custom content would be lost.
 
 Administrators and members can edit and delete drafts. Viewers can inspect them. Deleting a draft requires confirmation and does not cancel a delivery set that was already created from it. Use [Scheduled Posts](/scheduling) to cancel pending delivery instead.
-
-## Pending drafts
-
-<Screenshot
-  light="/assets/screenshots/drafts-light.jpg"
-  dark="/assets/screenshots/drafts-dark.jpg"
-  alt="Posted pending drafts with single posts and sequences, selected accounts, author attribution and last saved times."
-  width={1280}
-  height={900}
-/>
-
-## Customize an account
-
-<Screenshot
-  light="/assets/screenshots/account-edit-light.jpg"
-  dark="/assets/screenshots/account-edit-dark.jpg"
-  alt="Posted account editor with custom text, Reset to master and ordered attachments."
-  width={1280}
-  height={900}
-/>
-
-## Review before publishing
-
-<Screenshot
-  light="/assets/screenshots/publish-confirmation-light.jpg"
-  dark="/assets/screenshots/publish-confirmation-dark.jpg"
-  alt="Posted publication confirmation listing the selected accounts and post count."
-  width={1280}
-  height={900}
-/>

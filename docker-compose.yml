@@ -8,7 +8,6 @@ x-server-environment: &server-environment
   POSTED_X_CLIENT_SECRET: ${POSTED_X_CLIENT_SECRET:-}
   POSTED_LINKEDIN_CLIENT_ID: ${POSTED_LINKEDIN_CLIENT_ID:-}
   POSTED_LINKEDIN_CLIENT_SECRET: ${POSTED_LINKEDIN_CLIENT_SECRET:-}
-  POSTED_LINKEDIN_API_VERSION: ${POSTED_LINKEDIN_API_VERSION:-202609}
   POSTED_THREADS_CLIENT_ID: ${POSTED_THREADS_CLIENT_ID:-}
   POSTED_THREADS_CLIENT_SECRET: ${POSTED_THREADS_CLIENT_SECRET:-}
   POSTED_BLUESKY_CLIENT_ID: ${POSTED_BLUESKY_CLIENT_ID:-}
@@ -29,7 +28,7 @@ x-runtime: &runtime
 services:
   api:
     <<: *runtime
-    image: ghcr.io/avgeek-oss/posted-api:${POSTED_VERSION:-0.2.0}
+    image: ghcr.io/avgeek-oss/posted-api:0.2.0
     environment:
       <<: *server-environment
       PORT: 4341
@@ -43,7 +42,7 @@ services:
   worker:
     <<: *runtime
     tmpfs: ["/tmp:rw,noexec,nosuid,size=256m,mode=1777"]
-    image: ghcr.io/avgeek-oss/posted-worker:${POSTED_VERSION:-0.2.0}
+    image: ghcr.io/avgeek-oss/posted-worker:0.2.0
     environment:
       <<: *server-environment
       PORT: 4343
@@ -52,7 +51,7 @@ services:
         condition: service_healthy
   web:
     <<: *runtime
-    image: ghcr.io/avgeek-oss/posted-web:${POSTED_VERSION:-0.2.0}
+    image: ghcr.io/avgeek-oss/posted-web:0.2.0
     environment:
       NODE_ENV: production
       PORT: 4342

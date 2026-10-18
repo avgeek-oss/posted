@@ -95,6 +95,7 @@ export function PostDetailsPage({
               {
                 key: "postIndex",
                 header: "Post",
+                className: "whitespace-nowrap",
                 cell: (delivery) =>
                   `${delivery.postIndex + 1} of ${post.additionalPosts.length + 1}`,
               },

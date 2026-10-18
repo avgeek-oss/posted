@@ -2,12 +2,20 @@
 
 Schedule a single post or a complete sequence after reviewing its accounts and media.
 
+Choose a date and time in the calendar before confirming your schedule. The time row below the calendar lets you set the hour and minute. Posted shows the time in your account's time zone.
+
+<!-- screenshot:scheduling-dialog -->
+
 1. Open the arrow beside **Post in X accounts** and choose **Schedule for later**.
 2. Select a future date in **Scheduled for**. The calendar popover includes a compact time row; you can also edit the date and time segments directly.
 3. Review the time in your account's time zone, the selected accounts and whether each provider receives linked replies or individual posts. Confirm **Schedule post**.
 4. Open **Scheduled Posts** to see the accepted delivery set and its per-account status.
 
 PostgreSQL stores the requested time. A worker claims due deliveries, prepares media and sends posts in order for each account. X, Bluesky and Threads use linked replies; LinkedIn receives individual posts. A later post is not sent if an earlier post for that account fails or has an uncertain outcome.
+
+The scheduled list shows what is coming up, which accounts are included and when each post will be published. Open a post title to review or change it.
+
+<!-- screenshot:scheduled -->
 
 ## Edit or cancel a schedule
 

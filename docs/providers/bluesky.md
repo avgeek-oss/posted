@@ -5,26 +5,49 @@ Connect a Bluesky account through official AT Protocol OAuth. Posted uses PKCE, 
 ## Connect an account
 
 <Steps>
-  <Step title="Configure the provider">The installation operator supplies `POSTED_BLUESKY_CLIENT_ID` and `POSTED_BLUESKY_PRIVATE_KEY_JWK` to both API and worker. The OAuth client ID is the public client-metadata URL served by this API. Generate a private EC P-256 JWK and keep the same signing key on both API and worker. The private key stays on the server; only public keys are served.</Step>
+  <Step title="Configure the provider">Add the required environment variables below to your Posted installation.</Step>
   <Step title="Authorize the account">A team administrator opens **Connections → Add connection**, chooses **Bluesky**, and completes the provider’s sign-in and consent flow.</Step>
   <Step title="Choose it in the composer">After returning to Posted, confirm that the account is Connected. Select it through **Choose Accounts**, review its preview and customize its text or media if needed.</Step>
 </Steps>
 
 Accounts belong to the team. Connecting the same provider account again refreshes the existing connection. Members can compose for connected accounts; only administrators can add or disconnect them.
 
-## Application configuration
+## Required environment variables
 
-Set the client ID to your API's metadata URL:
+Add these values to both the API and worker services, then restart them to apply the configuration.
 
-```text
-https://posted-api.example.com/social/bluesky/client-metadata.json
+```dotenv title="Environment variables"
+POSTED_BLUESKY_CLIENT_ID={{POSTED_API_URL}}/social/bluesky/client-metadata.json
+POSTED_BLUESKY_PRIVATE_KEY_JWK=YOUR_PRIVATE_JWK_JSON
 ```
 
-Posted advertises `https://posted-api.example.com/api/social/callback/bluesky` in that metadata and serves its public signing key at `/social/bluesky/jwks.json`. For the hosted installation, use `https://posted-api.avgeek.ltd/social/bluesky/client-metadata.json` as the client ID. Both metadata and public keys must be publicly reachable over HTTPS.
+## Application configuration
 
-Posted requests `atproto transition:generic`.
+Posted serves your OAuth client metadata at:
 
-See [configuration](/configuration) for the shared runtime environment and [Towbar provider setup](/providers#configure-the-hosted-installation-in-towbar) for private value entry and Bluesky key generation. Follow the provider's [official authorization documentation](https://atproto.com/specs/oauth) for its registration and approval process.
+```text title="Client metadata URL"
+{{POSTED_API_URL}}/social/bluesky/client-metadata.json
+```
+
+The metadata includes this callback URL:
+
+```text title="Callback URL"
+{{POSTED_API_URL}}/api/social/callback/bluesky
+```
+
+Public signing keys are served at:
+
+```text title="Public signing keys URL"
+{{POSTED_API_URL}}/social/bluesky/jwks.json
+```
+
+The metadata and public keys must be publicly reachable over HTTPS. The private signing key stays on your server.
+
+Use an EC P-256 signing key. See [Generate a Bluesky signing key](/providers#generate-a-bluesky-signing-key) for the command.
+
+Posted requests `atproto`, `transition:generic`.
+
+Follow the provider's [official authorization documentation](https://atproto.com/specs/oauth) to register your application and complete any approval steps.
 
 ## Limits enforced by Posted
 
@@ -41,7 +64,7 @@ These are Posted’s current delivery limits. Use [list_providers](/mcp-referenc
 
 Enter your Bluesky handle when beginning the connection, for example name.bsky.social. The provider flow discovers the account’s server. In a thread, each reply retains the first publication as its root and the preceding publication as its parent.
 
-Each post has independent text and attachment order. Account-specific edits affect only that account and post. **Reset to master** restores text and media inheritance after confirmation. Image or video publishing requires [private media storage](/configuration#private-media-storage).
+Each post has independent text and attachment order. Account-specific edits affect only that account and post. **Reset to master** restores text and media inheritance after confirmation. Image or video publishing requires [S3 source](/configuration#s3-source).
 
 ```mermaid
 flowchart LR

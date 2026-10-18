@@ -9,6 +9,16 @@ A thread starts with a root post and continues with ordered posts. Posted keeps 
 
 ## Build the sequence
 
+Build your thread on the left and review each account's version on the right. Each numbered card is one post. The preview connects replies so you can see how the thread will read.
+
+<Screenshot
+  light="/assets/screenshots/sequence-light@2x.png"
+  dark="/assets/screenshots/sequence-dark@2x.png"
+  alt="Posted numbered master posts and connected account previews for a sample thread."
+  width={1280}
+  height={900}
+/>
+
 <Steps>
   <Step title="Write the first post">
     Open **Create post**, write the root text and choose accounts. Each provider
@@ -77,13 +87,3 @@ A timeout after a provider request can leave an **Uncertain** result. Check the 
 The root request is the first post; `additionalPosts` contains the remaining items. Each can have `textOverrides`, `mediaIds` and `mediaOverrides`. `connectionIds`, `scheduledAt` and `idempotencyKey` belong to the whole sequence. Use the latest draft or post version when saving an edit.
 
 See [create_post](/mcp-reference/create_post), [save_draft](/mcp-reference/save_draft) and the [HTTP request conventions](/api-reference/overview).
-
-## Thread composer
-
-<Screenshot
-  light="/assets/screenshots/sequence-light.jpg"
-  dark="/assets/screenshots/sequence-dark.jpg"
-  alt="Posted numbered master posts and connected account previews for a sample thread."
-  width={1280}
-  height={900}
-/>

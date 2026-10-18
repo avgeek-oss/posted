@@ -5,7 +5,8 @@
     "alt": "Posted composer with sample master text, account selection, media and a provider preview.",
     "width": 1280,
     "height": 900,
-    "pages": ["composer", "media", "getting-started"]
+    "pages": ["composer", "media", "getting-started"],
+    "pixelRatio": 2
   },
   {
     "name": "scheduled",
@@ -13,7 +14,8 @@
     "alt": "Posted scheduled table with sample delivery sets and relative schedule times.",
     "width": 1280,
     "height": 900,
-    "pages": ["scheduling"]
+    "pages": ["scheduling"],
+    "pixelRatio": 2
   },
   {
     "name": "connections",
@@ -21,7 +23,8 @@
     "alt": "Posted team-owned sample social accounts for X, LinkedIn, Bluesky and Threads.",
     "width": 1280,
     "height": 900,
-    "pages": ["connections"]
+    "pages": ["connections"],
+    "pixelRatio": 2
   },
   {
     "name": "drafts",
@@ -29,7 +32,8 @@
     "alt": "Posted pending drafts with single posts and sequences, selected accounts, author attribution and last saved times.",
     "width": 1280,
     "height": 900,
-    "pages": ["drafts"]
+    "pages": ["drafts"],
+    "pixelRatio": 2
   },
   {
     "name": "details",
@@ -37,7 +41,8 @@
     "alt": "Posted delivery set attributes and per-account state table.",
     "width": 1280,
     "height": 720,
-    "pages": ["deliveries"]
+    "pages": ["deliveries"],
+    "pixelRatio": 2
   },
   {
     "name": "composer-mobile",
@@ -46,7 +51,8 @@
     "width": 390,
     "height": 844,
     "portrait": true,
-    "pages": ["composer"]
+    "pages": [],
+    "pixelRatio": 2
   },
   {
     "name": "account-edit",
@@ -54,7 +60,8 @@
     "alt": "Posted account editor with custom text, Reset to master and ordered attachments.",
     "width": 1280,
     "height": 900,
-    "pages": ["composer", "drafts"]
+    "pages": ["composer"],
+    "pixelRatio": 2
   },
   {
     "name": "media-preview",
@@ -62,15 +69,17 @@
     "alt": "Posted image preview dialog with filename, pixel dimensions and file size.",
     "width": 1280,
     "height": 900,
-    "pages": ["media"]
+    "pages": ["media"],
+    "pixelRatio": 2
   },
   {
     "name": "publish-confirmation",
     "title": "Review before publishing",
-    "alt": "Posted publication confirmation listing the selected accounts and post count.",
+    "alt": "Posted publication confirmation with selected accounts and a post-count chip beside each one.",
     "width": 1280,
     "height": 900,
-    "pages": ["composer", "drafts", "getting-started"]
+    "pages": ["composer", "getting-started"],
+    "pixelRatio": 2
   },
   {
     "name": "scheduling-dialog",
@@ -78,7 +87,8 @@
     "alt": "Posted scheduling dialog with a calendar and compact time input.",
     "width": 1280,
     "height": 900,
-    "pages": ["scheduling"]
+    "pages": ["scheduling"],
+    "pixelRatio": 2
   },
   {
     "name": "sequence",
@@ -86,7 +96,8 @@
     "alt": "Posted numbered master posts and connected account previews for a sample thread.",
     "width": 1280,
     "height": 900,
-    "pages": ["threads"]
+    "pages": ["threads"],
+    "pixelRatio": 2
   },
   {
     "name": "history",
@@ -94,6 +105,43 @@
     "alt": "Posted sample publish history showing confirmed delivery state per delivery set.",
     "width": 1280,
     "height": 720,
-    "pages": ["deliveries"]
+    "pages": ["deliveries"],
+    "pixelRatio": 2
+  },
+  {
+    "name": "personal-api-keys",
+    "title": "Personal API keys",
+    "alt": "Posted personal API Keys page with sample read-only and editing keys, permissions and expiry.",
+    "pages": ["api-keys"],
+    "width": 1440,
+    "height": 900,
+    "pixelRatio": 2
+  },
+  {
+    "name": "team-api-keys",
+    "title": "Team API keys",
+    "alt": "Posted Team API Keys page showing sample keys for shared publishing and reporting automation.",
+    "pages": ["api-keys"],
+    "width": 1440,
+    "height": 900,
+    "pixelRatio": 2
+  },
+  {
+    "name": "mcp-guide",
+    "title": "MCP connection guide",
+    "alt": "Posted MCP Guide with an app selector and a copyable client configuration.",
+    "pages": ["mcp-connections"],
+    "width": 1440,
+    "height": 900,
+    "pixelRatio": 2
+  },
+  {
+    "name": "mcp-connections",
+    "title": "Manage MCP connections",
+    "alt": "Posted MCP Connections page showing a sample approved client and its permissions.",
+    "pages": ["mcp-connections"],
+    "width": 1440,
+    "height": 900,
+    "pixelRatio": 2
   }
 ]

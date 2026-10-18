@@ -1,0 +1,218 @@
+---
+title: "Towbar"
+description: "Deploy Posted with a repository connected to Towbar."
+icon: "/assets/installation/towbar.png"
+---
+
+Deploy Posted on a server already registered with your Towbar installation. You need a Git repository for the deployment files and separate domains for Posted and its API.
+
+## 1. Add the deployment files
+
+Create these five files in your deployment repository. Copy each code tab into the matching path. These examples use the published Posted 0.2.0 images.
+
+Replace `192.0.2.10` with your registered server's IP address and the two example domains with your own. Point both domains to that server. The examples use Towbar's direct TLS mode; use your existing TLS settings if they differ.
+
+Provider, email and S3 keys are commented out. Uncomment the groups you need before syncing. Keep provider and S3 values identical on API and worker. When using S3, also uncomment `POSTED_S3_ENDPOINT` on UI.
+
+<CodeGroup>
+```yaml towbar.yml
+# yaml-language-server: $schema=https://towbar.dev/schemas/repository.v2.json
+version: 2
+buildServer: null
+environments:
+  production: {}
+```
+
+```yaml .towbar/services/posted-api.service.yml
+id: posted-api
+name: Posted API
+description: Posted v0.2.0 api from the published immutable release image.
+deployment:
+  type: image
+  image: ghcr.io/avgeek-oss/posted-api@sha256:3a1ac56429a6bd094d989936e8f65ed93d869450767a84913c5229830c089053
+autoDeploy: false
+container:
+  network: posted
+  port: 4341
+  resources:
+    cpus: 0.5
+    memory: 512m
+health:
+  path: /health/ready
+  timeoutSeconds: 180
+secrets:
+  runtime:
+    - NODE_ENV
+    - DATABASE_URL
+    - POSTED_SECRET
+    - POSTED_WEB_URL
+    - POSTED_API_URL
+    # Uncomment both keys for each provider you enable.
+    # - POSTED_X_CLIENT_ID
+    # - POSTED_X_CLIENT_SECRET
+    # - POSTED_LINKEDIN_CLIENT_ID
+    # - POSTED_LINKEDIN_CLIENT_SECRET
+    # - POSTED_THREADS_CLIENT_ID
+    # - POSTED_THREADS_CLIENT_SECRET
+    # - POSTED_BLUESKY_CLIENT_ID
+    # - POSTED_BLUESKY_PRIVATE_KEY_JWK
+    # Uncomment this group to enable media uploads.
+    # - POSTED_S3_ENDPOINT
+    # - POSTED_S3_REGION
+    # - POSTED_S3_BUCKET
+    # - POSTED_S3_ACCESS_KEY_ID
+    # - POSTED_S3_SECRET_ACCESS_KEY
+    # Uncomment to configure email delivery.
+    # - POSTED_SMTP_HOST
+    # - POSTED_SMTP_PORT
+    # - POSTED_SMTP_SECURE
+    # - POSTED_SMTP_USER
+    # - POSTED_SMTP_PASSWORD
+    # - POSTED_SMTP_FROM
+environments:
+  production:
+    server: 192.0.2.10
+domains:
+  primary: posted-api.example.com
+tls:
+  mode: direct
+  proxied: false
+```
+
+```yaml .towbar/services/posted-worker.service.yml
+id: posted-worker
+name: Posted Worker
+description: Posted v0.2.0 worker from the published immutable release image.
+deployment:
+  type: image
+  image: ghcr.io/avgeek-oss/posted-worker@sha256:9e6b3af02cbb9819a36eadfc43f0d0ec9e8f48d03781eb10052fc4d881ddd1ae
+autoDeploy: false
+container:
+  network: posted
+  port: 4343
+  resources:
+    cpus: 0.5
+    memory: 1g
+health:
+  path: /health/ready
+  timeoutSeconds: 180
+secrets:
+  runtime:
+    - NODE_ENV
+    - DATABASE_URL
+    - POSTED_SECRET
+    - POSTED_WEB_URL
+    - POSTED_API_URL
+    # Uncomment both keys for each provider you enable.
+    # - POSTED_X_CLIENT_ID
+    # - POSTED_X_CLIENT_SECRET
+    # - POSTED_LINKEDIN_CLIENT_ID
+    # - POSTED_LINKEDIN_CLIENT_SECRET
+    # - POSTED_THREADS_CLIENT_ID
+    # - POSTED_THREADS_CLIENT_SECRET
+    # - POSTED_BLUESKY_CLIENT_ID
+    # - POSTED_BLUESKY_PRIVATE_KEY_JWK
+    # Uncomment this group to enable media uploads.
+    # - POSTED_S3_ENDPOINT
+    # - POSTED_S3_REGION
+    # - POSTED_S3_BUCKET
+    # - POSTED_S3_ACCESS_KEY_ID
+    # - POSTED_S3_SECRET_ACCESS_KEY
+environments:
+  production:
+    server: 192.0.2.10
+```
+
+```yaml .towbar/services/posted-web.service.yml
+id: posted-web
+name: Posted UI
+description: Posted v0.2.0 web from the published immutable release image.
+deployment:
+  type: image
+  image: ghcr.io/avgeek-oss/posted-web@sha256:cc0181c2f4f2d8ef01e82eb04395c43bcd82815e8b4523594c8e394fe1ebf1fd
+autoDeploy: false
+container:
+  network: posted
+  port: 4342
+  resources:
+    cpus: 0.25
+    memory: 256m
+health:
+  path: /health/ready
+  timeoutSeconds: 180
+secrets:
+  runtime:
+    - NODE_ENV
+    - POSTED_API_URL
+    # Uncomment when S3 source is configured on API and worker.
+    # - POSTED_S3_ENDPOINT
+environments:
+  production:
+    server: 192.0.2.10
+domains:
+  primary: posted.example.com
+tls:
+  mode: direct
+  proxied: false
+```
+
+```yaml .towbar/datastores/posted-postgres.datastore.yml
+id: posted-postgres
+name: Posted PostgreSQL
+description: Persistent PostgreSQL 17 database for Posted.
+type: postgres
+image: postgres:17.11-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+autoDeploy: false
+container:
+  network: posted
+  networkAlias: posted-postgres
+  resources:
+    cpus: 0.5
+    memory: 1g
+secrets:
+  runtime:
+    - POSTGRES_USER
+    - POSTGRES_DB
+    - POSTGRES_PASSWORD
+environments:
+  production:
+    server: 192.0.2.10
+```
+
+</CodeGroup>
+
+## 2. Connect the repository
+
+Add your deployment repository as a source in Towbar, map `production` to your deployment branch and sync it. Review the three services and PostgreSQL datastore.
+
+## 3. Add runtime values
+
+Generate separate values for the database password and `POSTED_SECRET`:
+
+```sh
+openssl rand -hex 32
+```
+
+Save these values in Towbar:
+
+| Workload       | Runtime values                                                                                              |
+| -------------- | ----------------------------------------------------------------------------------------------------------- |
+| PostgreSQL     | `POSTGRES_USER=posted`, `POSTGRES_DB=posted`, and your generated `POSTGRES_PASSWORD`.                       |
+| API and worker | The same `DATABASE_URL`, `POSTED_SECRET`, `POSTED_WEB_URL` and `POSTED_API_URL`. Set `NODE_ENV=production`. |
+| UI             | `POSTED_API_URL` and `NODE_ENV=production`.                                                                 |
+
+Use `postgres://posted:YOUR_DATABASE_PASSWORD@posted-postgres:5432/posted` as the database URL. Replace the password placeholder privately. Set `POSTED_WEB_URL` to your UI origin and `POSTED_API_URL` to your API origin.
+
+Fill in the optional keys you uncommented using [provider setup](/providers) and [Configuration](/configuration). Towbar requires a value for every uncommented key.
+
+## 4. Deploy Posted
+
+Deploy PostgreSQL first, then API, worker and UI. Wait for each workload to become ready before continuing. The API prepares the database automatically. Only API and UI need public domains; worker and PostgreSQL stay private.
+
+The examples keep deployment manual. Start each deployment after saving its runtime values.
+
+## 5. Create your team
+
+Open the API startup log in Towbar and find the installation setup secret. Open your Posted URL, enter the secret and create the first administrator. Keep the setup secret private.
+
+Next, [connect a social account](/connections) and [compose your first post](/composer). Follow [Backup and recovery](/backup) and [Upgrades](/upgrades) to maintain your installation.

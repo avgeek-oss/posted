@@ -2,6 +2,10 @@
 
 A draft keeps an idea without creating delivery jobs. Use **Save as draft** in the composer whenever you want to keep working later. You can save an empty post, no selected accounts, disconnected accounts or text that exceeds a provider limit.
 
+The draft list shows your team's saved work, with the selected accounts and last saved time. Open a post title to continue editing.
+
+<!-- screenshot:drafts -->
+
 ## Save and reopen
 
 1. Start from **Dashboard** or **Create post** and write the master text. Use **Add Another Post** or **Insert post** to build a sequence.
