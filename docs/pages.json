@@ -81,11 +81,6 @@
     "icon": "settings"
   },
   {
-    "name": "providers",
-    "title": "Provider application setup",
-    "description": "Register approved applications and exact callback URLs."
-  },
-  {
     "name": "operations",
     "title": "Operations",
     "description": "Inspect health, schedules, account emails and recovery."

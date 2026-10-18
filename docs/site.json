@@ -345,6 +345,10 @@
     }
   },
   "redirects": [
+    {
+      "source": "/providers",
+      "destination": "/configuration#social-providers"
+    },
     { "source": "/storage", "destination": "/configuration#s3-source" },
     { "source": "/rest-reference", "destination": "/api-reference/overview" }
   ]

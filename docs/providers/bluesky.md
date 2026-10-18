@@ -1,12 +1,12 @@
 # Bluesky
 
-Connect a Bluesky account through official AT Protocol OAuth. Posted uses PKCE, DPoP and private-key client authentication rather than asking for an account password or app password.
+Connect your account by entering your Bluesky handle and approving access on Bluesky. You do not need to register a developer application or copy an account password into Posted.
 
 ## Connect an account
 
 <Steps>
   <Step title="Configure the provider">Add the required environment variables below to your Posted installation.</Step>
-  <Step title="Authorize the account">A team administrator opens **Connections → Add connection**, chooses **Bluesky**, and completes the provider’s sign-in and consent flow.</Step>
+  <Step title="Authorize the account">A team administrator opens **Connections → Add connection**, chooses **Bluesky**, enters their handle (for example, name.bsky.social), and continues to Bluesky to sign in and approve access.</Step>
   <Step title="Choose it in the composer">After returning to Posted, confirm that the account is Connected. Select it through **Choose Accounts**, review its preview and customize its text or media if needed.</Step>
 </Steps>
 
@@ -43,11 +43,25 @@ Public signing keys are served at:
 
 The metadata and public keys must be publicly reachable over HTTPS. The private signing key stays on your server.
 
-Use an EC P-256 signing key. See [Generate a Bluesky signing key](/providers#generate-a-bluesky-signing-key) for the command.
+## Generate a signing key
+
+For Bluesky, generate a private signing key in a private operator directory, outside the repository:
+
+```sh
+node --input-type=module <<'JS'
+import { generateKeyPairSync, randomUUID } from "node:crypto";
+import { writeFileSync } from "node:fs";
+const { privateKey } = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+const jwk = { ...privateKey.export({ format: "jwk" }), kid: randomUUID(), alg: "ES256", use: "sig" };
+writeFileSync("posted-bluesky-private.jwk", JSON.stringify(jwk), { mode: 0o600, flag: "wx" });
+JS
+```
+
+Copy that file's JSON into `POSTED_BLUESKY_PRIVATE_KEY_JWK` in both services. Keep the file private and retain the same signing key across deployments.
 
 Posted requests `atproto`, `transition:generic`.
 
-Follow the provider's [official authorization documentation](https://atproto.com/specs/oauth) to register your application and complete any approval steps.
+Posted uses [Bluesky OAuth](https://atproto.com/guides/about-oauth). Bluesky discovers your installation through its public client metadata URL; there is no separate developer application registration or approval step.
 
 ## Limits enforced by Posted
 
@@ -80,6 +94,6 @@ Read [Compose a post](/composer) for single posts and [Compose threads](/threads
 
 ## Reconnect and troubleshoot
 
-If the account needs reauthentication, an administrator repeats the official authorization flow. If Bluesky is missing from Add connection, ask the operator to check the complete provider configuration and deploy the saved runtime values. A callback mismatch must be corrected in the provider application using the API origin, not the UI or documentation domain.
+If the account needs reauthentication, an administrator repeats the official authorization flow. If Bluesky is missing from Add connection, ask the operator to check the complete provider configuration and deploy the saved runtime values. If authorization fails, check that the client metadata and public signing keys URLs open over HTTPS and that the metadata uses your API origin for the callback URL.
 
 Inspect [Publish history](/deliveries) for each account's result. A confirmed provider publication stays published if another account fails. An **Uncertain** result needs provider-side inspection before another posting request. Disconnecting prevents later use of the account and does not remove existing provider posts.
