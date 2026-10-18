@@ -22,11 +22,11 @@ https://posted-api.example.com/api/social/callback/linkedin
 
 Replace the example origin with your API origin. For the hosted installation, it is `https://posted-api.avgeek.ltd/api/social/callback/linkedin`.
 
-Posted requests `openid profile w_member_social`. Enable the identity and member-sharing access needed by Posted in your LinkedIn application. This integration publishes as the authorized member; it does not provide organization-page publishing.
+Posted requests `openid profile w_member_social`.
 
 Set `POSTED_LINKEDIN_API_VERSION` to the API version supported by your installation. Posted 0.2.0 uses `202609`; keep the value synchronized on API and worker.
 
-See [configuration](/configuration) for the shared runtime environment and [Towbar provider setup](/providers#configure-the-hosted-installation-in-towbar) for private value entry and Bluesky key generation. Follow the provider's [official authorization documentation](https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/share-on-linkedin) for its registration and approval process.
+See [configuration](/configuration) for the shared runtime environment and [Towbar provider setup](/providers#configure-the-hosted-installation-in-towbar) for private value entry. Follow the provider's [official authorization documentation](https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/share-on-linkedin) for its registration and approval process.
 
 ## Limits enforced by Posted
 
