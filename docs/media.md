@@ -1,13 +1,22 @@
-# Images and videos
+# Images, GIFs and videos
 
 An operator configures an [S3 source](/configuration#s3-source). Uploads use short-lived signed URLs. Original objects remain private and separate from temporary upload objects.
 
-| Input                 | Upload limit                      | Processing                                                                               |
-| --------------------- | --------------------------------- | ---------------------------------------------------------------------------------------- |
-| Still JPEG, PNG, WebP | 20 MiB; 40 million decoded pixels | Orientation, metadata removal, provider-specific dimensions and compression at delivery. |
-| MP4 or MOV            | 100 MiB; 3 to 1800 seconds        | Asynchronous normalization to H.264/AAC MP4, up to 1280×720, with metadata removed.      |
+| Input                 | Upload limit                                                                        | Processing                                                                               |
+| --------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Still JPEG, PNG, WebP | 20 MiB; 40 million decoded pixels                                                   | Orientation, metadata removal, provider-specific dimensions and compression at delivery. |
+| Animated GIF          | 20 MiB; up to 250 frames, 40 million decoded pixels across all frames and 3 minutes | Asynchronous animation preparation, metadata removal and a still thumbnail.              |
+| MP4 or MOV            | 100 MiB; 3 to 1800 seconds                                                          | Asynchronous normalization to H.264/AAC MP4, up to 1280×720, with metadata removed.      |
 
-Video processing requires the worker. The editor waits for ready metadata before a video can be scheduled. A malformed or unsupported file fails preparation rather than appearing as a ready asset.
+GIF and video processing require the worker. The editor waits for preparation to finish before media can be scheduled. A malformed or unsupported file fails preparation rather than appearing as a ready asset.
+
+## GIFs
+
+Attach one GIF on its own, without other images or videos in the same post. X and LinkedIn receive an animated GIF, prepared to fit within 1280 × 1080 pixels and 5 MB. Bluesky and Threads receive an MP4 containing the animation. Short animations repeat to meet the video minimum; single-frame GIFs become still images.
+
+The editor and account preview use a still thumbnail to keep drafts responsive. Click the GIF thumbnail in the master or account editor to watch the animation in the media dialog. Closing the dialog stops it. Original uploads, prepared animations and thumbnails remain private.
+
+These are conservative Posted limits. See [X’s media requirements](https://docs.x.com/x-api/media/quickstart/best-practices) and [LinkedIn’s Images API](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/images-api?view=li-lms-2026-09) for their native GIF support. Uploaded GIFs use video delivery on Bluesky and Threads; Threads’ separate Tenor/GIPHY attachment feature is not a file-upload path.
 
 ## Customize an account
 
@@ -26,4 +35,4 @@ Reorder media to choose the most important files first. Posted uses the supporte
 
 X, LinkedIn and Bluesky accept images or a video in this version; mixing both produces an account error. Threads can use mixed media. These are conservative application limits. Provider access, quota and current policy still apply.
 
-Add an accessible media description before uploading. Click a thumbnail in the expanded master or account editor to open a larger image or video dialog. Its title shows dimensions and file size, plus duration in seconds for videos. Video playback controls appear in the larger dialog and live preview. Close with X, Escape or a click outside; dismissing the dialog stops playback. Previews do not autoplay. Original images are preserved; delivery copies may be cropped or compressed for the target provider.
+Add an accessible media description before uploading. Click a thumbnail in the expanded master or account editor to open a larger image or video dialog. Its title shows dimensions and file size, plus duration in seconds for animations and videos. Video playback controls appear in the larger dialog and live preview. Close with X, Escape or a click outside; dismissing the dialog stops playback. Previews do not autoplay. Original images are preserved; delivery copies may be cropped or compressed for the target provider.

@@ -323,7 +323,10 @@ export function ComposerPage({
   const [leave, setLeave] = useState<NavigationRequest | null>(null);
   const accountText = useRef<HTMLTextAreaElement>(null);
   const previewUrls = useRef(
-    new Map<string, { url: string; expiresAt: number }>(),
+    new Map<
+      string,
+      { url: string; thumbnailUrl?: string; expiresAt: number }
+    >(),
   );
   const key = useRef<string>(crypto.randomUUID());
   const retry = useRef<PostInput | null>(null);
@@ -578,15 +581,16 @@ export function ComposerPage({
               const id = ids[next++];
               const cached = previewUrls.current.get(id);
               if (cached && cached.expiresAt > Date.now()) continue;
-              const { url } = await api<{ url: string }>(
-                `/media/${id}/preview`,
-                undefined,
-                "GET",
-                { signal: controller.signal },
-              );
+              const { url, thumbnailUrl } = await api<{
+                url: string;
+                thumbnailUrl?: string;
+              }>(`/media/${id}/preview`, undefined, "GET", {
+                signal: controller.signal,
+              });
               if (!controller.signal.aborted)
                 previewUrls.current.set(id, {
                   url,
+                  thumbnailUrl,
                   expiresAt: Date.now() + 540_000,
                 });
             }
@@ -596,10 +600,11 @@ export function ComposerPage({
           const refresh = (items: ComposerMediaItem[]) => {
             let changed = false;
             const result = items.map((image) => {
-              const url = previewUrls.current.get(image.id)?.url;
+              const cached = previewUrls.current.get(image.id);
+              const url = cached?.url;
               if (!url || url === image.url) return image;
               changed = true;
-              return { ...image, url };
+              return { ...image, url, thumbnailUrl: cached?.thumbnailUrl };
             });
             return changed ? result : items;
           };
@@ -698,7 +703,7 @@ export function ComposerPage({
         {},
       );
       if (result.state === "processing")
-        toast.info("Video uploaded. Preparing it for your post…");
+        toast.info("Media uploaded. Preparing it for your post…");
       const processing = AbortSignal.timeout(1_020_000);
       while (result.state === "processing") {
         await new Promise<void>((resolve) => setTimeout(resolve, 2000));
@@ -1533,8 +1538,8 @@ export function ComposerPage({
           />
           <FileUpload
             label="Upload media"
-            description="Drop an image or video here or browse your files."
-            accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
+            description="Drop an image, GIF or video here or browse your files."
+            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime"
             maxSizeBytes={configuration?.maxBytes ?? videoUploadBytes}
             isDisabled={locked || uploading || uploadMedia.length >= 20}
             onUpload={upload}

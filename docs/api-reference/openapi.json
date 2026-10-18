@@ -2682,6 +2682,7 @@
                     "image/jpeg",
                     "image/png",
                     "image/webp",
+                    "image/gif",
                     "video/mp4",
                     "video/quicktime"
                   ]
@@ -5053,6 +5054,7 @@
                       "image/jpeg",
                       "image/png",
                       "image/webp",
+                      "image/gif",
                       "video/mp4",
                       "video/quicktime"
                     ]
@@ -5198,7 +5200,7 @@
       "get": {
         "operationId": "get_api_media_by_mediaId_status",
         "summary": "Get media status",
-        "description": "Read media preparation status and its metadata when ready.\n\nA processing result contains the state only. A ready result includes metadata. Failed video preparation returns an error instead of making media publishable.\n\nRead access: a read-enabled personal or team REST API key, or a signed-in user. OAuth clients use the corresponding MCP tool through /mcp.",
+        "description": "Read media preparation status and its metadata when ready.\n\nA processing result contains the state only. A ready result includes metadata. Failed media preparation returns an error instead of making media publishable.\n\nRead access: a read-enabled personal or team REST API key, or a signed-in user. OAuth clients use the corresponding MCP tool through /mcp.",
         "tags": ["Media"],
         "security": [{ "bearerAuth": [] }, { "sessionCookie": [] }],
         "parameters": [
@@ -5267,7 +5269,7 @@
       "get": {
         "operationId": "get_api_media_by_mediaId_preview",
         "summary": "Get a media preview",
-        "description": "Get a short-lived private URL to view approved media.\n\nOnly approved, ready media from this team can be previewed. The URL is temporary and is not a permanent public attachment URL.\n\nRead access: a read-enabled personal or team REST API key, or a signed-in user. OAuth clients use the corresponding MCP tool through /mcp.",
+        "description": "Get a short-lived private URL to view approved media.\n\nOnly approved, ready media from this team can be previewed. The URL is temporary and is not a permanent public attachment URL. Animated GIFs also return thumbnailUrl for a private still preview; open url to view the animation.\n\nRead access: a read-enabled personal or team REST API key, or a signed-in user. OAuth clients use the corresponding MCP tool through /mcp.",
         "tags": ["Media"],
         "security": [{ "bearerAuth": [] }, { "sessionCookie": [] }],
         "parameters": [

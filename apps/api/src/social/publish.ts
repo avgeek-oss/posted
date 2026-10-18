@@ -25,7 +25,8 @@ export type DeliveryVideo = Omit<DeliveryImage, "kind"> & {
   kind: "video";
   durationSeconds: number;
 };
-export type DeliveryMedia = DeliveryImage | DeliveryVideo;
+export type DeliveryGif = Omit<DeliveryImage, "kind"> & { kind: "gif" };
+export type DeliveryMedia = DeliveryImage | DeliveryVideo | DeliveryGif;
 export type Publication = { id: string; url: string; cid?: string };
 export type PreparedPublication = {
   checkpoint:
@@ -71,8 +72,8 @@ async function prepareX(
 ): Promise<PreparedPublication> {
   const ids: string[] = [];
   for (const image of images) {
-    if (image.kind === "video") {
-      ids.push(await uploadXVideo(image, token));
+    if (image.kind === "video" || image.kind === "gif") {
+      ids.push(await uploadXMotion(image, token));
       continue;
     }
     const { data } = await providerJson(
@@ -152,7 +153,10 @@ async function prepareLinkedIn(
     );
     await providerRequest(trustedLinkedInUpload(value.uploadUrl), {
       method: "PUT",
-      headers: { ...bearer(token), "Content-Type": "image/jpeg" },
+      headers: {
+        ...bearer(token),
+        "Content-Type": image.kind === "gif" ? "image/gif" : "image/jpeg",
+      },
       body: new Uint8Array(image.bytes),
     });
     media.push({ id: value.image, altText: image.alt });
@@ -409,7 +413,10 @@ const xProcessing = z.object({
 const xMediaStatus = z.object({
   data: z.object({ processing_info: xProcessing.optional() }),
 });
-async function uploadXVideo(video: DeliveryVideo, token: string) {
+async function uploadXMotion(
+  video: DeliveryVideo | DeliveryGif,
+  token: string,
+) {
   const headers = { ...bearer(token), "Content-Type": "application/json" };
   const { data } = await providerJson(
     "https://api.x.com/2/media/upload/initialize",
@@ -417,8 +424,8 @@ async function uploadXVideo(video: DeliveryVideo, token: string) {
     {
       ...jsonBody({
         total_bytes: video.bytes.length,
-        media_type: "video/mp4",
-        media_category: "tweet_video",
+        media_type: video.kind === "gif" ? "image/gif" : "video/mp4",
+        media_category: video.kind === "gif" ? "tweet_gif" : "tweet_video",
       }),
       headers,
     },
@@ -453,9 +460,9 @@ async function uploadXVideo(video: DeliveryVideo, token: string) {
     status.data.processing_info.state !== "succeeded"
   ) {
     if (status.data.processing_info.state === "failed")
-      throw new Error("X could not process this video");
+      throw new Error("X could not process this media");
     if (Date.now() >= deadline)
-      throw new Error("X video processing timed out before publishing");
+      throw new Error("X media processing timed out before publishing");
     await delay(
       Math.max(
         1,

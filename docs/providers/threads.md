@@ -48,6 +48,8 @@ These are Posted’s current delivery limits. Use [list_providers](/mcp-referenc
 
 ## Posts, media and threads
 
+Uploaded GIFs are converted to MP4 for publishing. Use one GIF without other attachments in the same post. See [Images, GIFs and videos](/media) for upload limits and preparation.
+
 A Threads post can use the first 20 attachments in its chosen order, including a mixture of images and videos. For a sequence, each later post replies to the previous confirmed post on that account.
 
 Each post has independent text and attachment order. Account-specific edits affect only that account and post. **Reset to master** restores text and media inheritance after confirmation. Image or video publishing requires [S3 source](/configuration#s3-source).

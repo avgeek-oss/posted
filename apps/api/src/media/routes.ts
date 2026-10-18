@@ -72,7 +72,7 @@ mediaRoutes.post("/media/:id/complete", async (c) => {
   if (image.state === "failed")
     throw new HTTPException(422, {
       message:
-        "This video could not be prepared. Upload it again in a supported format.",
+        "This media could not be prepared. Upload it again in a supported format.",
     });
   if (image.state !== "ready") {
     const bytes = await mediaBytes(
@@ -91,7 +91,10 @@ mediaRoutes.post("/media/:id/complete", async (c) => {
           "The uploaded bytes don't match this media's file type or size",
       });
     const originalKey = `posted/originals/${id}/${randomUUID()}`;
-    if (image.contentType.startsWith("video/")) {
+    if (
+      image.contentType.startsWith("video/") ||
+      image.contentType === "image/gif"
+    ) {
       await storeOriginal(originalKey, bytes, image.contentType);
       await sql`UPDATE post_media SET state='processing',original_object_key=${originalKey},object_key=${originalKey} WHERE id=${id} AND state='uploading'`;
       return c.json({ state: "processing" }, 202);
@@ -121,7 +124,7 @@ mediaRoutes.get("/media/:id/status", async (c) => {
   if (media.state === "failed")
     throw new HTTPException(422, {
       message:
-        "This video could not be prepared. Use a valid MP4 or MOV between 3 seconds and 30 minutes.",
+        "This media could not be prepared. Use a valid MP4 or MOV between 3 seconds and 30 minutes, or a GIF with up to 250 frames, 40 million decoded pixels and 3 minutes of animation.",
     });
   const { state, ...ready } = media;
   return c.json(state === "ready" ? { state, media: ready } : { state });
@@ -130,9 +133,14 @@ mediaRoutes.get("/media/:id/preview", async (c) => {
   requireRole(c);
   const id = z.uuid().parse(c.req.param("id"));
   const [image] = await sql<
-    { objectKey: string }[]
-  >`SELECT object_key FROM post_media WHERE id=${id} AND state='ready' AND workspace_id=(SELECT id FROM workspace)`;
+    { objectKey: string; thumbnailObjectKey: string | null }[]
+  >`SELECT object_key,thumbnail_object_key FROM post_media WHERE id=${id} AND state='ready' AND workspace_id=(SELECT id FROM workspace)`;
   if (!image)
     throw new HTTPException(404, { message: "This media does not exist" });
-  return c.json({ url: await mediaUrl(image.objectKey) });
+  return c.json({
+    url: await mediaUrl(image.objectKey),
+    ...(image.thumbnailObjectKey
+      ? { thumbnailUrl: await mediaUrl(image.thumbnailObjectKey) }
+      : {}),
+  });
 });

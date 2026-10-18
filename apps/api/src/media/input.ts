@@ -4,6 +4,7 @@ export const mediaTypes = [
   "image/jpeg",
   "image/png",
   "image/webp",
+  "image/gif",
   "video/mp4",
   "video/quicktime",
 ] as const;

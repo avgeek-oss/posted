@@ -11,6 +11,8 @@ import {
   type DeliveryJob,
 } from "../../api/src/posts/queue.js";
 import { prepareImage } from "../../api/src/media/prepare.js";
+import { normalizeGif } from "../../api/src/media/gif.js";
+import { normalizeVideo } from "../../api/src/media/video.js";
 import { mediaBytes, preparedMediaUrl } from "../../api/src/media/storage.js";
 import {
   credentialsSchema,
@@ -28,6 +30,7 @@ import {
 import { validateProviderContent } from "../../api/src/posts/input.js";
 import {
   isVideo,
+  isGif,
   mediaForProvider,
   mediaError,
   videoUploadBytes,
@@ -98,6 +101,31 @@ export async function deliverNext(): Promise<boolean> {
     const token = await accessToken(job);
     const images: DeliveryMedia[] = [];
     for (const image of originals) {
+      if (isGif(image)) {
+        const bytes = await mediaBytes(image.objectKey);
+        if (job.provider === "bluesky" || job.provider === "threads") {
+          const video = await normalizeVideo(bytes, "gif");
+          const url =
+            job.provider === "threads"
+              ? await preparedMediaUrl(
+                  `posted/delivery/${job.id}/${job.leaseToken}/${image.id}.mp4`,
+                  video.bytes,
+                  "video/mp4",
+                )
+              : undefined;
+          images.push({
+            ...video,
+            kind: "video",
+            id: image.id,
+            alt: image.alt,
+            url,
+          });
+        } else {
+          const gif = await normalizeGif(bytes);
+          images.push({ ...gif, kind: "gif", id: image.id, alt: image.alt });
+        }
+        continue;
+      }
       if (isVideo(image)) {
         if (image.durationSeconds === null)
           throw new Error("This video has not been prepared");

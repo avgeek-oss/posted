@@ -276,7 +276,7 @@ export const illustrations: Record<
       "Wait while processing",
       "Use the media ID when ready",
     ],
-    note: "A processing result contains the state only. A ready result includes metadata. Failed video preparation returns an error instead of making media publishable.",
+    note: "A processing result contains the state only. A ready result includes metadata. Failed media preparation returns an error instead of making media publishable.",
   },
   get_media_preview: {
     title: "Get a media preview",
@@ -287,7 +287,7 @@ export const illustrations: Record<
       "Request a short-lived URL",
       "Render privately before expiry",
     ],
-    note: "Only approved, ready media from this team can be previewed. The URL is temporary and is not a permanent public attachment URL.",
+    note: "Only approved, ready media from this team can be previewed. The URL is temporary and is not a permanent public attachment URL. Animated GIFs also return thumbnailUrl for a private still preview; open url to view the animation.",
   },
   list_posts: {
     title: "List posts",
@@ -994,6 +994,7 @@ export const supplementalEndpoints: Endpoint[] = [
           "image/jpeg",
           "image/png",
           "image/webp",
+          "image/gif",
           "video/mp4",
           "video/quicktime",
         ],

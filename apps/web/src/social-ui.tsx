@@ -99,6 +99,7 @@ export function StateChip({
 export type PreviewMedia = {
   id: string;
   url: string;
+  thumbnailUrl?: string;
   alt: string;
   contentType: string;
   durationSeconds: number | null;
@@ -263,7 +264,7 @@ export function SocialPreview({
                   />
                 ) : (
                   <img
-                    src={image.url}
+                    src={image.thumbnailUrl ?? image.url}
                     alt={image.alt || "Post image"}
                     loading="lazy"
                     decoding="async"

@@ -14,10 +14,13 @@ import {
   PlayIcon,
 } from "@hugeicons/core-free-icons";
 import type { PostMedia } from "../../../packages/contracts/src/index.js";
-import { isVideo } from "../../../packages/contracts/src/media.js";
+import { isGif, isVideo } from "../../../packages/contracts/src/media.js";
 import { reorderItems } from "./item-order.js";
 
-export type ComposerMediaItem = PostMedia & { url?: string };
+export type ComposerMediaItem = PostMedia & {
+  url?: string;
+  thumbnailUrl?: string;
+};
 
 const mediaSizeFormat = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 1,
@@ -137,7 +140,7 @@ export const ComposerMedia = memo(function ComposerMedia({
                     />
                   ) : (
                     <img
-                      src={image.url}
+                      src={image.thumbnailUrl ?? image.url}
                       alt={image.alt || image.fileName}
                       draggable={false}
                       loading="lazy"
@@ -158,6 +161,16 @@ export const ComposerMedia = memo(function ComposerMedia({
                       <HugeiconsIcon icon={PlayIcon} size={16} aria-hidden />
                     </span>
                   </span>
+                )}
+                {isGif(image) && (
+                  <Chip
+                    size="sm"
+                    color="accent"
+                    variant="soft"
+                    className="absolute bottom-1 right-1"
+                  >
+                    <Chip.Label>GIF</Chip.Label>
+                  </Chip>
                 )}
               </Button>
               <div className="flex min-w-0 items-center gap-1 py-1 pl-1 pr-2">
@@ -230,18 +243,19 @@ export const ComposerMedia = memo(function ComposerMedia({
                 <Chip size="sm" variant="soft" color="accent">
                   <Chip.Label>{formatMediaSize(preview.sizeBytes)}</Chip.Label>
                 </Chip>
-                {isVideo(preview) && preview.durationSeconds !== null && (
-                  <Chip
-                    size="sm"
-                    variant="soft"
-                    color="accent"
-                    aria-label={`Duration: ${formatMediaDuration(preview.durationSeconds)}`}
-                  >
-                    <Chip.Label>
-                      {formatMediaDuration(preview.durationSeconds)}
-                    </Chip.Label>
-                  </Chip>
-                )}
+                {(isVideo(preview) || isGif(preview)) &&
+                  preview.durationSeconds !== null && (
+                    <Chip
+                      size="sm"
+                      variant="soft"
+                      color="accent"
+                      aria-label={`Duration: ${formatMediaDuration(preview.durationSeconds)}`}
+                    >
+                      <Chip.Label>
+                        {formatMediaDuration(preview.durationSeconds)}
+                      </Chip.Label>
+                    </Chip>
+                  )}
               </span>
             </span>
           ) : (
