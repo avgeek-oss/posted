@@ -696,6 +696,41 @@
     }
   },
   {
+    "name": "resume_post",
+    "method": "POST",
+    "path": "/api/posts/:postId/resume",
+    "description": "Resume an interrupted account's unpublished posts using its current version. Confirm the account and remaining content with the user. Published posts are preserved; uncertain results cannot be resumed. Reuse the same idempotencyKey for retries.",
+    "readOnly": false,
+    "administrator": false,
+    "input": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "connectionId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "version": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{8,128}$"
+        },
+        "postId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": ["connectionId", "version", "idempotencyKey", "postId"],
+      "additionalProperties": false
+    }
+  },
+  {
     "name": "disconnect_account",
     "method": "DELETE",
     "path": "/api/connections/:connectionId",

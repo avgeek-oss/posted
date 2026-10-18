@@ -1,0 +1,16 @@
+---
+title: "Resume interrupted publishing"
+description: "Resume an interrupted account's unpublished posts using its current version. Confirm the account and remaining content with the user. Published posts are preserved; uncertain results cannot be resumed. Reuse the same idempotencyKey for retries."
+playground: simple
+openapi: "/api-reference/openapi.json POST /api/posts/{postId}/resume"
+---
+
+Write access: a member/administrator with a write-enabled credential, or an authorized signed-in user.
+
+Resume an interrupted account's unpublished posts using its current version. Confirm the account and remaining content with the user. Published posts are preserved; uncertain results cannot be resumed. Reuse the same idempotencyKey for retries.
+
+Resume one connected account's failed remainder without creating a new posting group. Confirmed posts, their IDs and original request key are preserved. Active, cancelled or uncertain sequences cannot be resumed. Reuse the same resume key and payload after a lost response. A new failure requires a new key and the latest group version.
+
+MCP clients can use [`resume_post`](/mcp-reference/resume_post) for this operation.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

@@ -24,6 +24,8 @@ Choose a date and time in the calendar before confirming your schedule. The time
 
 PostgreSQL stores the requested time. A worker claims due deliveries, prepares media and sends posts in order for each account. X, Bluesky and Threads use linked replies; LinkedIn receives individual posts. A later post is not sent if an earlier post for that account fails or has an uncertain outcome.
 
+Safe temporary failures receive up to five attempts with increasing delays. Open delivery details to see **Retry scheduled** and the next attempt. A waiting retry stays in Scheduled Posts, but its content cannot be edited once delivery has begun. If the sequence stops, [resume its remaining posts](/deliveries#resume-interrupted-publishing) from delivery details.
+
 The scheduled list shows what is coming up, which accounts are included and when each post will be published. Open a post title to review or change it.
 
 <Screenshot

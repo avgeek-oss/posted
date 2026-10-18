@@ -78,6 +78,8 @@ Delivery is sequential within each account. A later post waits for the preceding
 
 A timeout after a provider request can leave an **Uncertain** result. Check the provider before making a new posting request; do not resend the entire thread to repair one uncertain item. Replaying the original request with its original key does not republish confirmed posts.
 
+Temporary failures are retried with increasing delays when Posted can safely send again. If retries run out, **Resume publishing** in delivery details continues the failed remainder for one account and preserves earlier publications. Accounts with uncertain results remain blocked. See [automatic retries and resume](/deliveries#automatic-retries).
+
 ## Save, edit and cancel
 
 [Pending drafts](/drafts) retain the full sequence, selected accounts, text overrides and attachment order without creating delivery jobs. An entirely [scheduled sequence](/scheduling) can be edited with its current version. Once preparation or publication starts, editing is blocked. Cancellation stops eligible pending work and never removes provider-side posts that are already published.

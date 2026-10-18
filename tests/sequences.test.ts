@@ -434,6 +434,8 @@ test("expired publishing leases never release later posts and preparation leases
   const original = await claimDelivery();
   assert.ok(original);
   await sql`UPDATE post_deliveries SET lease_until=now()-interval '1 second' WHERE id=${original.id}`;
+  assert.equal(await claimDelivery(), null);
+  await sql`UPDATE post_deliveries SET available_at=now()-interval '1 second' WHERE id=${original.id}`;
   const recovered = await claimDelivery();
   assert.ok(recovered);
   assert.equal(recovered.id, original.id);

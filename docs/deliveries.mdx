@@ -45,3 +45,19 @@ Successful deliveries stay recorded when another account fails. Posted does not 
 **Posted by** records the person responsible for the last accepted change. Background worker completion does not change attribution. Older edited data whose editor was never recorded displays **Not recorded** until a successful save.
 
 For linked sequences, a later post waits for the previous confirmed result on that account. X, Bluesky and Threads link replies to the prior post; LinkedIn publishes separate posts in order. An earlier failure or uncertain result prevents later posts for that account from being sent, while other accounts can still complete.
+
+## Automatic retries
+
+Posted retries temporary connection, upload and provider errors when it knows no post was published. Each delivery has up to five attempts per run. Delays start at about 30 seconds, then one, two and four minutes, with a small random variation. A provider's longer `Retry-After` or rate-limit reset time takes priority.
+
+**Retry scheduled** shows the next attempt in delivery details. The following posts wait for that attempt to succeed. Confirmed posts are kept as they are. If the worker stops before sending a post, its expired preparation job can be recovered within the same attempt limit.
+
+A rate-limit rejection can be retried after sending the request because the provider explicitly rejected it. A lost publishing response, timeout or provider server error can mean the post was created. Those results are **Uncertain** and are never resent automatically. Permission errors require reconnecting the account. Other permanent rejections and exhausted retries stop the remaining sequence on that account.
+
+## Resume interrupted publishing
+
+Open an interrupted delivery set and choose **Resume publishing** beside the first failed post for an eligible account. Review the account and confirm to continue its remaining posts now. The action preserves already published posts and their links. A resumed thread continues by replying to the last confirmed post; LinkedIn continues with individual posts.
+
+Resume is available to team members and administrators after all active work for that account has stopped. Reconnect a disconnected account first. Cancelled sequences and accounts with an unconfirmed publishing result cannot be resumed. Inspect the provider directly before taking further action on an uncertain result.
+
+Each resume starts a fresh bounded retry run for the failed remainder and keeps the same delivery set. It does not create a copy of the thread. API and MCP clients use [resume_post](/mcp-reference/resume_post) with the current post version, account ID and a request key. Reuse that key and the identical payload if the resume response is lost.

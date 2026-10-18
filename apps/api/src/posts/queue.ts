@@ -2,6 +2,12 @@ import { randomUUID } from "node:crypto";
 import { sql } from "../../../../packages/database/src/index.js";
 import type { Provider } from "../../../../packages/contracts/src/index.js";
 import { supportsThreads } from "../../../../packages/contracts/src/threads.js";
+import {
+  deliveryAttemptLimit,
+  deliveryRetryDelay,
+  retryBaseMilliseconds,
+  retryMaximumMilliseconds,
+} from "./retry.js";
 
 export type DeliveryJob = {
   id: string;
@@ -21,7 +27,11 @@ export type DeliveryJob = {
 export async function claimDelivery(): Promise<DeliveryJob | null> {
   return sql.begin(async (tx) => {
     // A crash before publishing is safe to retry. A crash after the publishing boundary isn't.
-    await tx`UPDATE post_deliveries SET state='scheduled',lease_token=NULL,lease_until=NULL,updated_at=now() WHERE state='preparing' AND lease_until<now()`;
+    await tx`UPDATE post_deliveries SET
+      state=CASE WHEN retry_attempts>=${deliveryAttemptLimit} THEN 'failed' ELSE 'scheduled' END,
+      available_at=now() + (LEAST(${retryMaximumMilliseconds},${retryBaseMilliseconds} * power(2,LEAST(GREATEST(retry_attempts-1,0),10))) * (1+random()*0.25)) * interval '1 millisecond',
+      error='The worker stopped before sending this post. The preparation attempt could not finish.',
+      lease_token=NULL,lease_until=NULL,updated_at=now() WHERE state='preparing' AND lease_until<now()`;
     await tx`UPDATE post_deliveries SET state='uncertain',error='The publishing response was not received. Check the connected account before trying again.',lease_token=NULL,lease_until=NULL,updated_at=now() WHERE state='publishing' AND lease_until<now()`;
     await tx`UPDATE post_deliveries d SET state='failed',error='An earlier post in this sequence did not finish publishing. Later posts were not sent.',updated_at=now()
       WHERE d.state='scheduled' AND EXISTS(SELECT 1 FROM post_deliveries earlier WHERE earlier.group_id=d.group_id AND earlier.connection_id=d.connection_id AND earlier.post_index<d.post_index AND earlier.state IN ('failed','uncertain','cancelled'))`;
@@ -33,7 +43,7 @@ export async function claimDelivery(): Promise<DeliveryJob | null> {
     if (!next) return null;
     const token = randomUUID();
     const [job] = await tx<DeliveryJob[]>`
-      UPDATE post_deliveries d SET state='preparing',lease_token=${token},lease_until=now()+interval '5 minutes',attempts=attempts+1,updated_at=now()
+      UPDATE post_deliveries d SET state='preparing',lease_token=${token},lease_until=now()+interval '5 minutes',attempts=attempts+1,retry_attempts=retry_attempts+1,updated_at=now()
       FROM post_groups g,social_connections c WHERE d.id=${next.id} AND g.id=d.group_id AND c.id=d.connection_id
       RETURNING d.id,d.group_id,d.post_index,d.workspace_id,d.connection_id,d.lease_token,c.provider,COALESCE(d.text_override,CASE WHEN d.post_index=0 THEN g.text ELSE g.additional_posts->(d.post_index-1)->>'text' END) AS text,c.account_id,c.encrypted_credentials`;
     const postIndex = job?.postIndex ?? 0;
@@ -83,8 +93,23 @@ export async function failDelivery(
   job: DeliveryJob,
   error: string,
   uncertain: boolean,
+  retry?: { retryAfterMs: number },
 ) {
   await sql.begin(async (tx) => {
+    if (retry && !uncertain) {
+      const [current] = await tx<
+        { retryAttempts: number }[]
+      >`SELECT retry_attempts FROM post_deliveries WHERE id=${job.id} AND lease_token=${job.leaseToken} AND state IN ('preparing','publishing') FOR UPDATE`;
+      if (!current) return;
+      if (current.retryAttempts < deliveryAttemptLimit) {
+        const delay = deliveryRetryDelay(
+          current.retryAttempts,
+          retry.retryAfterMs,
+        );
+        await tx`UPDATE post_deliveries SET state='scheduled',available_at=now()+${delay} * interval '1 millisecond',error=${error},provider_checkpoint=NULL,lease_token=NULL,lease_until=NULL,updated_at=now() WHERE id=${job.id} AND lease_token=${job.leaseToken}`;
+        return;
+      }
+    }
     const rows =
       await tx`UPDATE post_deliveries SET state=${uncertain ? "uncertain" : "failed"},error=${error},lease_token=NULL,lease_until=NULL,updated_at=now()
       WHERE id=${job.id} AND lease_token=${job.leaseToken} AND state IN ('preparing','publishing') RETURNING id`;

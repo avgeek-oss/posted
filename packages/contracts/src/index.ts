@@ -94,11 +94,14 @@ export type PostMedia = {
   durationSeconds: number | null;
 };
 export type PostDelivery = {
+  attempts: number;
+  nextAttemptAt: string | null;
   postIndex: number;
   id: string;
   connectionId: string;
   provider: Provider;
   accountName: string;
+  accountHandle: string;
   textOverride: string | null;
   state: DeliveryState;
   providerPostId: string | null;
@@ -107,6 +110,7 @@ export type PostDelivery = {
   publishedAt: string | null;
 };
 export type Post = {
+  resumableConnectionIds: string[];
   mediaOverrides: Record<string, PostMedia[]>;
   additionalPosts: PostPart[];
   id: string;

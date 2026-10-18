@@ -346,7 +346,9 @@ export function ComposerPage({
   const editablePost =
     !postId ||
     (!!post &&
-      post.deliveries.every((delivery) => delivery.state === "scheduled"));
+      post.deliveries.every(
+        (delivery) => delivery.state === "scheduled" && delivery.attempts === 0,
+      ));
   const locked = !canEdit || !editablePost || busy || ambiguous;
   const chosen = accounts.filter((account) => selected.includes(account.id));
   function partError(account: SocialConnection, part: ComposerPart) {
