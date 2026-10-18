@@ -25,7 +25,7 @@ import {
 import { PageHeading } from "./page-heading.js";
 import { formatDateTime } from "./date-time-preferences.js";
 import { useResource } from "./use-resource.js";
-import { providerNames, ProviderIcon, StateChip } from "./social-ui.js";
+import { AccountAvatar, providerNames, StateChip } from "./social-ui.js";
 import { RelativeDateTime } from "./relative-date-time.js";
 import { PublishingSummary } from "./publishing-summary.js";
 import { supportsThreads } from "../../../packages/contracts/src/threads.js";
@@ -134,26 +134,40 @@ export function PostDetailsPage({
                 key: "account",
                 header: "Account",
                 isRowHeader: true,
-                className: "min-w-48",
+                className: "min-w-72",
                 cell: (delivery) => (
                   <div className="flex items-center gap-2">
-                    <ProviderIcon provider={delivery.provider} />
+                    <AccountAvatar
+                      account={{
+                        name: delivery.accountName,
+                        provider: delivery.provider,
+                        avatarUrl: delivery.accountAvatarUrl,
+                      }}
+                    />
                     <span className="sr-only">
                       {providerNames[delivery.provider]}:{" "}
                     </span>
-                    <TooltipText
-                      tooltip={delivery.accountName}
-                      className="max-w-56 line-clamp-2"
-                    >
-                      {delivery.accountName}
-                    </TooltipText>
+                    <div className="grid min-w-0 gap-0.5">
+                      <TooltipText
+                        tooltip={delivery.accountName}
+                        className="max-w-56 truncate"
+                      >
+                        {delivery.accountName}
+                      </TooltipText>
+                      <TooltipText
+                        tooltip={`@${delivery.accountHandle}`}
+                        className="max-w-56 truncate text-xs text-muted"
+                      >
+                        @{delivery.accountHandle}
+                      </TooltipText>
+                    </div>
                   </div>
                 ),
               },
               {
                 key: "postIndex",
                 header: "Post",
-                className: "whitespace-nowrap",
+                className: "min-w-24 whitespace-nowrap",
                 cell: (delivery) =>
                   `${delivery.postIndex + 1} of ${post.additionalPosts.length + 1}`,
               },
@@ -182,10 +196,11 @@ export function PostDetailsPage({
               {
                 key: "status",
                 header: "Status",
+                className: "min-w-44",
                 cell: (delivery) => (
                   <div className="grid justify-items-start gap-1">
                     {delivery.nextAttemptAt ? (
-                      <Chip size="sm" color="warning" variant="soft">
+                      <Chip color="warning" variant="soft">
                         <Chip.Label>Retry scheduled</Chip.Label>
                       </Chip>
                     ) : (
@@ -200,19 +215,23 @@ export function PostDetailsPage({
                         showAbsolute={false}
                       />
                     )}
-                    {delivery.attempts > 0 && (
-                      <span className="text-xs text-muted">
-                        {delivery.attempts}{" "}
-                        {delivery.attempts === 1 ? "attempt" : "attempts"}
-                      </span>
-                    )}
                   </div>
+                ),
+              },
+              {
+                key: "attempts",
+                header: "Attempts",
+                className: "min-w-24",
+                cell: (delivery) => (
+                  <Chip>
+                    <Chip.Label>{delivery.attempts}</Chip.Label>
+                  </Chip>
                 ),
               },
               {
                 key: "published",
                 header: "Published",
-                className: "whitespace-nowrap",
+                className: "min-w-48 whitespace-nowrap",
                 cell: (delivery) =>
                   delivery.publishedAt ? (
                     timestamp(delivery.publishedAt)
@@ -223,7 +242,7 @@ export function PostDetailsPage({
               {
                 key: "result",
                 header: "Result",
-                className: "min-w-48 max-w-xs",
+                className: "min-w-64 max-w-xs",
                 cell: (delivery) => (
                   <div className="grid justify-items-start gap-2">
                     {delivery.publishedUrl ? (
@@ -247,34 +266,38 @@ export function PostDetailsPage({
                     ) : (
                       <span className="text-muted">—</span>
                     )}
-                    {session.user.role !== "viewer" &&
-                      post.resumableConnectionIds.includes(
-                        delivery.connectionId,
-                      ) &&
-                      post.deliveries.find(
-                        (item) =>
-                          item.connectionId === delivery.connectionId &&
-                          item.state === "failed",
-                      )?.id === delivery.id && (
-                        <Button
-                          variant="secondary"
-                          onPress={() =>
-                            setResume({
-                              delivery,
-                              version: post.version,
-                              remainingCount: post.deliveries.filter(
-                                (item) =>
-                                  item.connectionId === delivery.connectionId &&
-                                  item.state === "failed",
-                              ).length,
-                            })
-                          }
-                        >
-                          Resume publishing
-                        </Button>
-                      )}
                   </div>
                 ),
+              },
+              {
+                key: "actions",
+                header: "Actions",
+                className: "min-w-28 whitespace-nowrap",
+                cell: (delivery) =>
+                  session.user.role !== "viewer" &&
+                  post.resumableConnectionIds.includes(delivery.connectionId) &&
+                  post.deliveries.find(
+                    (item) =>
+                      item.connectionId === delivery.connectionId &&
+                      item.state === "failed",
+                  )?.id === delivery.id && (
+                    <Button
+                      variant="secondary"
+                      onPress={() =>
+                        setResume({
+                          delivery,
+                          version: post.version,
+                          remainingCount: post.deliveries.filter(
+                            (item) =>
+                              item.connectionId === delivery.connectionId &&
+                              item.state === "failed",
+                          ).length,
+                        })
+                      }
+                    >
+                      Resume
+                    </Button>
+                  ),
               },
             ]}
           />
@@ -288,7 +311,7 @@ export function PostDetailsPage({
       <Dialog
         open={!!resume}
         onClose={() => setResume(null)}
-        title="Resume publishing?"
+        title="Resume?"
         isDismissDisabled={busy}
         footer={
           <>
@@ -300,7 +323,7 @@ export function PostDetailsPage({
               Cancel
             </Button>
             <Button onPress={() => void resumePublishing()} isDisabled={busy}>
-              {busy ? "Resuming…" : "Resume publishing"}
+              {busy ? "Resuming…" : "Resume"}
             </Button>
           </>
         }
@@ -319,11 +342,13 @@ export function PostDetailsPage({
               postCount={resume.remainingCount}
             />
             <p>
-              Continue this account's remaining posts now? Already published
-              posts will stay in place.{" "}
-              {supportsThreads(resume.delivery.provider)
-                ? "Remaining replies will stay linked to this thread."
-                : "Remaining posts will publish individually in order."}
+              Continue this account's remaining{" "}
+              {resume.remainingCount === 1 ? "post" : "posts"} now? Already
+              published posts will stay in place.{" "}
+              {!!post?.additionalPosts.length &&
+                (supportsThreads(resume.delivery.provider)
+                  ? "Remaining replies will stay linked to this thread."
+                  : "Remaining posts will publish individually in order.")}
             </p>
           </div>
         )}

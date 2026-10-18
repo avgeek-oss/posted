@@ -59,11 +59,15 @@ async function editor(adminId: string) {
 test("last editor follows successful saves without changing on retries or rejected edits", async () => {
   const admin = await setupUser();
   const member = await editor(admin.user.id);
-  const body = input([await connection()]);
+  const connectionId = await connection();
+  const avatarUrl = "https://example.test/account-avatar.jpg";
+  await sql`UPDATE social_connections SET avatar_url=${avatarUrl} WHERE id=${connectionId}`;
+  const body = input([connectionId]);
   const created = await request("/api/posts", { cookie: admin.cookie, body });
   assert.equal(created.status, 201);
   const { post } = (await created.json()) as { post: Post };
   assert.equal(post.managedBy?.id, admin.user.id);
+  assert.equal(post.deliveries[0].accountAvatarUrl, avatarUrl);
   const changed = {
     ...body,
     text: "Edited by a team member",

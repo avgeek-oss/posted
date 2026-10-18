@@ -102,6 +102,7 @@ export type PostDelivery = {
   provider: Provider;
   accountName: string;
   accountHandle: string;
+  accountAvatarUrl: string | null;
   textOverride: string | null;
   state: DeliveryState;
   providerPostId: string | null;
