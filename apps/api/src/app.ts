@@ -8,6 +8,7 @@ import { sql } from "../../../packages/database/src/index.js";
 import { config } from "./config.js";
 import { authRoutes, sessionActor } from "./auth.js";
 import { domainRoutes } from "./domain.js";
+import { linkRoutes } from "./links/routes.js";
 import { mediaRoutes } from "./media/routes.js";
 import { socialRoutes } from "./social/routes.js";
 import {
@@ -125,6 +126,7 @@ app.use("/oauth/*", rateLimit);
 app.route("/api/auth", authRoutes);
 app.route("/api", domainRoutes);
 app.route("/api", mediaRoutes);
+app.route("/api", linkRoutes);
 app.route("/", socialRoutes);
 app.route("/", externalRoutes);
 app.notFound((c) => errorResponse(c, 404, "This route does not exist"));

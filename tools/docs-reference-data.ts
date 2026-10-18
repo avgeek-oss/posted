@@ -980,6 +980,25 @@ export const supplementalEndpoints: Endpoint[] = [
   ),
   endpoint(
     "GET",
+    "/api/link-preview",
+    "Preview a link",
+    "Media",
+    "read",
+    "Reads the first link's Open Graph or page metadata for a composer card. Only public HTTP destinations are fetched. Returns null when metadata is unavailable. Images are bounded, re-encoded JPEG data in base64; no remote image URL is exposed.",
+    {
+      query: z.object({ url: z.url().max(2048) }),
+      result: {
+        preview: {
+          url: "https://example.com/story",
+          title: "A story",
+          description: "Read the full story.",
+          siteName: "Example",
+        },
+      },
+    },
+  ),
+  endpoint(
+    "GET",
     "/api/media/config",
     "Read media upload configuration",
     "Media",

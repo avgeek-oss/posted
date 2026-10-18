@@ -115,7 +115,7 @@ export const ComposerMedia = memo(function ComposerMedia({
           items={media}
           dependencies={[disabled, media, onChange]}
           dragAndDropHooks={dragAndDropHooks}
-          className="composer-media relative grid auto-cols-[9rem] grid-flow-col gap-3 sm:auto-cols-[6rem]"
+          className="composer-media relative grid auto-cols-[10rem] grid-flow-col gap-3 sm:auto-cols-[9rem]"
         >
           {(image) => (
             <GridListItem
@@ -125,7 +125,7 @@ export const ComposerMedia = memo(function ComposerMedia({
             >
               <Button
                 variant="ghost"
-                className="relative block aspect-[4/3] h-auto w-full min-w-0 transform-none overflow-hidden rounded-none bg-default p-0 hover:bg-default active:transform-none data-[hovered=true]:bg-default data-[pressed=true]:transform-none"
+                className="composer-media-preview relative block aspect-[4/3] h-auto w-full min-w-0 transform-none overflow-hidden rounded-none bg-default p-0 hover:bg-default active:transform-none data-[hovered=true]:bg-default data-[pressed=true]:transform-none"
                 aria-label={`Preview ${image.fileName}`}
                 isDisabled={!image.url}
                 onPress={() => setPreviewId(image.id)}
@@ -202,14 +202,14 @@ export const ComposerMedia = memo(function ComposerMedia({
                 isIconOnly
                 variant="secondary"
                 size="sm"
-                className="absolute right-1 top-1 size-6 min-w-0 bg-transparent p-0 hover:bg-transparent data-[hovered=true]:bg-transparent"
+                className="composer-media-remove absolute right-1 top-1 size-6 min-w-0 bg-transparent p-0 hover:bg-transparent data-[hovered=true]:bg-transparent"
                 aria-label={`Remove ${image.fileName}`}
                 isDisabled={disabled}
                 onPress={() =>
                   onChange(media.filter((item) => item.id !== image.id))
                 }
               >
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-default">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface/70">
                   <HugeiconsIcon
                     icon={Cancel01Icon}
                     size={12}

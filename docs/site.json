@@ -202,6 +202,7 @@
               {
                 "group": "Media",
                 "pages": [
+                  "api-reference/get_api_link_preview",
                   "api-reference/get_api_media_config",
                   "api-reference/post_api_media_uploads",
                   "api-reference/post_api_media_by_mediaId_complete",

@@ -1,3 +1,4 @@
+import { PostLinkPreview } from "./post-link-preview.js";
 import { MediaVideo } from "./media-video.js";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -249,6 +250,11 @@ export function SocialPreview({
               </span>
             )}
           </p>
+        )}
+        {!media.length && (
+          <PostLinkPreview
+            text={textForProviderPreview(account.provider, text)}
+          />
         )}
         {!!media.length && (
           <div

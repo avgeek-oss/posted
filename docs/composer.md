@@ -14,6 +14,12 @@ You can search for an account by name or handle. Your selection only takes effec
 
 <!-- screenshot:composer -->
 
+## Include a link
+
+Paste a website link into your post. In **Preview**, Posted shows its title, description and Open Graph image when the website provides them. The first link gets the card; adding images, a GIF or a video uses your attachments instead.
+
+Each account's preview follows its own text. If a website cannot be reached or has no preview information, your link stays in the post without a card. The final appearance can vary by provider.
+
 ## Customize an account
 
 Each selected account starts with the text and media from your master post. For example, you could keep a short caption for one account and write a longer version for another.

@@ -2649,6 +2649,65 @@
         }
       }
     },
+    "/api/link-preview": {
+      "get": {
+        "operationId": "get_api_link_preview",
+        "summary": "Preview a link",
+        "description": "Reads the first link's Open Graph or page metadata for a composer card. Only public HTTP destinations are fetched. Returns null when metadata is unavailable. Images are bounded, re-encoded JPEG data in base64; no remote image URL is exposed.\n\nRead access: a read-enabled personal or team REST API key, or a signed-in user. OAuth clients use the corresponding MCP tool through /mcp.",
+        "tags": ["Media"],
+        "security": [{ "bearerAuth": [] }, { "sessionCookie": [] }],
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "maxLength": 2048, "format": "uri" },
+            "description": "uri"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "preview": {
+                      "type": "object",
+                      "properties": {
+                        "url": { "type": "string" },
+                        "title": { "type": "string" },
+                        "description": { "type": "string" },
+                        "siteName": { "type": "string" }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "example": {
+                  "preview": {
+                    "url": "https://example.com/story",
+                    "title": "A story",
+                    "description": "Read the full story.",
+                    "siteName": "Example"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/media/config": {
       "get": {
         "operationId": "get_api_media_config",

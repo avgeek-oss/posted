@@ -1,3 +1,5 @@
+import { firstPostLink } from "../../../../packages/contracts/src/links.js";
+import { getLinkPreview } from "../links/preview.js";
 import { z } from "zod";
 import { Agent, RichText, XRPCError } from "@atproto/api";
 import { setTimeout as delay } from "node:timers/promises";
@@ -135,34 +137,37 @@ async function prepareLinkedIn(
       media.push({ id: await uploadLinkedInVideo(image, owner, token) });
       continue;
     }
-    const { value } = await providerJson(
-      "https://api.linkedin.com/rest/images?action=initializeUpload",
-      z.object({
-        value: z.object({
-          uploadUrl: z.string().url(),
-          image: z.string().startsWith("urn:li:image:"),
-        }),
-      }),
-      {
-        ...jsonBody({ initializeUploadRequest: { owner } }),
-        headers: {
-          ...linkedinHeaders(token),
-          "Content-Type": "application/json",
-        },
-      },
-    );
-    await providerRequest(trustedLinkedInUpload(value.uploadUrl), {
-      method: "PUT",
-      headers: {
-        ...bearer(token),
-        "Content-Type": image.kind === "gif" ? "image/gif" : "image/jpeg",
-      },
-      body: new Uint8Array(image.bytes),
+    media.push({
+      id: await uploadLinkedInImage(
+        image.bytes,
+        image.kind === "gif" ? "image/gif" : "image/jpeg",
+        owner,
+        token,
+      ),
+      altText: image.alt,
     });
-    media.push({ id: value.image, altText: image.alt });
   }
-  const content =
-    media.length === 1
+  const link = !images.length ? firstPostLink(job.text) : null;
+  const preview = link ? await getLinkPreview(link) : null;
+  const thumbnail = preview?.image
+    ? await uploadLinkedInImage(
+        Buffer.from(preview.image.data, "base64"),
+        "image/jpeg",
+        owner,
+        token,
+      )
+    : undefined;
+  if (thumbnail) media.push({ id: thumbnail });
+  const content = preview
+    ? {
+        article: {
+          source: preview.url,
+          title: preview.title,
+          description: preview.description,
+          ...(thumbnail ? { thumbnail } : {}),
+        },
+      }
+    : media.length === 1
       ? { media: media[0] }
       : media.length > 1
         ? { multiImage: { images: media } }
@@ -201,6 +206,35 @@ async function prepareLinkedIn(
       };
     },
   };
+}
+async function uploadLinkedInImage(
+  bytes: Buffer,
+  contentType: string,
+  owner: string,
+  token: string,
+) {
+  const { value } = await providerJson(
+    "https://api.linkedin.com/rest/images?action=initializeUpload",
+    z.object({
+      value: z.object({
+        uploadUrl: z.string().url(),
+        image: z.string().startsWith("urn:li:image:"),
+      }),
+    }),
+    {
+      ...jsonBody({ initializeUploadRequest: { owner } }),
+      headers: {
+        ...linkedinHeaders(token),
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  await providerRequest(trustedLinkedInUpload(value.uploadUrl), {
+    method: "PUT",
+    headers: { ...bearer(token), "Content-Type": contentType },
+    body: new Uint8Array(bytes),
+  });
+  return value.image;
 }
 async function threadsContainer(
   accountId: string,
@@ -336,6 +370,16 @@ async function prepareBluesky(
       aspectRatio: { width: image.width, height: image.height },
     });
   }
+  const link = !images.length ? firstPostLink(job.text) : null;
+  const preview = link ? await getLinkPreview(link) : null;
+  const thumb = preview?.image
+    ? (
+        await agent.uploadBlob(
+          new Uint8Array(Buffer.from(preview.image.data, "base64")),
+          { encoding: "image/jpeg" },
+        )
+      ).data.blob
+    : undefined;
   const richText = new RichText({ text: job.text });
   await richText.detectFacets(agent);
   if (job.replyTo && (!job.replyTo.cid || !job.threadRoot?.cid))
@@ -364,7 +408,19 @@ async function prepareBluesky(
         }
       : uploaded.length
         ? { embed: { $type: "app.bsky.embed.images", images: uploaded } }
-        : {}),
+        : preview
+          ? {
+              embed: {
+                $type: "app.bsky.embed.external",
+                external: {
+                  uri: preview.url,
+                  title: preview.title,
+                  description: preview.description,
+                  ...(thumb ? { thumb } : {}),
+                },
+              },
+            }
+          : {}),
   };
   // A deterministic record key lets an operator reconcile a lost response without another post.
   const rkey = `posted-${job.id}`;

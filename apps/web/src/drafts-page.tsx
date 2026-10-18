@@ -104,11 +104,13 @@ export function DraftsPage({ session }: { session: Session }) {
               {
                 key: "accounts",
                 header: "Accounts",
+                className: "whitespace-nowrap",
                 cell: (draft) => (
-                  <div className="flex gap-2">
+                  <div className="flex w-max gap-2">
                     {draft.connections.map((account) => (
                       <span
                         key={account.id}
+                        className="shrink-0"
                         role="img"
                         aria-label={`${providerNames[account.provider]}: @${account.handle}`}
                         title={`@${account.handle}`}

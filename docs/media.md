@@ -22,6 +22,10 @@ These are conservative Posted limits. See [X’s media requirements](https://doc
 
 In an account's **Edit** view, add or remove media and drag the six-dot handle to reorder attachments. The vertical insertion line shows where the item will land. Dragging the image itself does not reorder it; clicking it opens the larger preview. Changes apply only to that account and post. Removing every inherited attachment keeps that account text-only. **Reset to master** restores both text and media after confirmation.
 
+## Link previews
+
+Posts without attachments can show a website card from the first link in the text. Posted reads the website's title, description and Open Graph image. LinkedIn and Bluesky receive an explicit card; X and Threads generate their own from the link. Websites can restrict previews, and unavailable metadata leaves the text and link intact. Link cards do not require S3 source.
+
 ## Provider selection
 
 Reorder media to choose the most important files first. Posted uses the supported prefix for each provider.
