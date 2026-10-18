@@ -61,7 +61,7 @@ export async function createPreviewApi() {
     cors({
       origin: new URL(settings.POSTED_WEB_URL).origin,
       credentials: true,
-      allowMethods: ["GET", "POST", "OPTIONS"],
+      allowMethods: ["GET", "POST", "DELETE", "OPTIONS"],
       allowHeaders: ["Content-Type"],
     }),
     bodyLimit({ maxSize: 2048 }),
@@ -122,6 +122,8 @@ export async function createPreviewApi() {
           ["POST", "OPTIONS"].includes(request.method)) ||
         (path.startsWith("/api/social/callback/") &&
           request.method === "GET") ||
+        (path.startsWith("/api/social/linkedin-pages/authorizations/") &&
+          ["GET", "POST", "DELETE", "OPTIONS"].includes(request.method)) ||
         (path.startsWith("/api/preview/social/") &&
           ["GET", "POST", "OPTIONS"].includes(request.method));
       return fixtureRoute ? fixtures.fetch(request) : app.fetch(request);

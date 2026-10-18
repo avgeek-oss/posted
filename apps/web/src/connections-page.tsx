@@ -1,3 +1,4 @@
+import { LinkedInPagesDialog } from "./linkedin-pages-dialog.js";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -28,7 +29,12 @@ import type {
 import { PageHeading } from "./page-heading.js";
 import { api, errorText, type Session } from "./api.js";
 import { useResource } from "./use-resource.js";
-import { providerNames, ProviderIcon, StateChip } from "./social-ui.js";
+import {
+  AccountAvatar,
+  providerNames,
+  ProviderIcon,
+  StateChip,
+} from "./social-ui.js";
 import { QueryFeedback } from "./query-feedback.js";
 import { RelativeDateTime } from "./relative-date-time.js";
 
@@ -46,6 +52,9 @@ export function ConnectionsPage({
   const providers = useResource<{
     providers: ProviderCapabilities[];
   }>("/providers");
+  const [pageAuthorization, setPageAuthorization] = useState(() =>
+    new URLSearchParams(window.location.search).get("linkedinPages"),
+  );
   const [open, setOpen] = useState(false);
   const [provider, setProvider] = useState<Provider | "">("");
   const [handle, setHandle] = useState("");
@@ -93,6 +102,20 @@ export function ConnectionsPage({
   }
   return (
     <section className="min-w-0">
+      {canManage && pageAuthorization && (
+        <LinkedInPagesDialog
+          authorizationId={pageAuthorization}
+          onDone={() => {
+            setPageAuthorization(null);
+            window.history.replaceState(
+              window.history.state,
+              "",
+              "/connections",
+            );
+            connections.refresh();
+          }}
+        />
+      )}
       <PageHeading
         title="Connections"
         icon={<HugeiconsIcon icon={Link01Icon} />}
@@ -135,10 +158,7 @@ export function ConnectionsPage({
               className: "min-w-60",
               cell: (item) => (
                 <div className="flex items-center gap-3">
-                  <ProviderIcon
-                    provider={item.provider}
-                    className="size-5 shrink-0"
-                  />
+                  <AccountAvatar account={item} providerBadgeSize="md" />
                   <span className="sr-only">
                     {providerNames[item.provider]}
                   </span>

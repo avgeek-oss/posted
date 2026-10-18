@@ -4,16 +4,16 @@ services:
       context: .
       target: api
       args:
-        RELEASE_VERSION: 0.2.3
+        RELEASE_VERSION: 0.2.4
   worker:
     build:
       context: .
       target: worker
       args:
-        RELEASE_VERSION: 0.2.3
+        RELEASE_VERSION: 0.2.4
   web:
     build:
       context: .
       target: web
       args:
-        RELEASE_VERSION: 0.2.3
+        RELEASE_VERSION: 0.2.4

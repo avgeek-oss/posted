@@ -38,7 +38,13 @@ export type InvitationCodeReceipt = EmailResendReceipt & {
 };
 export type InvitationVerificationProof = { verificationToken: string };
 
-export const PROVIDERS = ["x", "linkedin", "bluesky", "threads"] as const;
+export const PROVIDERS = [
+  "x",
+  "linkedin",
+  "linkedin-pages",
+  "bluesky",
+  "threads",
+] as const;
 export type Provider = (typeof PROVIDERS)[number];
 export type ProviderCapabilities = {
   id: Provider;
@@ -180,3 +186,10 @@ export type Page<T> = {
 };
 
 export type PostCounts = { scheduled: number; drafts: number };
+
+export type LinkedInPage = {
+  accountId: string;
+  name: string;
+  handle: string;
+  avatarUrl: string | null;
+};

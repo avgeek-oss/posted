@@ -1,3 +1,12 @@
+import {
+  linkedInPages,
+  linkedInPageRoutes,
+  saveLinkedInPageGrant,
+} from "./linkedin-pages.js";
+import {
+  PROVIDERS,
+  type LinkedInPage,
+} from "../../../../packages/contracts/src/index.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -11,13 +20,15 @@ import {
   sql,
   withDatabaseTransaction,
 } from "../../../../packages/database/src/index.js";
-import { requireRole, type Env } from "../http.js";
+import { requireHuman, requireRole, type Env } from "../http.js";
+import { withMutationAuthority } from "../middleware.js";
 import { config } from "../config.js";
 import { enabledProviders } from "./capabilities.js";
 import { seal, unseal } from "./secrets.js";
 import {
   callbackUrl,
   clientCredentials,
+  credentialsSchema,
   exchangeCode,
   accountProfile,
 } from "./tokens.js";
@@ -26,6 +37,10 @@ import { blueskyLoginSchema } from "./bluesky-input.js";
 import type { Provider } from "../../../../packages/contracts/src/index.js";
 
 export type SocialOAuthProvider = {
+  pages?: (
+    accessToken: string,
+    accountIds?: string[],
+  ) => Promise<LinkedInPage[]>;
   authorize: (
     provider: Provider,
     handle: string | undefined,
@@ -46,14 +61,16 @@ export type SocialOAuthProvider = {
     credential: unknown;
   }>;
 };
-const providerSchema = z.enum(["x", "linkedin", "bluesky", "threads"]);
+const providerSchema = z.enum(PROVIDERS);
 const hash = (value: string) =>
   createHash("sha256").update(value).digest("hex");
 export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
   const socialRoutes = new Hono<Env>();
+  socialRoutes.route("/", linkedInPageRoutes(providerClient?.pages));
   socialRoutes.post("/api/social/connect/:provider", async (c) => {
     const actor = requireRole(c, "admin");
     const provider = providerSchema.parse(c.req.param("provider"));
+    if (provider === "linkedin-pages") requireHuman(c);
     if (
       !providerClient &&
       !enabledProviders(process.env).some((p) => p.id === provider)
@@ -107,7 +124,7 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
       url = new URL(
         provider === "x"
           ? "https://x.com/i/oauth2/authorize"
-          : provider === "linkedin"
+          : provider === "linkedin" || provider === "linkedin-pages"
             ? "https://www.linkedin.com/oauth/v2/authorization"
             : "https://www.threads.net/oauth/authorize",
       );
@@ -119,9 +136,11 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
         scope:
           provider === "x"
             ? "tweet.read tweet.write users.read offline.access media.write"
-            : provider === "linkedin"
-              ? "openid profile w_member_social"
-              : "threads_basic,threads_content_publish",
+            : provider === "linkedin-pages"
+              ? "rw_organization_admin w_organization_social"
+              : provider === "linkedin"
+                ? "openid profile w_member_social"
+                : "threads_basic,threads_content_publish",
       }).toString();
       if (provider === "x") {
         url.searchParams.set(
@@ -137,6 +156,7 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
   socialRoutes.get("/api/social/callback/:provider", async (c) => {
     const actor = requireRole(c, "admin");
     const provider = providerSchema.parse(c.req.param("provider"));
+    if (provider === "linkedin-pages") requireHuman(c);
     let state = c.req.query("state");
     if (provider === "bluesky" && !providerClient) {
       const sdkState = z.string().min(1).max(512).parse(state);
@@ -175,9 +195,42 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
     };
     let credential: unknown;
     if (c.req.query("error")) {
-      await sql`UPDATE social_oauth_requests SET consumed_at=now() WHERE state_hash=${hash(rawState)} AND provider=${provider} AND user_id=${actor.userId} AND consumed_at IS NULL`;
+      await withMutationAuthority(c, async () => {
+        await sql`UPDATE social_oauth_requests SET consumed_at=now() WHERE state_hash=${hash(rawState)} AND provider=${provider} AND user_id=${actor.userId} AND consumed_at IS NULL`;
+      });
       return c.redirect(
         `${config().POSTED_WEB_URL.replace(/\/$/, "")}/connections?connection=denied`,
+      );
+    }
+    if (provider === "linkedin-pages") {
+      const verifier = z
+        .string()
+        .parse(
+          unseal(pending.encryptedVerifier, `social-oauth:${hash(rawState)}`),
+        );
+      const token = providerClient
+        ? credentialsSchema.parse(
+            (
+              await providerClient.exchange(
+                provider,
+                new URL(c.req.url).searchParams,
+                verifier,
+              )
+            ).credential,
+          )
+        : await exchangeCode(
+            provider,
+            z.string().min(1).max(4096).parse(c.req.query("code")),
+            verifier,
+          );
+      const pages = await (providerClient?.pages ?? linkedInPages)(
+        token.accessToken,
+      );
+      const selection = await withMutationAuthority(c, () =>
+        saveLinkedInPageGrant(actor.userId, hash(rawState), token, pages),
+      );
+      return c.redirect(
+        `${config().POSTED_WEB_URL.replace(/\/$/, "")}/connections?linkedinPages=${selection}`,
       );
     }
     if (providerClient) {

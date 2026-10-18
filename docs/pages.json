@@ -110,6 +110,11 @@
     "description": "Connect a LinkedIn member account and publish individual posts in order."
   },
   {
+    "name": "providers/linkedin-pages",
+    "title": "LinkedIn Pages",
+    "description": "Connect company Pages through a separate LinkedIn application with Community Management API access."
+  },
+  {
     "name": "providers/bluesky",
     "title": "Bluesky",
     "description": "Connect through Bluesky OAuth and publish posts, media and reply threads."

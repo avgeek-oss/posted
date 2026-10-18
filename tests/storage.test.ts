@@ -524,7 +524,7 @@ test("worker delivers account-specific image order, explicit empty media and inh
   }
 });
 
-test("GIF uploads keep private originals, prepare once, and publish animation through X and LinkedIn", async () => {
+test("GIF uploads keep private originals, prepare once, and publish animation through X, LinkedIn and LinkedIn Pages", async () => {
   const admin = await setupUser();
   const source = await gifFixture();
   const upload = await begin(admin.cookie, source, {
@@ -577,7 +577,7 @@ test("GIF uploads keep private originals, prepare once, and publish animation th
     "image/png",
   );
   const accounts: string[] = [];
-  for (const provider of ["x", "linkedin"]) {
+  for (const provider of ["x", "linkedin", "linkedin-pages"]) {
     const id = randomUUID();
     const credentials = seal(
       {
@@ -677,10 +677,11 @@ test("GIF uploads keep private originals, prepare once, and publish animation th
   try {
     assert.equal(await deliverNext(), true);
     assert.equal(await deliverNext(), true);
-    assert.equal(published, 2);
+    assert.equal(await deliverNext(), true);
+    assert.equal(published, 3);
     assert.deepEqual(
       (await sql`SELECT state FROM post_deliveries`).map((d) => d.state),
-      ["published", "published"],
+      ["published", "published", "published"],
     );
   } finally {
     mock.restoreAll();

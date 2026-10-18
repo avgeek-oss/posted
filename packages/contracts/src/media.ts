@@ -5,6 +5,7 @@ export const videoUploadBytes = 100 * 1024 * 1024;
 export const videoDurationLimits: Record<Provider, number> = {
   x: 140,
   linkedin: 1800,
+  "linkedin-pages": 1800,
   bluesky: 180,
   threads: 300,
 };

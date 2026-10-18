@@ -80,7 +80,11 @@ export function ComposerAccounts({
                   aria-pressed={account.id === activeId}
                   onPress={() => onActiveChange(account.id)}
                 >
-                  <AccountAvatar account={account} error={errors[account.id]} />
+                  <AccountAvatar
+                    account={account}
+                    error={errors[account.id]}
+                    providerBadgeSize="md"
+                  />
                 </Button>
               </Tooltip.Trigger>
               <Tooltip.Content>
@@ -230,7 +234,7 @@ export function ComposerAccounts({
                     <Checkbox.Control>
                       <Checkbox.Indicator />
                     </Checkbox.Control>
-                    <AccountAvatar account={account} />
+                    <AccountAvatar account={account} providerBadgeSize="md" />
                     <span className="grid min-w-0 gap-0.5">
                       <span
                         className="truncate font-medium"

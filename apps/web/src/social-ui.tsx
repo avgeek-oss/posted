@@ -30,6 +30,7 @@ import type {
 export const providerNames: Record<Provider, string> = {
   x: "X",
   linkedin: "LinkedIn",
+  "linkedin-pages": "LinkedIn Pages",
   bluesky: "Bluesky",
   threads: "Threads",
 };
@@ -55,10 +56,12 @@ export function AccountAvatar({
   account,
   error,
   size = "md",
+  providerBadgeSize = "sm",
 }: {
   account: Pick<SocialConnection, "name" | "provider" | "avatarUrl">;
   error?: string;
   size?: "sm" | "md";
+  providerBadgeSize?: "sm" | "md";
 }) {
   return (
     <span className="relative inline-flex shrink-0" aria-hidden="true">
@@ -73,7 +76,9 @@ export function AccountAvatar({
           <HugeiconsIcon icon={AlertCircleIcon} size={14} aria-hidden />
         </span>
       )}
-      <span className="absolute -bottom-1 -right-1 flex size-4 items-center justify-center overflow-hidden rounded-full border-2 border-background bg-surface">
+      <span
+        className={`absolute -bottom-1 -right-1 flex items-center justify-center overflow-hidden rounded-full border-2 border-background bg-surface ${providerBadgeSize === "md" ? "size-5" : "size-4"}`}
+      >
         <ProviderIcon provider={account.provider} className="size-full" />
       </span>
     </span>
@@ -216,7 +221,8 @@ export function SocialPreview({
   text: string;
   media: PreviewMedia[];
 }) {
-  const linkedIn = account.provider === "linkedin";
+  const linkedIn =
+    account.provider === "linkedin" || account.provider === "linkedin-pages";
   const x = account.provider === "x";
   const singleImage =
     media.length === 1 && media[0]?.contentType.startsWith("image/");

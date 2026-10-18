@@ -23,7 +23,13 @@ import {
 } from "../packages/contracts/src/text.js";
 
 test("preview text stops at provider limits without splitting emoji or weighted URLs", () => {
-  for (const provider of ["x", "linkedin", "bluesky", "threads"] as const) {
+  for (const provider of [
+    "x",
+    "linkedin",
+    "linkedin-pages",
+    "bluesky",
+    "threads",
+  ] as const) {
     const text = "a".repeat(characterLimits[provider] + 1);
     assert.equal(
       textForProviderPreview(provider, text),
@@ -230,7 +236,13 @@ test("GIF video conversion retains changing frames and loops short animations to
 test("a GIF cannot be silently combined with other attachment types", () => {
   const gif = { contentType: "image/gif", durationSeconds: 0.8 };
   const image = { contentType: "image/png", durationSeconds: null };
-  for (const provider of ["x", "linkedin", "bluesky", "threads"] as const) {
+  for (const provider of [
+    "x",
+    "linkedin",
+    "linkedin-pages",
+    "bluesky",
+    "threads",
+  ] as const) {
     assert.equal(mediaError(provider, [gif]), undefined);
     assert.match(mediaError(provider, [gif, image]) ?? "", /one GIF/);
     assert.match(mediaError(provider, [gif, gif]) ?? "", /one GIF/);
@@ -244,7 +256,12 @@ test("media priority and early account validation match each provider's supporte
   };
   const first = { id: "first", contentType: "video/mp4", durationSeconds: 10 };
   const second = { ...first, id: "second" };
-  for (const provider of ["x", "linkedin", "bluesky"] as const) {
+  for (const provider of [
+    "x",
+    "linkedin",
+    "linkedin-pages",
+    "bluesky",
+  ] as const) {
     assert.deepEqual(mediaForProvider(provider, [second, first]), [second]);
     assert.ok(mediaError(provider, [image, first]));
   }

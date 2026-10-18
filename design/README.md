@@ -31,9 +31,10 @@ Sketch rounds scale suffixes in filenames: `@0.6x`, `@0.2x`, and `@0.5x` above a
 
 ## Social provider logos
 
-The `Social Icons` page in `Posted.sketch` owns the X, LinkedIn, Bluesky and Threads logos. Export their complete 256 × 256 frames to preserve the supplied colours and padding. `design/exports/social/` holds SVG exports and PNG references; the app serves the vectors from `apps/web/public/providers/` through its shared `ProviderIcon` component. Account-avatar badges clip these tiles to a circle.
+The `Social Icons` page in `Posted.sketch` owns the X, LinkedIn, LinkedIn Pages, Bluesky and Threads logos. Export their complete 256 × 256 frames to preserve the supplied colours and padding. `design/exports/social/` holds SVG exports and PNG references; the app serves the vectors from `apps/web/public/providers/` through its shared `ProviderIcon` component. Account-avatar badges clip these tiles to a circle.
 
 ```sh
-/Applications/Sketch.app/Contents/MacOS/sketchtool export layers design/Posted.sketch --items=AF201F7B-2FEF-4DB5-BFA5-DDB80E181AF6,C55D0A11-35B6-4851-BFAD-E128874676C5,44F93A81-7EC1-4D6C-8114-C964D63E3025,54AAFD4C-9043-42E3-8878-B79B7CE4E8CF --formats=svg,png --output=design/exports/social --save-for-web=YES --overwriting=YES --without-activating=YES
+/Applications/Sketch.app/Contents/MacOS/sketchtool export layers design/Posted.sketch --items=AF201F7B-2FEF-4DB5-BFA5-DDB80E181AF6,C55D0A11-35B6-4851-BFAD-E128874676C5,19F9A9DA-C8C0-4EEA-AB71-2EEB8BB9F0BD,44F93A81-7EC1-4D6C-8114-C964D63E3025,54AAFD4C-9043-42E3-8878-B79B7CE4E8CF --formats=svg,png --output=design/exports/social --save-for-web=YES --overwriting=YES --without-activating=YES
 cp design/exports/social/*.svg apps/web/public/providers/
+mv apps/web/public/providers/linkedin_pages.svg apps/web/public/providers/linkedin-pages.svg
 ```

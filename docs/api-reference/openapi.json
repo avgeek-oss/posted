@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Posted HTTP API",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "description": "All registered application, account, OAuth, MCP transport and health endpoints. Publishing and draft request schemas come from the shared runtime validators. Replace the example server with your installation. Documentation uses simple request examples and does not execute live publishing requests."
   },
   "servers": [{ "url": "https://posted-api.example.com" }],
@@ -2774,7 +2774,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["x", "threads", "linkedin", "bluesky"]
+              "enum": ["x", "linkedin", "linkedin-pages", "bluesky", "threads"]
             },
             "description": "The provider from the corresponding list, record or authorization response."
           }
@@ -2820,6 +2820,182 @@
         }
       }
     },
+    "/api/social/linkedin-pages/authorizations/{id}": {
+      "get": {
+        "operationId": "get_api_social_linkedin_pages_authorizations_by_id",
+        "summary": "List Pages available to connect",
+        "description": "Returns the Pages discovered during this administrator's LinkedIn Pages OAuth flow. Grants expire after ten minutes. Provider credentials are never returned.\n\nA signed-in human administrator is required. API keys and MCP credentials cannot replace that session. Sensitive operations can also require recent authentication.",
+        "tags": ["Social connections"],
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "The id from the corresponding list, record or authorization response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "accountId": { "type": "string" },
+                          "name": { "type": "string" },
+                          "handle": { "type": "string" },
+                          "avatarUrl": { "type": ["string", "null"] }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "example": {
+                  "pages": [
+                    {
+                      "accountId": "123456",
+                      "name": "Studio North",
+                      "handle": "studio-north",
+                      "avatarUrl": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_social_linkedin_pages_authorizations_by_id",
+        "summary": "Connect selected LinkedIn Pages",
+        "description": "Rechecks current Page access and connects only the selected Page IDs to the team. Consumes the pending authorization atomically; repeated requests cannot create duplicate connections.\n\nA signed-in human administrator is required. API keys and MCP credentials cannot replace that session. Sensitive operations can also require recent authentication.",
+        "tags": ["Social connections"],
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "The id from the corresponding list, record or authorization response."
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" },
+            "description": "The exact configured Posted UI origin. Required for browser mutations carrying session cookies."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "accountIds": {
+                    "minItems": 1,
+                    "maxItems": 2000,
+                    "type": "array",
+                    "items": { "type": "string", "pattern": "^[0-9]+$" }
+                  }
+                },
+                "required": ["accountIds"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "connected": { "type": "integer" } },
+                  "additionalProperties": true
+                },
+                "example": { "connected": 1 }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_api_social_linkedin_pages_authorizations_by_id",
+        "summary": "Cancel LinkedIn Page selection",
+        "description": "Discards this administrator's pending authorization without saving or removing any team connections.\n\nA signed-in human administrator is required. API keys and MCP credentials cannot replace that session. Sensitive operations can also require recent authentication.",
+        "tags": ["Social connections"],
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "The id from the corresponding list, record or authorization response."
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" },
+            "description": "The exact configured Posted UI origin. Required for browser mutations carrying session cookies."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "cancelled": { "type": "boolean" } },
+                  "additionalProperties": true
+                },
+                "example": { "cancelled": true }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/social/callback/{provider}": {
       "get": {
         "operationId": "get_api_social_callback_by_provider",
@@ -2834,7 +3010,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["x", "threads", "linkedin", "bluesky"]
+              "enum": ["x", "linkedin", "linkedin-pages", "bluesky", "threads"]
             },
             "description": "The provider from the corresponding list, record or authorization response."
           },

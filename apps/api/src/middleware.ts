@@ -130,20 +130,36 @@ export const readAuthority: MiddlewareHandler<Env> = async (c, next) => {
   });
 };
 
+export async function withMutationAuthority<T>(
+  c: Context<Env>,
+  operation: () => Promise<T>,
+) {
+  return withDatabaseTransaction(async () => {
+    await sql.begin(lockAuthority);
+    await currentAuthority(c);
+    const result = await operation();
+    await currentAuthority(c);
+    return result;
+  });
+}
+
 export const mutationAuthority: MiddlewareHandler<Env> = async (c, next) => {
   if (
     !c.get("actor") ||
     c.req.path.startsWith("/api/auth/") ||
+    (c.req.method === "GET" &&
+      c.req.path === "/api/social/callback/linkedin-pages") ||
+    (c.req.method === "POST" &&
+      /^\/api\/social\/linkedin-pages\/authorizations\/[^/]+$/.test(
+        c.req.path,
+      )) ||
     (!c.req.path.startsWith("/api/social/callback/") &&
       !["POST", "PATCH", "DELETE"].includes(c.req.method))
   )
     return next();
-  return withDatabaseTransaction(async () => {
-    await sql.begin(lockAuthority);
-    await currentAuthority(c);
+  return withMutationAuthority(c, async () => {
     await next();
     if (c.res.status >= 400) throw new RetryTransactionRollback();
-    await currentAuthority(c);
   }).catch((error) => {
     if (!(error instanceof RetryTransactionRollback)) throw error;
   });

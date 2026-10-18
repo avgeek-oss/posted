@@ -58,6 +58,7 @@
               "providers/x",
               "providers/threads",
               "providers/linkedin",
+              "providers/linkedin-pages",
               "providers/bluesky"
             ]
           }
@@ -215,6 +216,9 @@
                 "group": "Social connections",
                 "pages": [
                   "api-reference/post_api_social_connect_by_provider",
+                  "api-reference/get_api_social_linkedin_pages_authorizations_by_id",
+                  "api-reference/post_api_social_linkedin_pages_authorizations_by_id",
+                  "api-reference/delete_api_social_linkedin_pages_authorizations_by_id",
                   "api-reference/get_api_social_callback_by_provider",
                   "api-reference/get_social_bluesky_client_metadata_json",
                   "api-reference/get_social_bluesky_jwks_json",

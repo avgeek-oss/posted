@@ -1038,6 +1038,54 @@ export const supplementalEndpoints: Endpoint[] = [
   ),
   endpoint(
     "GET",
+    "/api/social/linkedin-pages/authorizations/:id",
+    "List Pages available to connect",
+    "Social connections",
+    "admin-session",
+    "Returns the Pages discovered during this administrator's LinkedIn Pages OAuth flow. Grants expire after ten minutes. Provider credentials are never returned.",
+    {
+      result: {
+        pages: [
+          {
+            accountId: "123456",
+            name: "Studio North",
+            handle: "studio-north",
+            avatarUrl: null,
+          },
+        ],
+      },
+    },
+  ),
+  endpoint(
+    "POST",
+    "/api/social/linkedin-pages/authorizations/:id",
+    "Connect selected LinkedIn Pages",
+    "Social connections",
+    "admin-session",
+    "Rechecks current Page access and connects only the selected Page IDs to the team. Consumes the pending authorization atomically; repeated requests cannot create duplicate connections.",
+    {
+      body: z
+        .object({
+          accountIds: z
+            .array(z.string().regex(/^[0-9]+$/))
+            .min(1)
+            .max(2000),
+        })
+        .strict(),
+      result: { connected: 1 },
+    },
+  ),
+  endpoint(
+    "DELETE",
+    "/api/social/linkedin-pages/authorizations/:id",
+    "Cancel LinkedIn Page selection",
+    "Social connections",
+    "admin-session",
+    "Discards this administrator's pending authorization without saving or removing any team connections.",
+    { result: { cancelled: true } },
+  ),
+  endpoint(
+    "GET",
     "/api/social/callback/:provider",
     "Complete a social OAuth callback",
     "Social connections",

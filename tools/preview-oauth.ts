@@ -37,6 +37,22 @@ export function previewOAuth(webUrl: string, apiUrl: string) {
     return grant;
   }
   const providerClient: SocialOAuthProvider = {
+    async pages() {
+      return [
+        {
+          accountId: "123456",
+          name: "Studio North",
+          handle: "studio-north",
+          avatarUrl: null,
+        },
+        {
+          accountId: "789012",
+          name: "Studio Journal",
+          handle: "studio-journal",
+          avatarUrl: null,
+        },
+      ];
+    },
     async authorize(provider, handle, state, verifier) {
       for (const [key, grant] of grants)
         if (grant.expiresAt <= Date.now()) grants.delete(key);
