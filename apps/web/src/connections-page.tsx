@@ -328,12 +328,15 @@ export function ConnectionsPage({
             />
             {provider === "bluesky" && (
               <TextField
-                label="Bluesky handle"
+                label="Bluesky handle or server URL"
                 value={handle}
                 onChange={(event) => setHandle(event.target.value)}
-                placeholder="name.bsky.social"
+                placeholder="name.bsky.social or https://bsky.social"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 required
-                maxLength={253}
+                maxLength={2048}
               />
             )}
             <p className="text-sm leading-relaxed text-muted">

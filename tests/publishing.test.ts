@@ -22,6 +22,10 @@ import {
 import { ProviderFailure } from "../apps/api/src/social/network.js";
 import type { DeliveryJob } from "../apps/api/src/posts/queue.js";
 import { blueskyClient } from "../apps/api/src/social/bluesky.js";
+import {
+  OAuthResolverError,
+  OAuthResponseError,
+} from "@atproto/oauth-client-node";
 
 beforeEach(resetDatabase);
 afterEach(() => mock.restoreAll());
@@ -891,7 +895,11 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
       code_challenge_methods_supported: ["S256"],
       scopes_supported: ["atproto", "transition:generic"],
     };
-    mock.method(client.oauthResolver, "resolve", async () => ({ metadata }));
+    const resolvedInputs: string[] = [];
+    mock.method(client.oauthResolver, "resolve", async (input: string) => {
+      resolvedInputs.push(input);
+      return { metadata };
+    });
     mock.method(client.oauthResolver, "resolveFromIdentity", async () => ({
       metadata,
       pds: new URL("https://pds.example.test"),
@@ -902,6 +910,52 @@ test("Bluesky OAuth binds callbacks to the initiating administrator, supports mu
       async () => metadata,
     );
     const admin = await setupUser();
+    const clientMetadataResponse = await request(
+      "/social/bluesky/client-metadata.json",
+    );
+    assert.equal(clientMetadataResponse.status, 200);
+    const clientMetadata = await clientMetadataResponse.json();
+    assert.ok(
+      !clientMetadata.client_uri ||
+        new URL(clientMetadata.client_uri).origin ===
+          new URL(clientMetadata.client_id).origin,
+      "Bluesky requires the client homepage to share the client ID origin",
+    );
+    const serverStart = await request("/api/social/connect/bluesky", {
+      cookie: admin.cookie,
+      body: { handle: "https://pds.example.test/" },
+    });
+    assert.equal(serverStart.status, 200);
+    assert.equal(resolvedInputs.at(-1), "https://pds.example.test");
+    const rejectedServer = await request("/api/social/connect/bluesky", {
+      cookie: admin.cookie,
+      body: { handle: "https://127.0.0.1" },
+    });
+    assert.equal(rejectedServer.status, 400);
+    for (const [error, status, message] of [
+      [new OAuthResolverError("private diagnostic"), 400, "could not find"],
+      [
+        new OAuthResponseError(new Response(null, { status: 400 }), {
+          error: "invalid_client_metadata",
+          error_description: "private diagnostic",
+        }),
+        502,
+        "OAuth configuration",
+      ],
+    ] as const) {
+      const failure = mock.method(client, "authorize", async () => {
+        throw error;
+      });
+      const result = await request("/api/social/connect/bluesky", {
+        cookie: admin.cookie,
+        body: { handle: "name.bsky.social" },
+      });
+      assert.equal(result.status, status);
+      const response = await result.json();
+      assert.ok(response.error.message.includes(message));
+      assert.ok(!JSON.stringify(response).includes("private diagnostic"));
+      failure.mock.restore();
+    }
     const start = await request("/api/social/connect/bluesky", {
       cookie: admin.cookie,
       body: { handle: "example.bsky.social" },

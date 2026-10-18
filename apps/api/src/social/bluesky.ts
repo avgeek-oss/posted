@@ -4,6 +4,7 @@ import {
   type NodeSavedSession,
   type NodeSavedState,
 } from "@atproto/oauth-client-node";
+import { safeFetchWrap } from "@atproto-labs/fetch-node";
 import { config } from "../config.js";
 import {
   sql,
@@ -26,7 +27,6 @@ async function createClient() {
     clientMetadata: {
       client_id: cfg.POSTED_BLUESKY_CLIENT_ID,
       client_name: "Posted",
-      client_uri: cfg.POSTED_WEB_URL,
       redirect_uris: [callbackUrl("bluesky") as `https://${string}`],
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
@@ -38,6 +38,7 @@ async function createClient() {
       jwks_uri: `${cfg.POSTED_API_URL.replace(/\/$/, "")}/social/bluesky/jwks.json`,
     },
     keyset: [key],
+    fetch: safeFetchWrap({ allowImplicitRedirect: true }),
     stateStore: {
       async set(key: string, value: NodeSavedState) {
         await sql`INSERT INTO bluesky_oauth_state(key,value,expires_at) VALUES(${key},${seal(value, `bluesky-state:${key}`)},now()+interval '10 minutes') ON CONFLICT(key) DO UPDATE SET value=excluded.value,expires_at=excluded.expires_at`;
