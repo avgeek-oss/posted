@@ -4,6 +4,10 @@ import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { Agent } from "@atproto/api";
 import {
+  OAuthResolverError,
+  OAuthResponseError,
+} from "@atproto/oauth-client-node";
+import {
   sql,
   withDatabaseTransaction,
 } from "../../../../packages/database/src/index.js";
@@ -18,6 +22,7 @@ import {
   accountProfile,
 } from "./tokens.js";
 import { blueskyClient } from "./bluesky.js";
+import { blueskyLoginSchema } from "./bluesky-input.js";
 import type { Provider } from "../../../../packages/contracts/src/index.js";
 
 export type SocialOAuthProvider = {
@@ -58,29 +63,45 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
           "Ask your installation operator to configure this provider first",
       });
     const input = z
-      .object({ handle: z.string().trim().max(253).optional() })
+      .object({ handle: z.string().trim().max(2048).optional() })
       .strict()
       .parse(await c.req.json());
-    if (
-      provider === "bluesky" &&
-      (!input.handle ||
-        !/^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(input.handle))
-    )
-      throw new HTTPException(400, {
-        message: "Enter a valid Bluesky handle, such as name.bsky.social",
-      });
+    const login =
+      provider === "bluesky"
+        ? blueskyLoginSchema.parse(input.handle ?? "")
+        : input.handle;
     const state = randomBytes(32).toString("base64url");
     const verifier = randomBytes(48).toString("base64url");
     await sql`INSERT INTO social_oauth_requests(state_hash,provider,workspace_id,user_id,encrypted_verifier,expires_at) VALUES(${hash(state)},${provider},(SELECT id FROM workspace),${actor.userId},${seal(verifier, `social-oauth:${hash(state)}`)},now()+interval '10 minutes')`;
     let url: URL;
     if (providerClient) {
       url = new URL(
-        await providerClient.authorize(provider, input.handle, state, verifier),
+        await providerClient.authorize(provider, login, state, verifier),
       );
     } else if (provider === "bluesky") {
-      url = await (
-        await blueskyClient()
-      ).authorize(z.string().parse(input.handle), { state });
+      try {
+        url = await (
+          await blueskyClient()
+        ).authorize(z.string().parse(login), {
+          state,
+          signal: AbortSignal.timeout(20_000),
+        });
+      } catch (error) {
+        if (error instanceof OAuthResolverError)
+          throw new HTTPException(400, {
+            message:
+              "Bluesky could not find this account or server. Check the handle or use your server's HTTPS URL.",
+          });
+        if (error instanceof OAuthResponseError)
+          throw new HTTPException(502, {
+            message:
+              error.error === "invalid_client_metadata" ||
+              error.error === "invalid_client"
+                ? "Bluesky rejected this installation's OAuth configuration. Ask your operator to check the client metadata and signing key."
+                : "Bluesky could not start the connection. Try again shortly.",
+          });
+        throw error;
+      }
     } else {
       const client = clientCredentials(provider);
       url = new URL(

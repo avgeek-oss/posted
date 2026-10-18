@@ -1,14 +1,16 @@
 # Bluesky
 
-Connect your account by entering your Bluesky handle and approving access on Bluesky. You do not need to register a developer application or copy an account password into Posted.
+Connect your account by entering your Bluesky handle or server URL and approving access on Bluesky. You do not need to register a developer application or copy an account password into Posted.
 
 ## Connect an account
 
 <Steps>
   <Step title="Configure the provider">Add the required environment variables below to your Posted installation.</Step>
-  <Step title="Authorize the account">A team administrator opens **Connections → Add connection**, chooses **Bluesky**, enters their handle (for example, name.bsky.social), and continues to Bluesky to sign in and approve access.</Step>
+  <Step title="Authorize the account">A team administrator opens **Connections → Add connection**, chooses **Bluesky**, enters their handle (for example, name.bsky.social) or server URL (for example, https://bsky.social), and continues to Bluesky to sign in and approve access.</Step>
   <Step title="Choose it in the composer">After returning to Posted, confirm that the account is Connected. Select it through **Choose Accounts**, review its preview and customize its text or media if needed.</Step>
 </Steps>
+
+Enter your handle to discover its server automatically. You can also enter a public HTTPS server URL, including your own server, and choose the account on its sign-in page.
 
 ## Required environment variables
 
