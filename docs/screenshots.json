@@ -5,7 +5,7 @@
     "alt": "Posted composer with sample master text, account selection, media and a provider preview.",
     "width": 1280,
     "height": 900,
-    "pages": ["composer", "media", "getting-started"],
+    "pages": ["composer"],
     "pixelRatio": 2
   },
   {
@@ -23,7 +23,7 @@
     "alt": "Posted team-owned sample social accounts for X, LinkedIn, Bluesky and Threads.",
     "width": 1280,
     "height": 900,
-    "pages": ["connections"],
+    "pages": [],
     "pixelRatio": 2
   },
   {
@@ -69,7 +69,7 @@
     "alt": "Posted image preview dialog with filename, pixel dimensions and file size.",
     "width": 1280,
     "height": 900,
-    "pages": ["media"],
+    "pages": [],
     "pixelRatio": 2
   },
   {
@@ -78,7 +78,7 @@
     "alt": "Posted publication confirmation with selected accounts and a post-count chip beside each one.",
     "width": 1280,
     "height": 900,
-    "pages": ["composer", "getting-started"],
+    "pages": ["composer"],
     "pixelRatio": 2
   },
   {

@@ -350,6 +350,21 @@
       "destination": "/configuration#social-providers"
     },
     { "source": "/storage", "destination": "/configuration#s3-source" },
-    { "source": "/rest-reference", "destination": "/api-reference/overview" }
+    { "source": "/rest-reference", "destination": "/api-reference/overview" },
+    { "source": "/getting-started", "destination": "/composer" },
+    {
+      "source": "/legal",
+      "destination": "https://github.com/avgeek-oss/posted/blob/main/LICENSE"
+    },
+    {
+      "source": "/authentication",
+      "destination": "/security#accounts-and-team-access"
+    },
+    { "source": "/connections", "destination": "/composer#connect-accounts" },
+    { "source": "/media", "destination": "/composer#add-media" },
+    {
+      "source": "/operations",
+      "destination": "/troubleshooting#check-service-health"
+    }
   ]
 }

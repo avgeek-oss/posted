@@ -6,11 +6,6 @@
     "icon": "book-open"
   },
   {
-    "name": "getting-started",
-    "title": "Your first post",
-    "description": "Set up a team, connect an account and prepare a post."
-  },
-  {
     "name": "composer",
     "title": "Compose a post",
     "description": "Write a post, choose accounts and make it your own for each one."
@@ -29,21 +24,6 @@
     "name": "deliveries",
     "title": "Publish history",
     "description": "Inspect progress and handle partial or uncertain publication."
-  },
-  {
-    "name": "media",
-    "title": "Images, GIFs and videos",
-    "description": "Upload media, reorder attachments and review provider limits."
-  },
-  {
-    "name": "connections",
-    "title": "Social connections",
-    "description": "Connect team-owned accounts through official provider OAuth."
-  },
-  {
-    "name": "authentication",
-    "title": "Accounts and team access",
-    "description": "Manage invitations, roles, passkeys and recovery."
   },
   {
     "name": "mcp-connections",
@@ -81,11 +61,6 @@
     "icon": "settings"
   },
   {
-    "name": "operations",
-    "title": "Operations",
-    "description": "Inspect health, schedules, account emails and recovery."
-  },
-  {
     "name": "backup",
     "title": "Backup and recovery",
     "description": "Keep the database, encryption secret and S3 source objects together.",
@@ -102,11 +77,6 @@
     "title": "Security",
     "description": "Understand credentials, roles and publishing boundaries.",
     "icon": "shield-check"
-  },
-  {
-    "name": "legal",
-    "title": "Licenses and provider terms",
-    "description": "Source licensing, notices and installation responsibilities."
   },
   {
     "name": "troubleshooting",

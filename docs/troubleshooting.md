@@ -27,3 +27,19 @@ Check both public origins, HTTPS, session cookies and the current role. Role cha
 ## First setup asks for a secret
 
 Read the API's initial startup log in your private operator session. The setup secret proves installation access. Existing teams cannot be initialized again. Use the operator recovery procedure for a lost administrator account.
+
+## Check service health
+
+Check API, worker and UI readiness independently. The API verifies a database query; worker readiness verifies its database access. The UI serves its public runtime configuration and static assets. Separate HTTPS routing and browser sign-in must also work.
+
+```sh
+docker compose ps
+docker compose logs --tail=100 worker
+docker compose exec worker node -e "fetch('http://127.0.0.1:4343/health/ready').then(r=>{if(!r.ok)process.exit(1)})"
+```
+
+### Worker and schedules
+
+The worker prepares private video uploads and claims due delivery jobs using database leases. Expired preparation can be recovered. Publishing claims cross a durable boundary before public provider calls; unknown outcomes become Uncertain rather than automatically republishing.
+
+Keep the worker running with the same version and secret as the API. Review per-account results when a group is Partial or Failed. Do not modify queue rows manually or restart a publishing operation merely because a response was lost.

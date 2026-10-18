@@ -19,6 +19,12 @@ const routes = pageRoutes(
   site.navigation.dropdowns.flatMap((item) => item.groups),
 );
 assert.equal(new Set(routes).size, routes.length);
+const guides = JSON.parse(await readFile(resolve(dir, "pages.json"), "utf8"));
+for (const guide of guides)
+  assert(
+    routes.includes(guide.name),
+    `${guide.name} is generated but missing from the sidebar`,
+  );
 for (const route of routes) {
   const body = await readFile(resolve(dir, route + ".mdx"), "utf8");
   await compile(body);

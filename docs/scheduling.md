@@ -25,4 +25,4 @@ Click a post title or its edit action to reopen the full composer, including eve
 
 Once delivery begins, content and schedule edits are no longer allowed. **Cancel** stops deliveries that have not started; it does not remove already published content from a social network. Read [Publish History and delivery details](/deliveries) before retrying a failed or uncertain request.
 
-The table lists delivery sets, not individual posts or account deliveries. Its sidebar badge includes sets with scheduled, preparing or publishing work. The worker must be running for schedules and video processing; healthy API and UI probes alone do not establish this. See [operations](/operations) if a schedule does not advance.
+The table lists delivery sets, not individual posts or account deliveries. Its sidebar badge includes sets with scheduled, preparing or publishing work. The worker must be running for schedules and video processing; healthy API and UI probes alone do not establish this. See [Troubleshooting](/troubleshooting#check-service-health) if a schedule does not advance.
