@@ -1,27 +1,26 @@
 # Posted
 
-A team-owned social media scheduler for X, LinkedIn, Bluesky and Threads.
+An open-source, self-hosted social publishing app for teams.
 
-Posted uses the same shared authentication, settings and MCP consent components as Towbar, Mill, Rootset and Vitalog. Social accounts connect to the team and can be shared by its members within their current permissions.
+Write posts and threads, add images or videos, and customize content for each connected account. Save drafts, publish immediately or schedule for later. Track the results in publish history.
 
-Read the documentation at [posted.cc](https://posted.cc). The source uses the published shared design system and includes PostgreSQL, private-storage, OAuth, MCP, image/video and worker-concurrency tests. Published versions, image manifests and installation assets are available in [GitHub Releases](https://github.com/avgeek-oss/posted/releases). Provider application approval and production credentials remain installation prerequisites.
+Social accounts belong to the team, with access managed through member roles. API and MCP clients can also create drafts and manage publishing.
 
-Use the [installation guide](docs/installation.md) to run version-matched API, worker and UI images with external or bundled PostgreSQL. The [Docker Compose guide](docs/installation/docker-compose.md#build-from-source) includes source builds. Public source builds require no npm registry credential.
+## Get started
 
-## Towbar deployment
+Follow the [installation guide](https://www.posted.cc/installation) to run Posted on your own server. Posted runs as a web app, API and publishing worker, backed by PostgreSQL. Connect an S3 source to upload images and videos.
 
-`towbar.yml` and `.towbar/` define the hosted production deployment using the published v0.2.0 image digests. See [installation with Towbar](docs/installation/towbar.md) for runtime values, deployment order and moving an existing installation. Forks must use their own registered server and domains.
+- [Install with Docker Compose](https://www.posted.cc/installation/docker-compose)
+- [Configure your installation](https://www.posted.cc/configuration)
+- [Connect social accounts](https://www.posted.cc/connections)
+- [Compose your first post](https://www.posted.cc/composer)
 
-## Architecture
+See the [documentation](https://www.posted.cc) for the full guides and API and MCP references. Published versions are available in [GitHub Releases](https://github.com/avgeek-oss/posted/releases).
 
-- `apps/api`: identity, team administration, OAuth callbacks and publishing requests.
-- `apps/worker`: durable scheduling and provider-specific media preparation/delivery.
-- `apps/web`: composer, provider previews, connections, scheduled posts, history and shared settings.
-- `packages/database`: PostgreSQL migrations and transaction context.
-- `packages/contracts`: shared request/response contracts.
+## Contributing
 
-UI and API use separate origins. PostgreSQL owns schedules and delivery state; an S3 source keeps uploaded originals private. Provider secrets are environment configuration and never browser data.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, checks and documentation workflows.
 
-## Attribution
+## License and attribution
 
-Authentication, team administration and application shell integration are adapted from the Apache-2.0 licensed Avgeek OSS Mill application. Shared UI is provided by `@avgeek-oss/design-system`.
+Posted is licensed under [Apache 2.0](LICENSE). Authentication, team administration and application shell integration are adapted from Avgeek OSS Mill. Shared UI is provided by `@avgeek-oss/design-system`. See [NOTICE](NOTICE) for attribution.

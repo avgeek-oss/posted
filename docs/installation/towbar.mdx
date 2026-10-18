@@ -8,11 +8,23 @@ Deploy Posted on a server already registered with your Towbar installation. You 
 
 ## 1. Add the deployment files
 
-Create these five files in your deployment repository. Copy each code tab into the matching path. These examples use the published Posted 0.2.0 images.
+Copy the YML files listed into your deployment repository in the same folder structure and update them as required based on the instructions below.
 
-Replace `192.0.2.10` with your registered server's IP address and the two example domains with your own. Point both domains to that server. The examples use Towbar's direct TLS mode; use your existing TLS settings if they differ.
+<Tree>
+  <Tree.File name="towbar.yml" />
+  <Tree.Folder name=".towbar" defaultOpen>
+    <Tree.Folder name="services" defaultOpen>
+      <Tree.File name="posted-api.service.yml" />
+      <Tree.File name="posted-worker.service.yml" />
+      <Tree.File name="posted-web.service.yml" />
+    </Tree.Folder>
+    <Tree.Folder name="datastores" defaultOpen>
+      <Tree.File name="posted-postgres.datastore.yml" />
+    </Tree.Folder>
+  </Tree.Folder>
+</Tree>
 
-Provider, email and S3 keys are commented out. Uncomment the groups you need before syncing. Keep provider and S3 values identical on API and worker. When using S3, also uncomment `POSTED_S3_ENDPOINT` on UI.
+Replace the IP address, TLS mode, and domains as required. The required env variables need to be added to the runtime secrets based on the requirements. The example already has commented-out variables but do refer to the latest [provider configuration docs](/providers) for direct env variables as it might change with different Posted versions.
 
 <CodeGroup>
 ```yaml towbar.yml
