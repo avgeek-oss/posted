@@ -889,6 +889,7 @@ export function ComposerPage({
     >
       <Button
         size="md"
+        className={desktop ? undefined : "px-3"}
         isPending={busy && !draftSave.current}
         isDisabled={publishDisabled}
         onPress={requestPublish}
@@ -896,6 +897,7 @@ export function ComposerPage({
         <HugeiconsIcon
           icon={postId ? Calendar03Icon : SentIcon}
           size={16}
+          className={desktop ? undefined : "hidden"}
           aria-hidden
         />
         {ambiguous && !draftRetry
@@ -1199,11 +1201,12 @@ export function ComposerPage({
   const heading = (
     <PageHeading
       title={postId ? "Edit Schedule" : draftId ? "Edit Draft" : "Create post"}
+      truncateTitle
       icon={
         <HugeiconsIcon icon={draftId ? QuillWrite02Icon : QuillWrite01Icon} />
       }
       actions={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {!postId && (
             <Tooltip>
               <Tooltip.Trigger<"span">
@@ -1268,7 +1271,7 @@ export function ComposerPage({
               onSelectionChange={(key) => setMobileView(String(key))}
               className="min-w-0"
             >
-              <div className="sticky top-0 z-20 bg-background pt-2">
+              <div className="composer-mobile-heading sticky top-0 z-20 bg-background pt-2 [&_header]:gap-2">
                 {heading}
                 <Tabs.ListContainer>
                   <Tabs.List
