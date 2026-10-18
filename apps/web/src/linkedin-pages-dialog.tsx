@@ -29,11 +29,11 @@ export function LinkedInPagesDialog({
     setBusy(true);
     try {
       await api(path, undefined, "DELETE");
-      onDone();
     } catch (error) {
       toast.danger(errorText(error));
     } finally {
       setBusy(false);
+      onDone();
     }
   }
   async function connect() {

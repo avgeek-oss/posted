@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Posted HTTP API",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "description": "All registered application, account, OAuth, MCP transport and health endpoints. Publishing and draft request schemas come from the shared runtime validators. Replace the example server with your installation. Documentation uses simple request examples and does not execute live publishing requests."
   },
   "servers": [{ "url": "https://posted-api.example.com" }],
@@ -2774,7 +2774,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["x", "threads", "linkedin", "bluesky"]
+              "enum": ["x", "linkedin", "linkedin-pages", "bluesky", "threads"]
             },
             "description": "The provider from the corresponding list, record or authorization response."
           }
@@ -3010,7 +3010,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["x", "threads", "linkedin", "bluesky"]
+              "enum": ["x", "linkedin", "linkedin-pages", "bluesky", "threads"]
             },
             "description": "The provider from the corresponding list, record or authorization response."
           },

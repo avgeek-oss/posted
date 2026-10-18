@@ -21,6 +21,7 @@ import {
   withDatabaseTransaction,
 } from "../../../../packages/database/src/index.js";
 import { requireHuman, requireRole, type Env } from "../http.js";
+import { withMutationAuthority } from "../middleware.js";
 import { config } from "../config.js";
 import { enabledProviders } from "./capabilities.js";
 import { seal, unseal } from "./secrets.js";
@@ -36,7 +37,10 @@ import { blueskyLoginSchema } from "./bluesky-input.js";
 import type { Provider } from "../../../../packages/contracts/src/index.js";
 
 export type SocialOAuthProvider = {
-  pages?: (accessToken: string) => Promise<LinkedInPage[]>;
+  pages?: (
+    accessToken: string,
+    accountIds?: string[],
+  ) => Promise<LinkedInPage[]>;
   authorize: (
     provider: Provider,
     handle: string | undefined,
@@ -191,7 +195,9 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
     };
     let credential: unknown;
     if (c.req.query("error")) {
-      await sql`UPDATE social_oauth_requests SET consumed_at=now() WHERE state_hash=${hash(rawState)} AND provider=${provider} AND user_id=${actor.userId} AND consumed_at IS NULL`;
+      await withMutationAuthority(c, async () => {
+        await sql`UPDATE social_oauth_requests SET consumed_at=now() WHERE state_hash=${hash(rawState)} AND provider=${provider} AND user_id=${actor.userId} AND consumed_at IS NULL`;
+      });
       return c.redirect(
         `${config().POSTED_WEB_URL.replace(/\/$/, "")}/connections?connection=denied`,
       );
@@ -220,11 +226,8 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
       const pages = await (providerClient?.pages ?? linkedInPages)(
         token.accessToken,
       );
-      const selection = await saveLinkedInPageGrant(
-        actor.userId,
-        hash(rawState),
-        token,
-        pages,
+      const selection = await withMutationAuthority(c, () =>
+        saveLinkedInPageGrant(actor.userId, hash(rawState), token, pages),
       );
       return c.redirect(
         `${config().POSTED_WEB_URL.replace(/\/$/, "")}/connections?linkedinPages=${selection}`,

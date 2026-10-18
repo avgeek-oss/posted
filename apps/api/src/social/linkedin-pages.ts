@@ -8,6 +8,7 @@ import {
 } from "../../../../packages/database/src/index.js";
 import type { LinkedInPage } from "../../../../packages/contracts/src/index.js";
 import { requireHuman, requireRole, type Env } from "../http.js";
+import { withMutationAuthority } from "../middleware.js";
 import { bearer, providerJson } from "./network.js";
 import { seal, unseal } from "./secrets.js";
 import {
@@ -48,6 +49,7 @@ const aclSchema = z.object({
 });
 export async function linkedInPages(
   accessToken: string,
+  accountIds?: string[],
 ): Promise<LinkedInPage[]> {
   const headers = linkedinHeaders(accessToken);
   const ids = new Set<string>();
@@ -89,7 +91,9 @@ export async function linkedInPages(
     start += count;
   }
   const pages: LinkedInPage[] = [];
-  const values = [...ids];
+  const values = [...ids].filter(
+    (id) => !accountIds || accountIds.includes(id),
+  );
   for (let start = 0; start < values.length; start += 5) {
     pages.push(
       ...(await Promise.all(
@@ -222,7 +226,7 @@ export function linkedInPageRoutes(listPages = linkedInPages) {
       "linkedin-pages",
       value.credential,
     );
-    const current = await listPages(credential.accessToken);
+    const current = await listPages(credential.accessToken, accountIds);
     const chosen = [...accountIds]
       .sort()
       .map((id) => current.find((page) => page.accountId === id));
@@ -230,9 +234,9 @@ export function linkedInPageRoutes(listPages = linkedInPages) {
       throw new HTTPException(403, {
         message: "Your Page access changed. Connect LinkedIn Pages again.",
       });
-    await withDatabaseTransaction(async () => {
+    await withMutationAuthority(c, async () => {
       const [grant] =
-        await sql`DELETE FROM linkedin_page_authorizations WHERE id=${id} AND user_id=${actor.userId} AND expires_at>now() RETURNING id`;
+        await sql`DELETE FROM linkedin_page_authorizations WHERE id=${id} AND user_id=${actor.userId} AND workspace_id=${value.workspaceId} AND expires_at>now() RETURNING id`;
       if (!grant)
         throw new HTTPException(409, {
           message: "This Page selection was already completed or expired",

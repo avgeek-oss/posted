@@ -3,6 +3,7 @@ import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { z } from "zod";
 import { format } from "prettier";
 import type { Endpoint } from "./docs-reference-data.js";
+import { PROVIDERS } from "../packages/contracts/src/index.js";
 process.env.DATABASE_URL ??= "postgres://unused:unused@127.0.0.1:1/unused";
 const { illustrations, supplementalEndpoints } =
   await import("./docs-reference-data.js");
@@ -254,7 +255,7 @@ for (const endpoint of endpoints) {
     required: true,
     schema:
       match[1] === "provider"
-        ? { type: "string", enum: ["x", "threads", "linkedin", "bluesky"] }
+        ? { type: "string", enum: [...PROVIDERS] }
         : {
             type: "string",
             ...(endpoint.path.includes("/passkeys/") ? {} : { format: "uuid" }),

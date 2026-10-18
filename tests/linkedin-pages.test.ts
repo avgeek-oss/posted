@@ -25,13 +25,14 @@ afterEach(() => mock.restoreAll());
 after(cleanupDatabase);
 const avatar = "https://media.licdn.com/dms/image/fixture";
 let revoked = false;
-function provider() {
+function provider(onRequest?: (url: URL) => Promise<void>) {
   revoked = false;
   mock.method(
     globalThis,
     "fetch",
     async (input: string | URL | Request, init?: RequestInit) => {
       const url = new URL(input instanceof Request ? input.url : String(input));
+      await onRequest?.(url);
       if (url.pathname === "/oauth/v2/accessToken") {
         const body = new URLSearchParams(String(init?.body));
         assert.equal(body.get("client_id"), "pages-client");
@@ -328,6 +329,85 @@ test("Page selection rechecks current access, expires, cancels without saving, a
   );
   assert.equal((await sql`SELECT id FROM social_connections`).length, 0);
 });
+for (const phase of ["callback", "selection"] as const) {
+  test(`Page ${phase} discovery leaves the workspace available and rejects authority revoked during discovery`, async () => {
+    const admin = await setupUser();
+    let markEntered!: () => void;
+    let release!: () => void;
+    const entered = new Promise<void>((resolve) => {
+      markEntered = resolve;
+    });
+    const released = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let blocked = phase === "callback";
+    provider(async (url) => {
+      if (blocked && url.pathname === "/rest/organizations/123") {
+        markEntered();
+        await released;
+      }
+    });
+    const target =
+      phase === "callback"
+        ? await begin(admin.cookie)
+        : (await grant(admin.cookie)).path;
+    blocked = true;
+    const operation = request(target, {
+      cookie: admin.cookie,
+      ...(phase === "selection" ? { body: { accountIds: ["123"] } } : {}),
+    });
+    await entered;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const read = await Promise.race([
+        request("/api/connections", { cookie: admin.cookie }),
+        new Promise<never>((_, reject) => {
+          timeout = setTimeout(
+            () => reject(new Error("Discovery blocked workspace reads")),
+            2000,
+          );
+        }),
+      ]);
+      assert.equal(read.status, 200);
+      if (phase === "callback")
+        await sql`DELETE FROM sessions WHERE user_id=${admin.user.id}`;
+      else await sql`UPDATE users SET role='member' WHERE id=${admin.user.id}`;
+    } finally {
+      clearTimeout(timeout);
+      release();
+    }
+    assert.equal((await operation).status, phase === "callback" ? 401 : 403);
+    assert.equal((await sql`SELECT id FROM social_connections`).length, 0);
+    if (phase === "callback")
+      assert.equal(
+        (await sql`SELECT id FROM linkedin_page_authorizations`).length,
+        0,
+      );
+    else
+      assert.equal(
+        (await sql`SELECT id FROM linkedin_page_authorizations`).length,
+        1,
+      );
+  });
+}
+
+test("Page selection hydrates only selected Pages after rechecking their current ACLs", async () => {
+  const admin = await setupUser();
+  const profiles: string[] = [];
+  provider(async (url) => {
+    if (url.pathname.startsWith("/rest/organizations/"))
+      profiles.push(url.pathname);
+  });
+  const selection = await grant(admin.cookie);
+  profiles.length = 0;
+  const saved = await request(selection.path, {
+    cookie: admin.cookie,
+    body: { accountIds: ["123"] },
+  });
+  assert.equal(saved.status, 200);
+  assert.deepEqual(profiles, ["/rest/organizations/123"]);
+});
+
 test("Page grants deny unauthenticated requests and member OAuth initiation", async () => {
   assert.equal(
     (await request(`/api/social/linkedin-pages/authorizations/${randomUUID()}`))
