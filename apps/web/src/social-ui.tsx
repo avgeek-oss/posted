@@ -17,6 +17,7 @@ import {
 import { Chip, TooltipText } from "@posted/web-design-system";
 import { textForProviderPreview } from "../../../packages/contracts/src/text.js";
 import { supportsThreads } from "../../../packages/contracts/src/threads.js";
+import { profileImageUrl } from "../../../packages/contracts/src/avatars.js";
 import type {
   Provider,
   SocialConnection,
@@ -185,7 +186,10 @@ export function SocialPreview({
           <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-default text-sm leading-none font-medium">
             {account.avatarUrl ? (
               <img
-                src={account.avatarUrl}
+                src={
+                  profileImageUrl(account.provider, account.avatarUrl) ??
+                  undefined
+                }
                 alt=""
                 className="size-full object-cover"
                 referrerPolicy="no-referrer"
@@ -240,7 +244,7 @@ export function SocialPreview({
                     aria-hidden
                   />
                 </TooltipText>
-                <em className="italic">Your post will appear here.</em>
+                <em className="text-sm italic">Your post will appear here.</em>
               </span>
             )}
           </p>

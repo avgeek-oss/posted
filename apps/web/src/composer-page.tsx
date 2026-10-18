@@ -889,6 +889,7 @@ export function ComposerPage({
     >
       <Button
         size="md"
+        className={desktop ? undefined : "px-3"}
         isPending={busy && !draftSave.current}
         isDisabled={publishDisabled}
         onPress={requestPublish}
@@ -896,6 +897,7 @@ export function ComposerPage({
         <HugeiconsIcon
           icon={postId ? Calendar03Icon : SentIcon}
           size={16}
+          className={desktop ? undefined : "hidden"}
           aria-hidden
         />
         {ambiguous && !draftRetry
@@ -985,6 +987,8 @@ export function ComposerPage({
         aria-label="Master posts"
         items={parts}
         selectionMode="none"
+        keyboardNavigationBehavior="tab"
+        disallowTypeAhead
         dependencies={[
           parts,
           activePostId,
@@ -1003,8 +1007,9 @@ export function ComposerPage({
           return (
             <GridListItem
               id={part.id}
+              focusMode="child"
               textValue={`Post ${index + 1}: ${part.text.trim() || "No text yet"}`}
-              className="composer-post group relative min-w-0 rounded-2xl outline-none data-[dragging]:opacity-50"
+              className="composer-post relative min-w-0 rounded-2xl outline-none data-[dragging]:opacity-50"
             >
               <MasterPostEditor
                 part={part}
@@ -1147,7 +1152,7 @@ export function ComposerPage({
               onActiveChange={setPreviewId}
             />
             {preview && (
-              <div className="min-w-0">
+              <div className="grid min-w-0 gap-0.5">
                 <h2 className="truncate text-base font-medium">
                   {preview.name}
                 </h2>
@@ -1166,14 +1171,17 @@ export function ComposerPage({
               onSelectionChange={(key) => setAccountView(String(key))}
             >
               <Tabs.ListContainer>
-                <Tabs.List aria-label="Account workspace">
+                <Tabs.List
+                  aria-label="Account workspace"
+                  className="composer-tab-list max-sm:p-0"
+                >
                   <Tabs.Tab id="edit">
                     Edit
-                    <Tabs.Indicator />
+                    <Tabs.Indicator className="max-sm:inset-1 max-sm:size-auto" />
                   </Tabs.Tab>
                   <Tabs.Tab id="preview">
                     Preview
-                    <Tabs.Indicator />
+                    <Tabs.Indicator className="max-sm:inset-1 max-sm:size-auto" />
                   </Tabs.Tab>
                 </Tabs.List>
               </Tabs.ListContainer>
@@ -1196,11 +1204,12 @@ export function ComposerPage({
   const heading = (
     <PageHeading
       title={postId ? "Edit Schedule" : draftId ? "Edit Draft" : "Create post"}
+      truncateTitle
       icon={
         <HugeiconsIcon icon={draftId ? QuillWrite02Icon : QuillWrite01Icon} />
       }
       actions={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {!postId && (
             <Tooltip>
               <Tooltip.Trigger<"span">
@@ -1265,20 +1274,20 @@ export function ComposerPage({
               onSelectionChange={(key) => setMobileView(String(key))}
               className="min-w-0"
             >
-              <div className="sticky top-0 z-20 bg-background pt-2">
+              <div className="composer-mobile-heading sticky top-0 z-20 bg-background pt-2 [&_header]:gap-2">
                 {heading}
                 <Tabs.ListContainer>
                   <Tabs.List
                     aria-label="Create post workspace"
-                    className="w-full"
+                    className="composer-tab-list w-full max-sm:p-0"
                   >
                     <Tabs.Tab id="write" className="flex-1">
                       Write
-                      <Tabs.Indicator />
+                      <Tabs.Indicator className="max-sm:inset-1 max-sm:size-auto" />
                     </Tabs.Tab>
                     <Tabs.Tab id="accounts" className="flex-1">
                       Accounts
-                      <Tabs.Indicator />
+                      <Tabs.Indicator className="max-sm:inset-1 max-sm:size-auto" />
                     </Tabs.Tab>
                   </Tabs.List>
                 </Tabs.ListContainer>

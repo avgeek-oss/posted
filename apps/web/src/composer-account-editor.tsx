@@ -1,7 +1,6 @@
 import { lazy, Suspense, useCallback } from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { AttachmentIcon } from "@hugeicons/core-free-icons";
 import { Button, TextField } from "@posted/web-design-system";
+import { AddMediaButton } from "./add-media-button.js";
 import type { SocialConnection } from "../../../packages/contracts/src/index.js";
 import {
   characterLimits,
@@ -118,18 +117,11 @@ export function ComposerAccountEditor({
           />
         </Suspense>
       )}
-      <div>
-        <Button
-          variant="secondary"
-          onPress={onUpload}
-          isDisabled={
-            locked || uploading || !storageEnabled || media.length >= 20
-          }
-        >
-          <HugeiconsIcon icon={AttachmentIcon} size={16} aria-hidden />
-          Add media
-        </Button>
-      </div>
+      <AddMediaButton
+        onPress={onUpload}
+        storageEnabled={storageEnabled}
+        disabled={locked || uploading || media.length >= 20}
+      />
     </li>
   );
 }

@@ -24,6 +24,30 @@
   width: 100%;
   min-width: 0;
 }
+.composer-mobile-heading [data-slot="application-page-heading"] {
+  font-size: var(--text-base);
+}
+@media (width < 40rem) {
+  .composer-tab-list
+    .tabs__tab:is(
+      :focus-visible:not([data-focused]),
+      [data-focus-visible="true"]
+    ) {
+    box-shadow: none;
+  }
+  .composer-tab-list
+    .tabs__tab:is(
+      :focus-visible:not([data-focused]),
+      [data-focus-visible="true"]
+    )::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 2px var(--focus);
+    pointer-events: none;
+  }
+}
 @media (max-width: 640px) {
   .pagination:has(> .pagination__summary) {
     flex-direction: row;

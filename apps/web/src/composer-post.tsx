@@ -11,6 +11,7 @@ import {
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import type { ComposerMediaItem } from "./composer-media.js";
+import { AddMediaButton } from "./add-media-button.js";
 
 export type ComposerPart = {
   id: string;
@@ -73,7 +74,7 @@ export function MasterPostEditor({
   ).length;
   return (
     <Card
-      className="min-w-0 group-data-[focus-visible]:ring-2 group-data-[focus-visible]:ring-focus"
+      className="min-w-0"
       id={`master-post-${part.id}`}
       data-keyboard={isFocusVisible || undefined}
     >
@@ -277,27 +278,11 @@ export function MasterPostEditor({
                     />
                   </Suspense>
                 )}
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button
-                    variant="secondary"
-                    onPress={onUpload}
-                    isDisabled={
-                      disabled || !storageEnabled || part.media.length >= 20
-                    }
-                  >
-                    <HugeiconsIcon
-                      icon={AttachmentIcon}
-                      size={16}
-                      aria-hidden
-                    />
-                    Add media
-                  </Button>
-                  {!storageEnabled && (
-                    <p className="text-xs text-muted">
-                      Media storage hasn't been configured.
-                    </p>
-                  )}
-                </div>
+                <AddMediaButton
+                  onPress={onUpload}
+                  storageEnabled={storageEnabled}
+                  disabled={disabled || part.media.length >= 20}
+                />
               </div>
             </div>
           </div>
