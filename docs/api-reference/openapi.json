@@ -5646,6 +5646,9 @@
                                 "provider": { "type": "string" },
                                 "accountName": { "type": "string" },
                                 "accountHandle": { "type": "string" },
+                                "accountAvatarUrl": {
+                                  "type": ["string", "null"]
+                                },
                                 "textOverride": { "type": ["string", "null"] },
                                 "state": { "type": "string" },
                                 "attempts": { "type": "integer" },
@@ -5708,6 +5711,7 @@
                           "provider": "bluesky",
                           "accountName": "Alex Morgan",
                           "accountHandle": "alex.example.test",
+                          "accountAvatarUrl": null,
                           "textOverride": null,
                           "state": "scheduled",
                           "attempts": 0,
@@ -5964,6 +5968,9 @@
                               "provider": { "type": "string" },
                               "accountName": { "type": "string" },
                               "accountHandle": { "type": "string" },
+                              "accountAvatarUrl": {
+                                "type": ["string", "null"]
+                              },
                               "textOverride": { "type": ["string", "null"] },
                               "state": { "type": "string" },
                               "attempts": { "type": "integer" },
@@ -6019,6 +6026,7 @@
                         "provider": "bluesky",
                         "accountName": "Alex Morgan",
                         "accountHandle": "alex.example.test",
+                        "accountAvatarUrl": null,
                         "textOverride": null,
                         "state": "scheduled",
                         "attempts": 0,
@@ -6098,6 +6106,9 @@
                               "provider": { "type": "string" },
                               "accountName": { "type": "string" },
                               "accountHandle": { "type": "string" },
+                              "accountAvatarUrl": {
+                                "type": ["string", "null"]
+                              },
                               "textOverride": { "type": ["string", "null"] },
                               "state": { "type": "string" },
                               "attempts": { "type": "integer" },
@@ -6153,6 +6164,7 @@
                         "provider": "bluesky",
                         "accountName": "Alex Morgan",
                         "accountHandle": "alex.example.test",
+                        "accountAvatarUrl": null,
                         "textOverride": null,
                         "state": "scheduled",
                         "attempts": 0,
@@ -6260,6 +6272,9 @@
                               "provider": { "type": "string" },
                               "accountName": { "type": "string" },
                               "accountHandle": { "type": "string" },
+                              "accountAvatarUrl": {
+                                "type": ["string", "null"]
+                              },
                               "textOverride": { "type": ["string", "null"] },
                               "state": { "type": "string" },
                               "attempts": { "type": "integer" },
@@ -6315,6 +6330,7 @@
                         "provider": "bluesky",
                         "accountName": "Alex Morgan",
                         "accountHandle": "alex.example.test",
+                        "accountAvatarUrl": null,
                         "textOverride": null,
                         "state": "scheduled",
                         "attempts": 0,
@@ -6583,6 +6599,9 @@
                               "provider": { "type": "string" },
                               "accountName": { "type": "string" },
                               "accountHandle": { "type": "string" },
+                              "accountAvatarUrl": {
+                                "type": ["string", "null"]
+                              },
                               "textOverride": { "type": ["string", "null"] },
                               "state": { "type": "string" },
                               "attempts": { "type": "integer" },
@@ -6638,6 +6657,7 @@
                         "provider": "bluesky",
                         "accountName": "Alex Morgan",
                         "accountHandle": "alex.example.test",
+                        "accountAvatarUrl": null,
                         "textOverride": null,
                         "state": "scheduled",
                         "attempts": 0,
@@ -6743,6 +6763,9 @@
                               "provider": { "type": "string" },
                               "accountName": { "type": "string" },
                               "accountHandle": { "type": "string" },
+                              "accountAvatarUrl": {
+                                "type": ["string", "null"]
+                              },
                               "textOverride": { "type": ["string", "null"] },
                               "state": { "type": "string" },
                               "attempts": { "type": "integer" },
@@ -6798,6 +6821,7 @@
                         "provider": "bluesky",
                         "accountName": "Alex Morgan",
                         "accountHandle": "alex.example.test",
+                        "accountAvatarUrl": null,
                         "textOverride": null,
                         "state": "cancelled",
                         "attempts": 0,
@@ -6938,6 +6962,9 @@
                               "provider": { "type": "string" },
                               "accountName": { "type": "string" },
                               "accountHandle": { "type": "string" },
+                              "accountAvatarUrl": {
+                                "type": ["string", "null"]
+                              },
                               "textOverride": { "type": ["string", "null"] },
                               "state": { "type": "string" },
                               "attempts": { "type": "integer" },
@@ -6993,6 +7020,7 @@
                         "provider": "bluesky",
                         "accountName": "Alex Morgan",
                         "accountHandle": "alex.example.test",
+                        "accountAvatarUrl": null,
                         "textOverride": null,
                         "state": "scheduled",
                         "attempts": 0,

@@ -66,6 +66,7 @@ export const examplePost = {
       provider: "bluesky",
       accountName: "Alex Morgan",
       accountHandle: "alex.example.test",
+      accountAvatarUrl: null,
       textOverride: null,
       state: "scheduled",
       attempts: 0,

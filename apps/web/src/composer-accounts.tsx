@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Avatar, Checkbox } from "@heroui/react";
+import { Checkbox } from "@heroui/react";
 import {
   Button,
   Dialog,
@@ -8,48 +8,9 @@ import {
   Tooltip,
 } from "@posted/web-design-system";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, AlertCircleIcon } from "@hugeicons/core-free-icons";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import type { SocialConnection } from "../../../packages/contracts/src/index.js";
-import { profileImageUrl } from "../../../packages/contracts/src/avatars.js";
-import { ProviderIcon, providerNames } from "./social-ui.js";
-
-function AccountAvatar({
-  account,
-  error,
-}: {
-  account: SocialConnection;
-  error?: string;
-}) {
-  const initials = account.name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toUpperCase();
-  return (
-    <span className="relative inline-flex shrink-0" aria-hidden="true">
-      <Avatar size="md">
-        <Avatar.Image
-          src={
-            profileImageUrl(account.provider, account.avatarUrl) ?? undefined
-          }
-          alt=""
-          referrerPolicy="no-referrer"
-        />
-        <Avatar.Fallback>{initials}</Avatar.Fallback>
-      </Avatar>
-      {error && (
-        <span className="absolute -left-1 -top-1 flex size-5 items-center justify-center rounded-full border-2 border-surface bg-danger text-danger-foreground">
-          <HugeiconsIcon icon={AlertCircleIcon} size={14} aria-hidden />
-        </span>
-      )}
-      <span className="absolute -bottom-1 -right-1 flex size-4 items-center justify-center overflow-hidden rounded-full border-2 border-background bg-surface">
-        <ProviderIcon provider={account.provider} className="size-full" />
-      </span>
-    </span>
-  );
-}
+import { AccountAvatar, ProviderIcon, providerNames } from "./social-ui.js";
 
 export function ComposerAccounts({
   accounts,
@@ -123,7 +84,10 @@ export function ComposerAccounts({
                 </Button>
               </Tooltip.Trigger>
               <Tooltip.Content>
-                @{account.handle}
+                <span className="grid gap-0.5">
+                  <span>{account.name}</span>
+                  <span>@{account.handle}</span>
+                </span>
                 {errors[account.id] && (
                   <p className="mt-1 text-danger">{errors[account.id]}</p>
                 )}

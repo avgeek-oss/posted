@@ -66,7 +66,7 @@ async function readPost(id: string): Promise<Post> {
       connectionState: string;
       providerPostCid: string | null;
     })[]
-  >`SELECT d.id,d.post_index,d.connection_id,c.provider,c.state AS connection_state,c.name AS account_name,c.handle AS account_handle,d.text_override,d.state,d.attempts,CASE WHEN d.state='scheduled' AND d.retry_attempts>0 AND d.error IS NOT NULL THEN d.available_at ELSE NULL END AS next_attempt_at,d.provider_post_id,d.provider_post_cid,d.published_url,d.error,d.published_at FROM post_deliveries d JOIN social_connections c ON c.id=d.connection_id WHERE d.group_id=${id} ORDER BY d.post_index,c.provider,c.id,d.id`;
+  >`SELECT d.id,d.post_index,d.connection_id,c.provider,c.state AS connection_state,c.name AS account_name,c.handle AS account_handle,c.avatar_url AS account_avatar_url,d.text_override,d.state,d.attempts,CASE WHEN d.state='scheduled' AND d.retry_attempts>0 AND d.error IS NOT NULL THEN d.available_at ELSE NULL END AS next_attempt_at,d.provider_post_id,d.provider_post_cid,d.published_url,d.error,d.published_at FROM post_deliveries d JOIN social_connections c ON c.id=d.connection_id WHERE d.group_id=${id} ORDER BY d.post_index,c.provider,c.id,d.id`;
   const resumableConnectionIds = cancelledAt
     ? []
     : [...new Set(records.map((item) => item.connectionId))].filter(
@@ -449,7 +449,7 @@ domainRoutes.post("/posts/:id/resume", async (c) => {
       conflict(
         "Only an interrupted sequence with confirmed earlier posts can be resumed",
       );
-    await sql`UPDATE post_deliveries SET state='scheduled',available_at=now(),retry_attempts=0,error=NULL,provider_checkpoint=NULL,lease_token=NULL,lease_until=NULL,updated_at=now() WHERE group_id=${id} AND connection_id=${input.connectionId} AND state='failed' AND provider_post_id IS NULL AND provider_post_cid IS NULL AND published_at IS NULL`;
+    await sql`UPDATE post_deliveries SET state='scheduled',available_at=now(),retry_attempts=0,error=NULL,provider_checkpoint=CASE WHEN ${connection.provider}='bluesky' THEN provider_checkpoint ELSE NULL END,lease_token=NULL,lease_until=NULL,updated_at=now() WHERE group_id=${id} AND connection_id=${input.connectionId} AND state='failed' AND provider_post_id IS NULL AND provider_post_cid IS NULL AND published_at IS NULL`;
     await sql`UPDATE post_groups SET version=version+1,last_edited_by=${actor.userId},updated_at=now() WHERE id=${id}`;
     await sql`INSERT INTO post_resume_requests(workspace_id,idempotency_key,group_id,connection_id,request_hash) VALUES(${team.id},${input.idempotencyKey},${id},${input.connectionId},${hash})`;
     return c.json({ post: await readPost(id) });

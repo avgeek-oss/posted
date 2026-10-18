@@ -14,8 +14,9 @@ import {
   ThumbsUpIcon,
   Bookmark02Icon,
   TriangleAlertIcon,
+  AlertCircleIcon,
 } from "@hugeicons/core-free-icons";
-import { Chip, TooltipText } from "@posted/web-design-system";
+import { Avatar, Chip, TooltipText } from "@posted/web-design-system";
 import { textForProviderPreview } from "../../../packages/contracts/src/text.js";
 import { supportsThreads } from "../../../packages/contracts/src/threads.js";
 import { profileImageUrl } from "../../../packages/contracts/src/avatars.js";
@@ -51,6 +52,67 @@ export function ProviderIcon({
     />
   );
 }
+export function AccountAvatar({
+  account,
+  error,
+  size = "md",
+}: {
+  account: Pick<SocialConnection, "name" | "provider" | "avatarUrl">;
+  error?: string;
+  size?: "sm" | "md";
+}) {
+  return (
+    <span className="relative inline-flex shrink-0" aria-hidden="true">
+      <Avatar
+        email=""
+        name={account.name}
+        src={profileImageUrl(account.provider, account.avatarUrl) ?? undefined}
+        size={size}
+      />
+      {error && (
+        <span className="absolute -left-1 -top-1 flex size-5 items-center justify-center rounded-full border-2 border-surface bg-danger text-danger-foreground">
+          <HugeiconsIcon icon={AlertCircleIcon} size={14} aria-hidden />
+        </span>
+      )}
+      <span className="absolute -bottom-1 -right-1 flex size-4 items-center justify-center overflow-hidden rounded-full border-2 border-background bg-surface">
+        <ProviderIcon provider={account.provider} className="size-full" />
+      </span>
+    </span>
+  );
+}
+
+export function AccountLogoGroup({
+  accounts,
+}: {
+  accounts: Pick<
+    SocialConnection,
+    "id" | "name" | "handle" | "provider" | "avatarUrl"
+  >[];
+}) {
+  return (
+    <div className="flex w-max items-center gap-2">
+      {accounts.map((account) => (
+        <TooltipText
+          key={account.id}
+          className="inline-flex size-8 shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-focus"
+          role="img"
+          aria-label={`${providerNames[account.provider]}: ${account.name}, @${account.handle}`}
+          tabIndex={0}
+          openOnPress
+          tooltip={
+            <span className="grid gap-0.5">
+              <span>{account.name}</span>
+              <span>@{account.handle}</span>
+            </span>
+          }
+        >
+          <AccountAvatar account={account} size="sm" />
+        </TooltipText>
+      ))}
+    </div>
+  );
+}
+
 export function StateChip({
   state,
 }: {
@@ -69,7 +131,6 @@ export function StateChip({
       : state.charAt(0).toUpperCase() + state.slice(1);
   return (
     <Chip
-      size="sm"
       color={
         success
           ? "success"
@@ -91,7 +152,7 @@ export function StateChip({
                 ? InformationCircleIcon
                 : Clock01Icon
         }
-        size={14}
+        size={16}
         aria-hidden
       />
       <Chip.Label>{title}</Chip.Label>

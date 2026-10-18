@@ -1,5 +1,6 @@
 import { after, afterEach, before, mock, test } from "node:test";
 import assert from "node:assert/strict";
+import { TID } from "@atproto/common-web";
 import dns from "node:dns/promises";
 import http, { type RequestOptions, type IncomingMessage } from "node:http";
 import https from "node:https";
@@ -391,7 +392,7 @@ test("Bluesky prepares an external card blob before publishing its deterministic
             ? init.body
             : Buffer.from(init?.body as Uint8Array).toString(),
         );
-        assert.equal(body.rkey, `posted-${job.id}`);
+        assert.equal(body.rkey, job.blueskyRecordKey);
         records.push(body.record);
         return Response.json({
           uri: `at://${did}/app.bsky.feed.post/${body.rkey}`,
@@ -405,6 +406,7 @@ test("Bluesky prepares an external card blob before publishing its deterministic
   const job = {
     id: randomUUID(),
     provider: "bluesky",
+    blueskyRecordKey: TID.nextStr(),
     accountId: did,
     text: `Read ${url}`,
   } as DeliveryJob;

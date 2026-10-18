@@ -27,7 +27,7 @@ export function PublishingSummary({
               </p>
               <p className="truncate text-xs text-muted">@{account.handle}</p>
             </div>
-            <Chip size="sm" variant="soft" color="accent" className="shrink-0">
+            <Chip variant="soft" color="accent" className="shrink-0">
               <Chip.Label>
                 {postCount} {postCount === 1 ? "post" : "posts"}
               </Chip.Label>

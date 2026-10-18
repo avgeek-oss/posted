@@ -164,7 +164,7 @@ export const ComposerMedia = memo(function ComposerMedia({
                 )}
                 {isGif(image) && (
                   <span className="pointer-events-none absolute bottom-1 right-1 rounded-full bg-surface">
-                    <Chip size="sm" color="accent" variant="soft">
+                    <Chip color="accent" variant="soft">
                       <Chip.Label>GIF</Chip.Label>
                     </Chip>
                   </span>
@@ -232,18 +232,17 @@ export const ComposerMedia = memo(function ComposerMedia({
                 {preview.fileName}
               </span>
               <span className="flex flex-wrap items-center gap-1.5">
-                <Chip size="sm" variant="soft" color="accent">
+                <Chip variant="soft" color="accent">
                   <Chip.Label>
                     {preview.width} × {preview.height} px
                   </Chip.Label>
                 </Chip>
-                <Chip size="sm" variant="soft" color="accent">
+                <Chip variant="soft" color="accent">
                   <Chip.Label>{formatMediaSize(preview.sizeBytes)}</Chip.Label>
                 </Chip>
                 {(isVideo(preview) || isGif(preview)) &&
                   preview.durationSeconds !== null && (
                     <Chip
-                      size="sm"
                       variant="soft"
                       color="accent"
                       aria-label={`Duration: ${formatMediaDuration(preview.durationSeconds)}`}

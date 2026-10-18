@@ -1,5 +1,6 @@
 import { after, afterEach, beforeEach, mock, test } from "node:test";
 import assert from "node:assert/strict";
+import { isValidTid } from "@atproto/syntax";
 import { randomUUID } from "node:crypto";
 import {
   sql,
@@ -74,6 +75,71 @@ async function interrupted() {
   await failDelivery(second, "Definitive rejection", false);
   return value;
 }
+
+test("Bluesky persists valid record keys across backoff, worker recovery and manual resume", async () => {
+  const value = await sequence();
+  await sql`UPDATE social_connections SET provider='bluesky',account_id='did:plc:abcdefghijklmnopqrstuvwx' WHERE id=${value.connectionId}`;
+  await sql`UPDATE post_deliveries SET provider_checkpoint=${sql.json({ rkey: `posted-${randomUUID()}` })} WHERE post_index=0`;
+  const claims = await Promise.all([claimDelivery(), claimDelivery()]);
+  assert.equal(claims.filter(Boolean).length, 1);
+  const first = claims.find((item) => item !== null);
+  assert.ok(first);
+  assert.ok(isValidTid(first.blueskyRecordKey));
+  const key = first.blueskyRecordKey;
+  const [saved] =
+    await sql`SELECT provider_checkpoint FROM post_deliveries WHERE id=${first.id}`;
+  assert.equal(saved.providerCheckpoint.rkey, key);
+
+  await failDelivery(first, "Temporary preparation failure", false, {
+    retryAfterMs: 0,
+  });
+  await sql`UPDATE post_deliveries SET available_at=now()-interval '1 second' WHERE id=${first.id}`;
+  const retry = await claimDelivery();
+  assert.ok(retry);
+  assert.equal(retry.id, first.id);
+  assert.equal(retry.blueskyRecordKey, key);
+
+  await sql`UPDATE post_deliveries SET lease_until=now()-interval '1 second' WHERE id=${retry.id}`;
+  assert.equal(await claimDelivery(), null);
+  await sql`UPDATE post_deliveries SET available_at=now()-interval '1 second' WHERE id=${retry.id}`;
+  const recovered = await claimDelivery();
+  assert.ok(recovered);
+  assert.equal(recovered.blueskyRecordKey, key);
+  assert.equal(await publishingBoundary(recovered), true);
+  await failDelivery(recovered, "Definitive provider rejection", false);
+
+  const post: Post = (
+    await (
+      await request(`/api/posts/${value.post.id}`, { cookie: value.cookie })
+    ).json()
+  ).post;
+  const resumed = await request(`/api/posts/${post.id}/resume`, {
+    cookie: value.cookie,
+    body: {
+      connectionId: value.connectionId,
+      version: post.version,
+      idempotencyKey: randomUUID(),
+    },
+  });
+  assert.equal(resumed.status, 200);
+  const final = await claimDelivery();
+  assert.ok(final);
+  assert.equal(final.blueskyRecordKey, key);
+  assert.equal(await publishingBoundary(final), true);
+  await completeDelivery(final, {
+    id: `at://${final.accountId}/app.bsky.feed.post/${key}`,
+    cid: "confirmed-cid",
+    url: "https://bsky.app/confirmed",
+  });
+  const reply = await claimDelivery();
+  assert.ok(reply);
+  assert.ok(isValidTid(reply.blueskyRecordKey));
+  assert.notEqual(reply.blueskyRecordKey, key);
+  assert.equal(
+    reply.replyTo?.id,
+    `at://${final.accountId}/app.bsky.feed.post/${key}`,
+  );
+});
 
 test("rate-limited replies wait for Retry-After and continue the original thread once", async () => {
   const value = await sequence();

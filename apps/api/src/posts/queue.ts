@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { TID } from "@atproto/common-web";
+import { isValidTid } from "@atproto/syntax";
 import { sql } from "../../../../packages/database/src/index.js";
 import type { Provider } from "../../../../packages/contracts/src/index.js";
 import { supportsThreads } from "../../../../packages/contracts/src/threads.js";
@@ -19,6 +21,7 @@ export type DeliveryJob = {
   text: string;
   accountId: string;
   encryptedCredentials: string;
+  blueskyRecordKey?: string;
   postIndex?: number;
   replyTo?: { id: string; cid: string | null };
   threadRoot?: { id: string; cid: string | null };
@@ -45,7 +48,11 @@ export async function claimDelivery(): Promise<DeliveryJob | null> {
     const [job] = await tx<DeliveryJob[]>`
       UPDATE post_deliveries d SET state='preparing',lease_token=${token},lease_until=now()+interval '5 minutes',attempts=attempts+1,retry_attempts=retry_attempts+1,updated_at=now()
       FROM post_groups g,social_connections c WHERE d.id=${next.id} AND g.id=d.group_id AND c.id=d.connection_id
-      RETURNING d.id,d.group_id,d.post_index,d.workspace_id,d.connection_id,d.lease_token,c.provider,COALESCE(d.text_override,CASE WHEN d.post_index=0 THEN g.text ELSE g.additional_posts->(d.post_index-1)->>'text' END) AS text,c.account_id,c.encrypted_credentials`;
+      RETURNING d.id,d.group_id,d.post_index,d.workspace_id,d.connection_id,d.lease_token,c.provider,COALESCE(d.text_override,CASE WHEN d.post_index=0 THEN g.text ELSE g.additional_posts->(d.post_index-1)->>'text' END) AS text,c.account_id,c.encrypted_credentials,d.provider_checkpoint->>'rkey' AS bluesky_record_key`;
+    if (job?.provider === "bluesky" && !isValidTid(job.blueskyRecordKey)) {
+      job.blueskyRecordKey = TID.nextStr();
+      await tx`UPDATE post_deliveries SET provider_checkpoint=${tx.json({ rkey: job.blueskyRecordKey })} WHERE id=${job.id}`;
+    }
     const postIndex = job?.postIndex ?? 0;
     if (job && postIndex > 0 && supportsThreads(job.provider)) {
       const references = await tx<
@@ -106,7 +113,7 @@ export async function failDelivery(
           current.retryAttempts,
           retry.retryAfterMs,
         );
-        await tx`UPDATE post_deliveries SET state='scheduled',available_at=now()+${delay} * interval '1 millisecond',error=${error},provider_checkpoint=NULL,lease_token=NULL,lease_until=NULL,updated_at=now() WHERE id=${job.id} AND lease_token=${job.leaseToken}`;
+        await tx`UPDATE post_deliveries SET state='scheduled',available_at=now()+${delay} * interval '1 millisecond',error=${error},provider_checkpoint=CASE WHEN ${job.provider}='bluesky' THEN provider_checkpoint ELSE NULL END,lease_token=NULL,lease_until=NULL,updated_at=now() WHERE id=${job.id} AND lease_token=${job.leaseToken}`;
         return;
       }
     }
