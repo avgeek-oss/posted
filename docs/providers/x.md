@@ -110,8 +110,6 @@ Posted requests `tweet.read`, `tweet.write`, `users.read`, `offline.access`, `me
   </Step>
 </Steps>
 
-Accounts belong to the team. Connecting the same X account again refreshes its existing connection. Members can compose for connected accounts; only administrators can add or disconnect them.
-
 ## Limits enforced by Posted
 
 | Content        | Posted behavior                    |
@@ -119,34 +117,13 @@ Accounts belong to the team. Connecting the same X account again refreshes its e
 | Text           | 280 weighted characters per post   |
 | Attachments    | Up to 4 images **or** one video    |
 | Video duration | 3–140 seconds                      |
+| GIFs           | Animated GIF; one GIF per post     |
 | Sequence       | Linked replies after the root post |
 
-These are Posted’s current delivery limits. Use [list_providers](/mcp-reference/list_providers) or the provider API endpoint to inspect the running installation’s capabilities. Uploaded originals are prepared for the provider at delivery time; provider account permissions and quotas still apply.
-
-## Posts, media and threads
-
-GIFs are delivered as animated GIFs. Use one GIF without other attachments in the same post. See [Images, GIFs and videos](/composer#add-media) for upload limits and preparation.
+## Character counting
 
 Posted uses X's `twitter-text` library for the character counter and publishing validation. A recognized URL counts as 23 characters, and an emoji counts as 2, including joined emoji such as families. The same counting rules apply in the account editor and on the server. See [X's character-counting rules](https://docs.x.com/fundamentals/counting-characters).
 
 Posted currently limits every connected X account to 280 weighted characters. X offers [longer posts for eligible subscribers](https://help.x.com/en/using-x/types-of-posts), but Posted does not yet detect that eligibility or enable the higher limit.
 
-Each later post replies to the immediately preceding confirmed publication on the same account.
-
-Each post has independent text and attachment order. Account-specific edits affect only that account and post. **Reset to master** restores text and media inheritance after confirmation. Image or video publishing requires [S3 source](/configuration#s3-source).
-
-```mermaid
-flowchart LR
-  draft["Write shared content"] --> account["Review X account"]
-  account --> ready["Validate text and media"]
-  ready --> publish["Confirm publishing or schedule"]
-  publish --> outcome["Read per-post delivery results"]
-```
-
-Read [Compose a post](/composer) for single posts and [Compose threads](/threads) for insertion, ordering, reply links and failure handling.
-
-## Reconnect and troubleshoot
-
-If the account needs reauthentication, an administrator repeats the official authorization flow. If X is missing from Add connection, ask the operator to check the complete provider configuration and deploy the saved runtime values. A callback mismatch must be corrected in the provider application using the API origin, not the UI or documentation domain.
-
-Inspect [Publish history](/deliveries) for each account's result. A confirmed provider publication stays published if another account fails. An **Uncertain** result needs provider-side inspection before another posting request. Disconnecting prevents later use of the account and does not remove existing provider posts.
+Read [Publishing across accounts](/publishing-across-accounts) for shared editing, media, thread and reconnection guidance.

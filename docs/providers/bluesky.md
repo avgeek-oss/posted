@@ -10,8 +10,6 @@ Connect your account by entering your Bluesky handle and approving access on Blu
   <Step title="Choose it in the composer">After returning to Posted, confirm that the account is Connected. Select it through **Choose Accounts**, review its preview and customize its text or media if needed.</Step>
 </Steps>
 
-Accounts belong to the team. Connecting the same provider account again refreshes the existing connection. Members can compose for connected accounts; only administrators can add or disconnect them.
-
 ## Required environment variables
 
 Add these values to both the API and worker services, then restart them to apply the configuration.
@@ -70,30 +68,7 @@ Posted uses [Bluesky OAuth](https://atproto.com/guides/about-oauth). Bluesky dis
 | Text           | 300 grapheme clusters per post     |
 | Attachments    | Up to 4 images **or** one video    |
 | Video duration | 3–180 seconds                      |
+| GIFs           | Converted to MP4; one GIF per post |
 | Sequence       | Linked replies after the root post |
 
-These are Posted’s current delivery limits. Use [list_providers](/mcp-reference/list_providers) or the provider API endpoint to inspect the running installation’s capabilities. Uploaded originals are prepared for the provider at delivery time; provider account permissions and quotas still apply.
-
-## Posts, media and threads
-
-Uploaded GIFs are converted to MP4 for publishing. Use one GIF without other attachments in the same post. See [Images, GIFs and videos](/composer#add-media) for upload limits and preparation.
-
-Enter your Bluesky handle when beginning the connection, for example name.bsky.social. The provider flow discovers the account’s server. In a thread, each reply retains the first publication as its root and the preceding publication as its parent.
-
-Each post has independent text and attachment order. Account-specific edits affect only that account and post. **Reset to master** restores text and media inheritance after confirmation. Image or video publishing requires [S3 source](/configuration#s3-source).
-
-```mermaid
-flowchart LR
-  draft["Write shared content"] --> account["Review Bluesky account"]
-  account --> ready["Validate text and media"]
-  ready --> publish["Confirm publishing or schedule"]
-  publish --> outcome["Read per-post delivery results"]
-```
-
-Read [Compose a post](/composer) for single posts and [Compose threads](/threads) for insertion, ordering, reply links and failure handling.
-
-## Reconnect and troubleshoot
-
-If the account needs reauthentication, an administrator repeats the official authorization flow. If Bluesky is missing from Add connection, ask the operator to check the complete provider configuration and deploy the saved runtime values. If authorization fails, check that the client metadata and public signing keys URLs open over HTTPS and that the metadata uses your API origin for the callback URL.
-
-Inspect [Publish history](/deliveries) for each account's result. A confirmed provider publication stays published if another account fails. An **Uncertain** result needs provider-side inspection before another posting request. Disconnecting prevents later use of the account and does not remove existing provider posts.
+Read [Publishing across accounts](/publishing-across-accounts) for shared editing, media, thread and reconnection guidance.
