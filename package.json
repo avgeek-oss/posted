@@ -28,6 +28,7 @@
     "docs:validate": "cd docs && npx --yes mint@4.2.970 validate && npx --yes mint@4.2.970 broken-links --check-snippets",
     "docs:dev": "pnpm docs:build && cd docs && npx --yes mint@4.2.970 dev --port 4177",
     "docs:preview": "node --env-file=.env --import tsx tools/docs-preview.ts",
+    "docs:capture": "node --import tsx tools/capture-docs.ts",
     "release:check": "node tools/release-validate.mjs",
     "test:operations": "node --test tools/*.test.mjs",
     "verify:production": "node tools/production-verify.mjs"

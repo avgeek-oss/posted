@@ -1147,7 +1147,7 @@ supplementalEndpoints.push(
         : "Protected-resource metadata",
       "OAuth and MCP transport",
       "public",
-      "Advertises the MCP resource and its authorization server. HTTPS is required outside loopback development.",
+      "Advertises the MCP resource and its authorization server. Use HTTPS for public installations.",
       {
         result: {
           resource: "https://posted-api.example.test/mcp",

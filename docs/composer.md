@@ -1,31 +1,43 @@
 # Compose a post
 
-The editor keeps master posts on the left and an account workspace on the right. On desktop, the account workspace opens in **Preview**; switch to **Edit** to customize an account’s content. On mobile, use **Write** and **Accounts**. The Accounts tab contains the same **Edit** and **Preview** views as desktop. Publishing controls stay at the top.
+Write a post once, choose the accounts you want to publish to, then adjust the text or media for each account if needed. You can save your work as a draft, publish it now or schedule it for later.
 
-## Shared and account-specific text
+## Write your post
 
-Write the master text, then open **Choose Accounts**. Search accounts and select them using the row or checkbox. These changes stay pending inside the chooser until **Choose X accounts**. Closing the chooser discards the pending selection. If choosing the accounts would remove an account with custom content on any post, a confirmation lists the affected accounts before applying the selection and discarding their custom content across the sequence. Cancel preserves the current accounts and edits. Selected accounts appear as avatars with their provider logo. The avatar strip scrolls horizontally when it cannot fit every account.
+1. Choose **Create post** from **Pending Drafts**.
+2. Write your post and use **Add media** to attach images or a video.
+3. Open **Choose Accounts**, select your accounts and confirm.
 
-Click an avatar to view that account, then choose **Edit** to customize its text. All of the account's posts stay expanded. Each account post also shows its media. Add files, remove attachments or drag their six-dot handles to change the order for that account only. A vertical insertion line shows the drop location between attachments; dragging an image body does not reorder it. Text and media inherit the master until customized; an empty custom media selection keeps the account text-only. Choose the inline **Reset to master** link and confirm in the dialog to restore both master text and media. Cancel preserves custom content. The character counter uses the selected provider's limit. Previews stop at that limit; the original text remains available for editing. An error badge identifies an account that cannot currently publish.
+This is your **master post**, shared by all the accounts you choose. You can adjust each account's version next.
 
-## Media and previews
+You can search for an account by name or handle. Your selection only takes effect when you confirm it; closing the chooser leaves your current accounts unchanged.
 
-Choose **Add media** to upload supported [images or videos](/media). Reorder uploaded files using their drag handle or keyboard controls. The first files in that order take priority when a provider accepts fewer files. Preview images stay compact; a single image preserves its proportions rather than filling the card width. Video previews have native playback controls and do not autoplay.
+<!-- screenshot:composer -->
 
-Click an image or video thumbnail in the expanded master or account editor to open a larger preview. The title includes chips for dimensions and file size, plus duration for videos. Images fit inside the dialog without cropping, and videos have playback controls. Close it with the X button, Escape or a click outside the dialog. Closing a video preview stops its playback.
+## Customize an account
 
-Empty previews show an italic “Your post will appear here.” placeholder with a red alert triangle. Hover or focus the icon to see “Post copy missing, type in the composer to reflect in the preview.” The hint also opens when pressed on touch devices. Previews show content and supported media, but they do not replace provider validation. Providers may reject a request because of account access, quota or policy.
+Each selected account starts with the text and media from your master post. For example, you could keep a short caption for one account and write a longer version for another.
 
-## Compose a thread
+1. Select an account's profile picture.
+2. Open **Edit** to change its text or media.
+3. Open **Preview** to review your changes.
 
-A composition can contain several ordered posts. Read [Compose threads](/threads) for inserting, reordering, account-specific content and provider reply behavior.
+Your changes apply only to the selected account. The other accounts keep their own versions. The character count below the text shows how much space you have for that account. If something needs fixing before you can publish, Posted shows a message beside it.
 
-## Media performance
+Choose **Reset to master** to use the master text and media again. Posted asks you to confirm before replacing your changes. It also asks for confirmation if you remove an account that has custom content.
 
-Images load lazily with asynchronous decoding. Video sources load as they approach the viewport; playback pauses when a video leaves the nearby viewport or the browser tab becomes hidden. Inactive account panels are unmounted. Preview URLs are cached per media item and refreshed before expiry, with at most four requests in flight. Editing text keeps unchanged media grids intact.
+<!-- screenshot:account-edit -->
 
-## Publishing controls
+## Save, publish or schedule
 
-**Save as draft** accepts incomplete content and provider errors. **Post in X accounts** shows the selected account count and opens a confirmation modal. Before selecting an account, the disabled action reads **Post now**. Both publishing and scheduling dialogs list each destination account and whether it receives a thread or individual posts. **Schedule for later** opens a date and time modal, with a compact time field below the calendar. Publishing controls remain disabled until every post for every selected account is valid and uploads are ready.
+Choose **Save as draft** to keep working later. You can save a draft before the text, media or account selection is complete. On mobile, this button uses the save icon.
 
-When editing a scheduled post, **Save changes** preserves the current time; **Save & Update Schedule** changes it. A stale edit conflicts rather than overwriting another person's work. Leaving with unsaved edits opens a confirmation dialog.
+When you are ready, choose **Post in X accounts** on desktop or **Post now** on mobile. Review the accounts in the confirmation dialog, then confirm to publish. The button stays disabled until you have chosen accounts and their posts are ready.
+
+To publish later, open the arrow beside the publish button and choose **Schedule for later**. Pick a date and time, review the accounts, then confirm. Read [Scheduled posts](/scheduling) for more about managing your schedule.
+
+<!-- screenshot:publish-confirmation -->
+
+## Add more posts
+
+Use **Add Another Post** to continue with another post, or **Insert post** to add one between existing posts. You can review and customize each one for your selected accounts. Read [Compose threads](/threads) for the full walkthrough.

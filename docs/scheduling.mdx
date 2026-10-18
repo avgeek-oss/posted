@@ -7,12 +7,32 @@ import { Screenshot } from "/snippets/oss/screenshot.jsx";
 
 Schedule a single post or a complete sequence after reviewing its accounts and media.
 
+Choose a date and time in the calendar before confirming your schedule. The time row below the calendar lets you set the hour and minute. Posted shows the time in your account's time zone.
+
+<Screenshot
+  light="/assets/screenshots/scheduling-dialog-light@2x.png"
+  dark="/assets/screenshots/scheduling-dialog-dark@2x.png"
+  alt="Posted scheduling dialog with a calendar and compact time input."
+  width={1280}
+  height={900}
+/>
+
 1. Open the arrow beside **Post in X accounts** and choose **Schedule for later**.
 2. Select a future date in **Scheduled for**. The calendar popover includes a compact time row; you can also edit the date and time segments directly.
 3. Review the time in your account's time zone, the selected accounts and whether each provider receives linked replies or individual posts. Confirm **Schedule post**.
 4. Open **Scheduled Posts** to see the accepted delivery set and its per-account status.
 
 PostgreSQL stores the requested time. A worker claims due deliveries, prepares media and sends posts in order for each account. X, Bluesky and Threads use linked replies; LinkedIn receives individual posts. A later post is not sent if an earlier post for that account fails or has an uncertain outcome.
+
+The scheduled list shows what is coming up, which accounts are included and when each post will be published. Open a post title to review or change it.
+
+<Screenshot
+  light="/assets/screenshots/scheduled-light@2x.png"
+  dark="/assets/screenshots/scheduled-dark@2x.png"
+  alt="Posted scheduled table with sample delivery sets and relative schedule times."
+  width={1280}
+  height={900}
+/>
 
 ## Edit or cancel a schedule
 
@@ -21,23 +41,3 @@ Click a post title or its edit action to reopen the full composer, including eve
 Once delivery begins, content and schedule edits are no longer allowed. **Cancel** stops deliveries that have not started; it does not remove already published content from a social network. Read [Publish History and delivery details](/deliveries) before retrying a failed or uncertain request.
 
 The table lists delivery sets, not individual posts or account deliveries. Its sidebar badge includes sets with scheduled, preparing or publishing work. The worker must be running for schedules and video processing; healthy API and UI probes alone do not establish this. See [operations](/operations) if a schedule does not advance.
-
-## Scheduled posts
-
-<Screenshot
-  light="/assets/screenshots/scheduled-light.jpg"
-  dark="/assets/screenshots/scheduled-dark.jpg"
-  alt="Posted scheduled table with sample delivery sets and relative schedule times."
-  width={1280}
-  height={900}
-/>
-
-## Choose a date and time
-
-<Screenshot
-  light="/assets/screenshots/scheduling-dialog-light.jpg"
-  dark="/assets/screenshots/scheduling-dialog-dark.jpg"
-  alt="Posted scheduling dialog with a calendar and compact time input."
-  width={1280}
-  height={900}
-/>

@@ -2,7 +2,8 @@
   {
     "name": "overview",
     "title": "About Posted",
-    "description": "Self-hosted social publishing for a team."
+    "description": "Self-hosted social publishing for a team.",
+    "icon": "book-open"
   },
   {
     "name": "getting-started",
@@ -12,7 +13,7 @@
   {
     "name": "composer",
     "title": "Compose a post",
-    "description": "Write shared content, choose accounts and customize each delivery."
+    "description": "Write a post, choose accounts and make it your own for each one."
   },
   {
     "name": "drafts",
@@ -32,7 +33,7 @@
   {
     "name": "media",
     "title": "Images and videos",
-    "description": "Upload private media, reorder it and review provider-specific limits."
+    "description": "Upload images and videos, reorder it and review provider-specific limits."
   },
   {
     "name": "connections",
@@ -47,22 +48,37 @@
   {
     "name": "mcp-connections",
     "title": "MCP connections",
-    "description": "Connect an MCP client with OAuth and user-selected permissions."
+    "description": "Connect your AI assistant, choose its access and try a first request."
   },
   {
     "name": "api-keys",
     "title": "API keys",
-    "description": "Authorize REST clients without giving them provider credentials."
+    "description": "Create a personal or team API key and connect your first script."
   },
   {
     "name": "installation",
-    "title": "Installation",
-    "description": "Run version-matched API, worker and UI images with PostgreSQL."
+    "title": "Architecture overview",
+    "description": "Understand Posted\u2019s architecture and choose Docker Compose or Towbar.",
+    "sidebarTitle": "Overview",
+    "icon": "network"
+  },
+  {
+    "name": "installation/docker-compose",
+    "title": "Docker Compose",
+    "description": "Install Posted with Docker Compose and bundled or external PostgreSQL.",
+    "icon": "/assets/installation/docker-compose.png"
+  },
+  {
+    "name": "installation/towbar",
+    "title": "Towbar",
+    "description": "Deploy Posted with a repository connected to Towbar.",
+    "icon": "/assets/installation/towbar.png"
   },
   {
     "name": "configuration",
     "title": "Configuration",
-    "description": "Required settings and optional provider, storage and email configuration."
+    "description": "Required settings and optional provider, storage and email configuration.",
+    "icon": "settings"
   },
   {
     "name": "providers",
@@ -77,17 +93,20 @@
   {
     "name": "backup",
     "title": "Backup and recovery",
-    "description": "Keep the database, encryption secret and private media together."
+    "description": "Keep the database, encryption secret and S3 source objects together.",
+    "icon": "database-backup"
   },
   {
     "name": "upgrades",
     "title": "Upgrades",
-    "description": "Replace all three images together after a tested backup."
+    "description": "Replace all three images together after a tested backup.",
+    "icon": "package"
   },
   {
     "name": "security",
     "title": "Security",
-    "description": "Understand credentials, roles and publishing boundaries."
+    "description": "Understand credentials, roles and publishing boundaries.",
+    "icon": "shield-check"
   },
   {
     "name": "legal",
@@ -95,14 +114,10 @@
     "description": "Source licensing, notices and installation responsibilities."
   },
   {
-    "name": "release-notes",
-    "title": "Release notes",
-    "description": "Published changes and upgrade guidance for Posted."
-  },
-  {
     "name": "troubleshooting",
     "title": "Troubleshooting",
-    "description": "Diagnose configuration, media and publishing problems."
+    "description": "Diagnose configuration, media and publishing problems.",
+    "icon": "wrench"
   },
   {
     "name": "threads",

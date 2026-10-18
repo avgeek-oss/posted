@@ -2,7 +2,15 @@
 
 One delivery set contains every numbered post and its selected accounts. A three-post sequence for two accounts has six deliveries. **Post in X accounts** opens a confirmation dialog, then the accepted request opens its details page. You can also open **Details** from **Publish History**, the first item under Posts.
 
+Publish history lists your team's posting requests and their results. Open a row's **Details** action to see what happened for each account.
+
+<!-- screenshot:history -->
+
+## Review delivery details
+
 The **Delivery set** Attributes card shows Requested and Scheduled for. The table below it shows each numbered post and account, content, status, published time and result. A successful provider URL opens the published post. Errors are scoped to their account.
+
+<!-- screenshot:details -->
 
 | State      | Meaning                                                                  |
 | ---------- | ------------------------------------------------------------------------ |

@@ -5,48 +5,45 @@ description: "Register approved applications and exact callback URLs."
 
 Create provider applications under your own accounts. Use the installation's public API origin in callback settings. Complete configuration enables that provider in Add connection; local tests cannot grant production permissions or paid-plan access.
 
-| Provider | Required environment                                         | Requested scope or client metadata                                                       |
-| -------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| X        | `POSTED_X_CLIENT_ID`, `POSTED_X_CLIENT_SECRET`               | `tweet.read tweet.write users.read offline.access media.write`                           |
-| LinkedIn | `POSTED_LINKEDIN_CLIENT_ID`, `POSTED_LINKEDIN_CLIENT_SECRET` | `openid profile w_member_social`; `POSTED_LINKEDIN_API_VERSION` selects the API version. |
-| Threads  | `POSTED_THREADS_CLIENT_ID`, `POSTED_THREADS_CLIENT_SECRET`   | `threads_basic,threads_content_publish`                                                  |
-| Bluesky  | `POSTED_BLUESKY_CLIENT_ID`, `POSTED_BLUESKY_PRIVATE_KEY_JWK` | Official OAuth with PKCE, DPoP and private-key client authentication.                    |
+Use your configured `POSTED_API_URL`, including `https://`, wherever a URL contains `{{POSTED_API_URL}}`.
 
-For X, LinkedIn and Threads, register these exact callbacks after replacing the example API origin:
+## Required environment variables
 
-```text
-https://posted-api.example.com/api/social/callback/x
-https://posted-api.example.com/api/social/callback/linkedin
-https://posted-api.example.com/api/social/callback/threads
+Add the variables for each provider you want to enable to both the API and worker services.
+
+<CodeGroup>
+
+```dotenv title="X"
+POSTED_X_CLIENT_ID=YOUR_X_CLIENT_ID
+POSTED_X_CLIENT_SECRET=YOUR_X_CLIENT_SECRET
 ```
 
-For Bluesky, set the client ID to `https://posted-api.example.com/social/bluesky/client-metadata.json`. Supply an EC P-256 private signing JWK with a key ID. Posted serves client metadata and public keys at `/social/bluesky/client-metadata.json` and `/social/bluesky/jwks.json`; it never serves the private JWK.
-
-## Configure the hosted installation in Towbar
-
-The Posted API and Posted Worker manifests declare the provider keys under `secrets.runtime`. In Towbar, open each service, select **production**, and fill its runtime secret values. Use identical values in both services. Posted UI does not receive provider credentials.
-
-| Provider | Runtime key                      | Value                                                               |
-| -------- | -------------------------------- | ------------------------------------------------------------------- |
-| X        | `POSTED_X_CLIENT_ID`             | OAuth 2.0 client ID from your X application.                        |
-| X        | `POSTED_X_CLIENT_SECRET`         | Matching OAuth 2.0 client secret.                                   |
-| LinkedIn | `POSTED_LINKEDIN_CLIENT_ID`      | Client ID from your LinkedIn application.                           |
-| LinkedIn | `POSTED_LINKEDIN_CLIENT_SECRET`  | Matching client secret.                                             |
-| LinkedIn | `POSTED_LINKEDIN_API_VERSION`    | `202609`, the version used by Posted 0.2.0.                         |
-| Threads  | `POSTED_THREADS_CLIENT_ID`       | Client ID for your Threads application.                             |
-| Threads  | `POSTED_THREADS_CLIENT_SECRET`   | Matching Threads client secret.                                     |
-| Bluesky  | `POSTED_BLUESKY_CLIENT_ID`       | `https://posted-api.avgeek.ltd/social/bluesky/client-metadata.json` |
-| Bluesky  | `POSTED_BLUESKY_PRIVATE_KEY_JWK` | A private EC P-256 JWK as one JSON string.                          |
-
-Register these exact callback URLs for this installation:
-
-```text
-https://posted-api.avgeek.ltd/api/social/callback/x
-https://posted-api.avgeek.ltd/api/social/callback/linkedin
-https://posted-api.avgeek.ltd/api/social/callback/threads
+```dotenv title="LinkedIn"
+POSTED_LINKEDIN_CLIENT_ID=YOUR_LINKEDIN_CLIENT_ID
+POSTED_LINKEDIN_CLIENT_SECRET=YOUR_LINKEDIN_CLIENT_SECRET
 ```
 
-Towbar requires a value for every declared key before deployment. To leave a provider disabled, remove its key declarations from both manifests before syncing; for LinkedIn, also remove its API-version declaration. Posted requires each provider's credentials together and rejects partial configuration.
+```dotenv title="Threads"
+POSTED_THREADS_CLIENT_ID=YOUR_THREADS_CLIENT_ID
+POSTED_THREADS_CLIENT_SECRET=YOUR_THREADS_CLIENT_SECRET
+```
+
+```dotenv title="Bluesky"
+POSTED_BLUESKY_CLIENT_ID={{POSTED_API_URL}}/social/bluesky/client-metadata.json
+POSTED_BLUESKY_PRIVATE_KEY_JWK=YOUR_PRIVATE_JWK_JSON
+```
+
+</CodeGroup>
+
+Use the [X](/providers/x), [Threads](/providers/threads), [LinkedIn](/providers/linkedin) or [Bluesky](/providers/bluesky) guide for callback URLs and application permissions.
+
+## Configure in Towbar
+
+Uncomment the provider keys under `secrets.runtime` in the [Towbar deployment files](/installation/towbar#1-add-the-deployment-files), then sync your deployment repository. In Towbar, open each service, select **production**, and enter its runtime secret values. Use the same values in both services. The UI does not need provider credentials.
+
+Leave unused provider groups commented out. Supply both required values for each provider you enable.
+
+## Generate a Bluesky signing key
 
 For Bluesky, generate a private signing key in a private operator directory, outside the repository:
 
@@ -62,7 +59,7 @@ JS
 
 Copy that file's JSON into `POSTED_BLUESKY_PRIVATE_KEY_JWK` in both services. Keep the file private and retain the same signing key across deployments.
 
-Saving values in Towbar does not update running containers. After saving both services, deploy the API and then the worker. An administrator can then open **Connections → Add connection**, choose an enabled provider and complete its OAuth flow. Connections belong to the team. Media publishing also needs the separate [private storage configuration](/configuration#private-media-storage).
+Saving values in Towbar does not update running containers. After saving both services, deploy the API and then the worker. An administrator can then open **Connections → Add connection**, choose an enabled provider and complete its OAuth flow. Connections belong to the team. Media publishing also needs an [S3 source](/configuration#s3-source).
 
 Consult the provider's current registration and approval instructions: [X OAuth](https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code), [LinkedIn member sharing](https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/share-on-linkedin), [Threads](https://developers.facebook.com/docs/threads/) and [Bluesky OAuth](https://atproto.com/specs/oauth).
 

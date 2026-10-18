@@ -1,6 +1,7 @@
 ---
 title: "complete_media_upload"
 description: "Complete a media upload with Posted MCP."
+icon: "/assets/icons/mcp.svg"
 ---
 
 Validate uploaded media and queue video preparation. Read its status until ready before scheduling it.
@@ -22,9 +23,9 @@ Images can become ready immediately. Videos normally return state processing wit
 
 ## Arguments
 
-| Argument  | Required | Type or meaning                                      |
-| --------- | -------- | ---------------------------------------------------- |
-| `mediaId` | Yes      | Private media UUID returned by reserve_media_upload. |
+| Argument  | Required | Type or meaning                                       |
+| --------- | -------- | ----------------------------------------------------- |
+| `mediaId` | Yes      | Uploaded media UUID returned by reserve_media_upload. |
 
 <Accordion title="Complete input schema">
 

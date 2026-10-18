@@ -89,6 +89,21 @@ execFileSync(
 Object.assign(process.env, environment);
 const { app } = await import("../apps/api/src/app.js");
 const { sql } = await import("../packages/database/src/index.js");
+const [administrator] = await sql<{ id: string }[]>`
+  SELECT id FROM users WHERE email='local@avgeek.ltd'`;
+if (!administrator) throw new Error("Documentation administrator missing");
+await sql`DELETE FROM credentials WHERE token_hash LIKE 'unusable-preview-%'`;
+for (const sample of [
+  { name: "Draft reader", team: false, access: "read" },
+  { name: "Personal publishing script", team: false, access: "edit" },
+  { name: "Publishing automation", team: true, access: "edit" },
+  { name: "Weekly report", team: true, access: "read" },
+]) {
+  await sql`INSERT INTO credentials(user_id,created_by,name,token_hash,token_prefix,scopes,access_level,expires_at,last_used_at)
+    VALUES(${sample.team ? null : administrator.id},${administrator.id},${sample.name},${`documentation-only:${randomUUID()}`},'posted_demo','{}'::text[],${sample.access},now()+interval '90 days',now()-interval '1 hour')`;
+}
+await sql`INSERT INTO credentials(user_id,created_by,name,token_hash,token_prefix,scopes,token_type,oauth_client_id,resource,expires_at,access_level,last_used_at)
+  VALUES(${administrator.id},${administrator.id},'Codex',${`documentation-only:${randomUUID()}`},'posted_demo',ARRAY['read','write'],'oauth','https://chatgpt.com/oauth/codex/client.json',${`${environment.POSTED_API_URL}/mcp`},now()+interval '30 days','edit',now()-interval '10 minutes')`;
 const login = await app.request("/api/auth/login", {
   method: "POST",
   headers: {

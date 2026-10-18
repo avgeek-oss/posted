@@ -1,9 +1,10 @@
 ---
 title: "Backup and recovery"
-description: "Keep the database, encryption secret and private media together."
+description: "Keep the database, encryption secret and S3 source objects together."
+icon: "database-backup"
 ---
 
-A usable backup includes PostgreSQL, `POSTED_SECRET`, operator configuration and retained private media. Losing the secret prevents encrypted tokens and email payloads from being decrypted. A database dump alone does not preserve uploaded media.
+A usable backup includes PostgreSQL, `POSTED_SECRET`, operator configuration and retained S3 source objects. Losing the secret prevents encrypted tokens and email payloads from being decrypted. A database dump alone does not preserve uploaded media.
 
 ## Make a consistent backup
 

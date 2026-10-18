@@ -47,11 +47,11 @@ const fixtures: {
     posts: [
       {
         text: "Studio update: one idea, four audiences. A few snapshots from this week's work: the big picture, the details and the next step. What are you making this week?",
-        assets: ["landscape", "portrait", "square"],
+        assets: ["landscape", "portrait"],
         overrides: {
           linkedin:
             "Studio update: a look at how our team turns one idea into a clear story for every audience. This week's highlights are in the carousel. What helps your team move from an idea to a finished piece of work?",
-          x: "One idea, four audiences. This week's studio notes in three frames. What are you making?",
+          x: "One idea, four audiences. This week's studio notes in two frames. What are you making?",
         },
       },
     ],
@@ -161,41 +161,15 @@ async function assetBytes(asset: Asset) {
       await rm(directory, { recursive: true, force: true });
     }
   }
-  const [width, height, background, foreground, title, subtitle] = (
-    {
-      landscape: [
-        1600,
-        1000,
-        "#174b80",
-        "#b8ddf0",
-        "One idea.",
-        "Every audience.",
-      ],
-      portrait: [
-        900,
-        1200,
-        "#793d38",
-        "#ffd7bb",
-        "Small details.",
-        "A clearer story.",
-      ],
-      square: [
-        1080,
-        1080,
-        "#28564b",
-        "#cbe8c5",
-        "Make room.",
-        "For the next idea.",
-      ],
-    } as const
-  )[asset];
-  return sharp(
-    Buffer.from(
-      `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="${background}"/><circle cx="${width * 0.82}" cy="${height * 0.24}" r="${width * 0.24}" fill="${foreground}" opacity=".35"/><path d="M0 ${height * 0.75} Q${width * 0.45} ${height * 0.4} ${width} ${height * 0.8} V${height} H0Z" fill="${foreground}" opacity=".15"/><text x="80" y="${height * 0.48}" font-family="sans-serif" font-size="64" font-weight="600" fill="${foreground}">${title}</text><text x="80" y="${height * 0.48 + 84}" font-family="sans-serif" font-size="54" fill="${foreground}">${subtitle}</text><text x="80" y="${height - 70}" font-family="sans-serif" font-size="24" fill="${foreground}">POSTED / LOCAL PREVIEW</text></svg>`,
-    ),
-  )
-    .png()
-    .toBuffer();
+  const source = new URL(
+    asset === "portrait"
+      ? "./fixtures/photos/forest-trail.jpg"
+      : "./fixtures/photos/mountain-lake.jpg",
+    import.meta.url,
+  );
+  const image = sharp(await readFile(source));
+  if (asset === "square") image.resize(1080, 1080);
+  return image.png().toBuffer();
 }
 
 function requiredId<Key>(ids: Map<Key, string>, key: Key) {
@@ -281,7 +255,9 @@ try {
           alt:
             asset === "video"
               ? "Four-second moving color-pattern study for local video preview testing."
-              : `Studio illustration in ${asset} format, with a circle, curved landscape and a short creative prompt.`,
+              : asset === "portrait"
+                ? "A forest trail surrounded by tall trees and ferns, photographed by Dave Hoefler."
+                : "A boathouse beside a mountain lake, photographed by Luca Bravo.",
         })
       ).json()) as {
         mediaId: string;

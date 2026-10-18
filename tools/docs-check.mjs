@@ -55,6 +55,8 @@ for (const path of files) {
   const links = [
     ...body.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g),
     ...body.matchAll(/(?:href|light|dark|src)="([^"]+)"/g),
+    ...body.matchAll(/icon="(\/[^"]+)"/g),
+    ...body.matchAll(/^icon: "(\/[^"]+)"/gm),
   ];
   for (const match of links) {
     const destination = match[1].split("#")[0];
@@ -80,12 +82,13 @@ const screenshots = JSON.parse(
 );
 for (const capture of screenshots)
   for (const theme of ["light", "dark"]) {
+    assert.equal(capture.pixelRatio, 2, "Screenshots must use Retina density");
     const metadata = await sharp(
-      resolve(dir, "assets/screenshots", `${capture.name}-${theme}.jpg`),
+      resolve(dir, "assets/screenshots", `${capture.name}-${theme}@2x.png`),
     ).metadata();
-    assert.equal(metadata.format, "jpeg");
-    assert.equal(metadata.width, capture.width);
-    assert.equal(metadata.height, capture.height);
+    assert.equal(metadata.format, "png");
+    assert.equal(metadata.width, capture.width * capture.pixelRatio);
+    assert.equal(metadata.height, capture.height * capture.pixelRatio);
   }
 console.log(
   `PASS ${routes.length} routes, ${files.length} source pages and ${screenshots.length * 2} screenshot assets.`,

@@ -1,6 +1,7 @@
 ---
 title: "get_media_status"
 description: "Get media status with Posted MCP."
+icon: "/assets/icons/mcp.svg"
 ---
 
 Read media preparation status and its metadata when ready.
@@ -22,9 +23,9 @@ A processing result contains the state only. A ready result includes metadata. F
 
 ## Arguments
 
-| Argument  | Required | Type or meaning                                      |
-| --------- | -------- | ---------------------------------------------------- |
-| `mediaId` | Yes      | Private media UUID returned by reserve_media_upload. |
+| Argument  | Required | Type or meaning                                       |
+| --------- | -------- | ----------------------------------------------------- |
+| `mediaId` | Yes      | Uploaded media UUID returned by reserve_media_upload. |
 
 <Accordion title="Complete input schema">
 

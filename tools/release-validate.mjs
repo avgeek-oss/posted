@@ -15,11 +15,24 @@ for (const path of ["apps/web/package.json", "apps/web-server/package.json"])
 const compose = parse(await readFile("docker-compose.yml", "utf8"), {
   merge: true,
 });
+const sourceBuild = parse(await readFile("docker-compose.build.yml", "utf8"));
+const dockerfile = await readFile("Dockerfile", "utf8");
+assert.deepEqual(
+  [...dockerfile.matchAll(/^ARG RELEASE_VERSION=(.+)$/gm)].map(
+    (match) => match[1],
+  ),
+  [root.version, root.version],
+  "Docker build defaults must match the package version",
+);
 for (const component of ["api", "worker", "web"]) {
+  assert.equal(
+    sourceBuild.services[component].build.args.RELEASE_VERSION,
+    root.version,
+  );
   const service = compose.services[component];
   assert.equal(
     service.image,
-    `ghcr.io/avgeek-oss/posted-${component}:\${POSTED_VERSION:-${root.version}}`,
+    `ghcr.io/avgeek-oss/posted-${component}:${root.version}`,
   );
   assert.equal(service.read_only, true);
   assert.deepEqual(service.cap_drop, ["ALL"]);
@@ -43,7 +56,6 @@ const registry = await readFile(".npmrc", "utf8");
 assert(registry.includes("@avgeek-oss:registry=https://registry.npmjs.org"));
 assert(!registry.includes("_authToken"));
 const env = await readFile(".env.example", "utf8");
-assert(env.includes(`POSTED_VERSION=${root.version}`));
 assert(!env.includes("POSTED_NPMRC_FILE"));
 if (process.env.RELEASE_TAG)
   assert.equal(process.env.RELEASE_TAG, `v${root.version}`);

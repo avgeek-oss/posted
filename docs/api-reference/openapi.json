@@ -3379,7 +3379,7 @@
       "get": {
         "operationId": "get_well_known_oauth_protected_resource",
         "summary": "Protected-resource metadata",
-        "description": "Advertises the MCP resource and its authorization server. HTTPS is required outside loopback development.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
+        "description": "Advertises the MCP resource and its authorization server. Use HTTPS for public installations.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
         "tags": ["OAuth and MCP transport"],
         "security": [],
         "responses": {
@@ -3432,7 +3432,7 @@
       "get": {
         "operationId": "get_well_known_oauth_protected_resource_mcp",
         "summary": "MCP protected-resource metadata",
-        "description": "Advertises the MCP resource and its authorization server. HTTPS is required outside loopback development.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
+        "description": "Advertises the MCP resource and its authorization server. Use HTTPS for public installations.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
         "tags": ["OAuth and MCP transport"],
         "security": [],
         "responses": {

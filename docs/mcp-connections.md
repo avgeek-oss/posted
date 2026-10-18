@@ -1,24 +1,73 @@
 # MCP connections
 
-Use the API origin's `/mcp` endpoint. Posted uses OAuth; MCP configuration does not need a static API key or bearer-token environment variable.
+Connect an AI assistant to Posted so it can read your accounts and posts, prepare drafts or publish with your permission. You sign in to Posted and choose the access level. No API key is needed.
 
-For Codex, add the following to `~/.codex/config.toml`, replacing the example API origin with your installation:
+## Find your connection settings
 
-```toml
-[mcp_servers.posted]
-url = "https://posted-api.example.com/mcp"
+1. Open **Account Settings → MCP Guide**.
+2. Choose your client from the **App** menu.
+3. Copy the configuration into that client.
+
+The guide includes settings for Codex, Claude Code, Cursor, VS Code and other clients. It uses your installation's API URL, so you can copy the configuration directly.
+
+<!-- screenshot:mcp-guide -->
+
+## Connect a client
+
+Your MCP server address is:
+
+```text title="MCP server URL"
+{{POSTED_API_URL}}/mcp
 ```
 
-Start the client's OAuth login. On Posted's shared approval form, check the application and choose **Read-only**, **Write** or **Administrator** yourself. The client cannot dictate the access level. Approve only a connection you started.
+In the examples below, replace `{{POSTED_API_URL}}` with your full API origin, such as `https://posted-api.example.com`.
 
-Access remains within your current role. Changing your role revokes the connection and requires reauthentication. Account Settings → MCP Connections shows the application, permissions and added time, with a revocation action. Codex is shown with the ChatGPT logo.
+<CodeGroup>
 
-MCP supports reading providers, connections, drafts and delivery state; reserving, completing and checking private media uploads; saving drafts; and authorized posting operations. Request keys and versions have the same meaning as in REST. A media upload does not create a post. Ask the human to approve real publication before issuing a posting request.
+```sh title="Codex"
+codex mcp add posted --url "{{POSTED_API_URL}}/mcp"
+codex mcp login posted
+```
 
-See [REST reference](/api-reference/overview) for the shared publishing contracts and [security](/security) for grant boundaries.
+```sh title="Claude Code"
+claude mcp add --transport http posted "{{POSTED_API_URL}}/mcp"
+```
 
-## Tool reference
+</CodeGroup>
 
-The **MCP reference** sidebar contains one illustrated page for every tool, with arguments, a JSON-RPC call, example result, permission requirements and retry behavior. Begin with [list_providers](/mcp-reference/list_providers) and [list_connections](/mcp-reference/list_connections); then [save_draft](/mcp-reference/save_draft) or [create_post](/mcp-reference/create_post) after the user confirms publication.
+For Codex, the second command starts sign-in. In Claude Code, open `/mcp`, select **posted** and choose the option to authenticate. For other clients, add the server URL and start the client's sign-in flow. See the official [Codex](https://developers.openai.com/codex/mcp) or [Claude Code](https://code.claude.com/docs/en/mcp) instructions for client-specific details.
 
-Only tools allowed by the current grant and team role are advertised. Read-only grants cannot mutate. An administrator tool also requires Administrator consent. Calls return JSON text plus `structuredContent`; a failed result sets `isError`. Use [request conventions](/api-reference/overview) for versions, request keys and media preparation.
+## Approve access
+
+Sign in when the client opens Posted in your browser. Review the application name, choose its access and approve the connection.
+
+| Access        | What the client can do                                             |
+| ------------- | ------------------------------------------------------------------ |
+| Read-only     | View providers, connected accounts, drafts and publishing results. |
+| Write         | Read content, prepare drafts, upload media and publish posts.      |
+| Administrator | Also manage accounts and team settings.                            |
+
+The connection stays within your team role, even if you choose a higher access level. A role change revokes the connection, so you will need to sign in again.
+
+## Try the connection
+
+Start with a request that reads your data:
+
+```text title="Example prompt"
+List my connected social accounts in Posted.
+```
+
+With **Write** access, you can also ask the assistant to prepare a draft:
+
+```text title="Example prompt"
+Save a draft in Posted saying "Our new website is live. Take a look!"
+for my connected accounts. Do not publish it.
+```
+
+Open **Pending Drafts** in Posted to review the result. For publishing, review the content and destination accounts before asking your assistant to send it. The [MCP reference](/mcp-reference/list_providers) explains each available tool.
+
+## Manage connections
+
+Open **Account Settings → MCP Connections** to see the apps you have approved, their permissions and when they were added. Choose **Revoke** to remove an app's access. To reconnect it later, start sign-in again from the client.
+
+<!-- screenshot:mcp-connections -->

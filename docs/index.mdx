@@ -1,6 +1,6 @@
 ---
 title: "Social publishing for your team"
-description: "Draft, tailor and schedule posts for X, LinkedIn, Bluesky and Threads. Self-host Posted with PostgreSQL and private media storage."
+description: "Draft, tailor and schedule posts for X, LinkedIn, Bluesky and Threads. Self-host Posted with PostgreSQL and an S3 source."
 mode: "custom"
 ---
 
@@ -45,8 +45,8 @@ import { ThemeImage } from "/snippets/oss/screenshot.jsx";
   </Hero>
   <ProductFrame>
     <ThemeImage
-      light="/assets/screenshots/composer-light.jpg"
-      dark="/assets/screenshots/composer-dark.jpg"
+      light="/assets/screenshots/composer-light@2x.png"
+      dark="/assets/screenshots/composer-dark@2x.png"
       alt="Posted composer with shared text, team account avatars and a provider preview using sample data."
       width={1280}
       height={900}
@@ -81,19 +81,19 @@ import { ThemeImage } from "/snippets/oss/screenshot.jsx";
   <FeatureGroup>
     <Feature id="media-heading">
       <FeatureCopy>
-        <Eyebrow>Private media</Eyebrow>
+        <Eyebrow>S3 source</Eyebrow>
         <h2 id="media-heading">Put the right files first.</h2>
         <p>
           Add images or videos and drag them into priority order. Posted
           prepares the supported files for each provider, while originals stay
-          in private storage.
+          in your S3 source.
         </p>
         <InlineLink href="/media">Media formats and limits →</InlineLink>
       </FeatureCopy>
       <FeatureImage>
         <ThemeImage
-          light="/assets/screenshots/composer-light.jpg"
-          dark="/assets/screenshots/composer-dark.jpg"
+          light="/assets/screenshots/composer-light@2x.png"
+          dark="/assets/screenshots/composer-dark@2x.png"
           alt="Shared media, account selection and compact live preview in Posted."
           width={1280}
           height={900}
@@ -113,8 +113,8 @@ import { ThemeImage } from "/snippets/oss/screenshot.jsx";
       </FeatureCopy>
       <FeatureImage>
         <ThemeImage
-          light="/assets/screenshots/scheduled-light.jpg"
-          dark="/assets/screenshots/scheduled-dark.jpg"
+          light="/assets/screenshots/scheduled-light@2x.png"
+          dark="/assets/screenshots/scheduled-dark@2x.png"
           alt="Posted scheduled table with sample posts, account logos and delivery counts."
           width={1280}
           height={900}
@@ -134,8 +134,8 @@ import { ThemeImage } from "/snippets/oss/screenshot.jsx";
       </FeatureCopy>
       <FeatureImage>
         <ThemeImage
-          light="/assets/screenshots/connections-light.jpg"
-          dark="/assets/screenshots/connections-dark.jpg"
+          light="/assets/screenshots/connections-light@2x.png"
+          dark="/assets/screenshots/connections-dark@2x.png"
           alt="Team-owned social connections in Posted using demonstration accounts."
           width={1280}
           height={900}
