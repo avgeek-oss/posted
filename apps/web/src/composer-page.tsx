@@ -1007,8 +1007,9 @@ export function ComposerPage({
           return (
             <GridListItem
               id={part.id}
+              focusMode="child"
               textValue={`Post ${index + 1}: ${part.text.trim() || "No text yet"}`}
-              className="composer-post group relative min-w-0 rounded-2xl outline-none data-[dragging]:opacity-50"
+              className="composer-post relative min-w-0 rounded-2xl outline-none data-[dragging]:opacity-50"
             >
               <MasterPostEditor
                 part={part}

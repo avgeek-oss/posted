@@ -74,7 +74,7 @@ export function MasterPostEditor({
   ).length;
   return (
     <Card
-      className="min-w-0 group-data-[focus-visible]:ring-2 group-data-[focus-visible]:ring-focus"
+      className="min-w-0"
       id={`master-post-${part.id}`}
       data-keyboard={isFocusVisible || undefined}
     >
