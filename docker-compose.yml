@@ -28,7 +28,7 @@ x-runtime: &runtime
 services:
   api:
     <<: *runtime
-    image: ghcr.io/avgeek-oss/posted-api:0.2.1
+    image: ghcr.io/avgeek-oss/posted-api:0.2.2
     environment:
       <<: *server-environment
       PORT: 4341
@@ -42,7 +42,7 @@ services:
   worker:
     <<: *runtime
     tmpfs: ["/tmp:rw,noexec,nosuid,size=256m,mode=1777"]
-    image: ghcr.io/avgeek-oss/posted-worker:0.2.1
+    image: ghcr.io/avgeek-oss/posted-worker:0.2.2
     environment:
       <<: *server-environment
       PORT: 4343
@@ -51,7 +51,7 @@ services:
         condition: service_healthy
   web:
     <<: *runtime
-    image: ghcr.io/avgeek-oss/posted-web:0.2.1
+    image: ghcr.io/avgeek-oss/posted-web:0.2.2
     environment:
       NODE_ENV: production
       PORT: 4342
