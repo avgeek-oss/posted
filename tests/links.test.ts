@@ -421,3 +421,14 @@ test("Bluesky prepares an external card blob before publishing its deterministic
   assert.equal(embed.external.title, "Field notes & ideas");
   assert.equal(embed.external.thumb.mimeType, "image/jpeg");
 });
+
+test(
+  "an expired link deadline never starts another DNS lookup",
+  { timeout: 1000 },
+  async () => {
+    mock.method(AbortSignal, "timeout", () => AbortSignal.abort());
+    const lookup = mock.method(dns, "lookup", () => new Promise(() => {}));
+    assert.equal(await getLinkPreview(link("/expired")), null);
+    assert.equal(lookup.mock.callCount(), 0);
+  },
+);

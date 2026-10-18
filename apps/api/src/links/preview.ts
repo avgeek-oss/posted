@@ -41,6 +41,7 @@ export function publicAddress(address: string) {
   }
 }
 async function resolveAddress(url: URL, signal: AbortSignal) {
+  signal.throwIfAborted();
   const hostname = url.hostname.replace(/^\[|\]$/g, "");
   const addresses = isIP(hostname)
     ? [{ address: hostname, family: isIP(hostname) }]
