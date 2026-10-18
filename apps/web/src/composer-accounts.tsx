@@ -176,8 +176,9 @@ export function ComposerAccounts({
                 else applySelection();
               }}
             >
-              Choose {draftSelected.length}{" "}
-              {draftSelected.length === 1 ? "account" : "accounts"}
+              {draftSelected.length
+                ? `Choose ${draftSelected.length} ${draftSelected.length === 1 ? "account" : "accounts"}`
+                : "Choose accounts"}
             </Button>
           )
         }
@@ -282,12 +283,8 @@ export function ComposerAccounts({
                   </Checkbox.Content>
                 </Checkbox>
               ))}
-              {!results.length && (
-                <p className="py-6 text-sm text-muted">
-                  {accounts.length
-                    ? "No matching accounts."
-                    : "Connect a social account to start posting."}
-                </p>
+              {!results.length && accounts.length > 0 && (
+                <p className="py-6 text-sm text-muted">No matching accounts.</p>
               )}
             </ScrollShadow>
             {draftSelected.length >= 50 && (

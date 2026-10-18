@@ -240,7 +240,7 @@ export function SocialPreview({
                     aria-hidden
                   />
                 </TooltipText>
-                <em className="italic">Your post will appear here.</em>
+                <em className="text-sm italic">Your post will appear here.</em>
               </span>
             )}
           </p>
