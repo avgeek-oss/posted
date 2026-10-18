@@ -31,21 +31,80 @@ POSTED_LINKEDIN_CLIENT_ID=YOUR_LINKEDIN_CLIENT_ID
 POSTED_LINKEDIN_CLIENT_SECRET=YOUR_LINKEDIN_CLIENT_SECRET
 ```
 
-## Application configuration
+## Set up your LinkedIn application
 
-Enable identity and member-sharing access in your LinkedIn application. Posted publishes as the connected member. Organization pages are not supported.
+Open the [LinkedIn Developer Portal](https://www.linkedin.com/developers/apps). The screenshots below show the setup in order, with numbered arrows marking the controls to use.
 
-Register this callback URL in your LinkedIn application:
+<Steps>
+  <Step title="Create an application">
+    Click **Create app** (arrow 1). If you already have an application for this installation, open it and continue to **Products**.
 
-```text title="Callback URL"
-{{POSTED_API_URL}}/api/social/callback/linkedin
-```
+    <Frame caption="Create an application from the LinkedIn Developer Portal.">
+      <img src="/assets/providers/linkedin/01-create-app@2x.png" alt="Arrow 1 points to Create app in the LinkedIn Developer Portal." width="1800" height="986" />
+    </Frame>
 
-Posted requests `openid`, `profile`, `w_member_social`.
+  </Step>
+  <Step title="Fill in the application details">
+    Enter an app name, select your LinkedIn Page, add your privacy policy URL and upload a logo (arrows 2–5). Review the terms, select the agreement checkbox if you accept them (arrow 6), then click **Create app** (arrow 7).
+
+    <Frame caption="Complete the application details before creating it.">
+      <img src="/assets/providers/linkedin/02-app-details@2x.png" alt="Arrows 2 through 7 identify the app details, agreement and Create app controls." width="1800" height="986" />
+    </Frame>
+
+  </Step>
+  <Step title="Enable Share on LinkedIn">
+    Open **Products** and click **Request access** for **Share on LinkedIn** (arrow 8).
+
+    <Frame caption="Share on LinkedIn lets connected members publish posts.">
+      <img src="/assets/providers/linkedin/03-share-product@2x.png" alt="Arrow 8 points to Request access for Share on LinkedIn." width="1800" height="986" />
+    </Frame>
+
+    Review the product terms. If you accept them, select the checkbox (arrow 10) and click **Request access** (arrow 11).
+
+    <Frame caption="Review the terms before requesting product access.">
+      <img src="/assets/providers/linkedin/04-share-access@2x.png" alt="Arrows 10 and 11 identify the agreement checkbox and Request access button." width="1800" height="986" />
+    </Frame>
+
+  </Step>
+  <Step title="Enable Sign In with LinkedIn">
+    On **Products**, find **Sign In with LinkedIn using OpenID Connect** and click **Request access** (arrow 13).
+
+    <Frame caption="Enable OpenID Connect so Posted can identify the connected account.">
+      <img src="/assets/providers/linkedin/05-sign-in-product@2x.png" alt="Arrow 13 points to Request access for Sign In with LinkedIn using OpenID Connect." width="1800" height="986" />
+    </Frame>
+
+    Review the terms. If you accept them, select the checkbox (arrow 14) and click **Request access** (arrow 15).
+
+    <Frame caption="Complete the request for OpenID Connect access.">
+      <img src="/assets/providers/linkedin/06-sign-in-access@2x.png" alt="Arrows 14 and 15 identify the OpenID Connect agreement and Request access button." width="1800" height="986" />
+    </Frame>
+
+  </Step>
+  <Step title="Copy your credentials and add the callback">
+    Open **Auth**. Copy the **Client ID** and **Primary Client Secret** from **Application credentials** (arrow 16) into the environment variables above. Keep the secret private.
+
+    Under **Authorized redirect URLs for your app**, click the edit icon (arrow 17).
+
+    <Frame caption="Find your client credentials and edit the redirect URLs in Auth.">
+      <img src="/assets/providers/linkedin/07-credentials@2x.png" alt="Arrows 16 and 17 identify Application credentials and the redirect URL edit icon; the client secret is masked." width="1800" height="986" />
+    </Frame>
+
+    Enter your Posted API origin, including `https://`, followed by `/api/social/callback/linkedin` (arrow 18). Click **Update** (arrow 19).
+
+    ```text title="Callback URL"
+    {{POSTED_API_URL}}/api/social/callback/linkedin
+    ```
+
+    <Frame caption="Save the callback URL for your Posted installation.">
+      <img src="/assets/providers/linkedin/08-callback@2x.png" alt="Arrows 18 and 19 identify the callback URL field and Update button, with the installation domain blurred." width="1800" height="986" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+Posted requests `openid`, `profile`, `w_member_social`. These come from [Sign In with LinkedIn using OpenID Connect](https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin-v2) and [Share on LinkedIn](https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/share-on-linkedin). Posted publishes as the connected member; organization pages are not supported.
 
 Posted uses LinkedIn API version `202609`. The version is managed by Posted and changes through application upgrades.
-
-Follow the provider's [official authorization documentation](https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/share-on-linkedin) to register your application and complete any approval steps.
 
 ## Limits enforced by Posted
 
