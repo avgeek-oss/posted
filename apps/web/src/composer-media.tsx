@@ -107,6 +107,8 @@ export const ComposerMedia = memo(function ComposerMedia({
           aria-label="Post media"
           layout="stack"
           orientation="horizontal"
+          keyboardNavigationBehavior="tab"
+          disallowTypeAhead
           items={media}
           dependencies={[disabled, media, onChange]}
           dragAndDropHooks={dragAndDropHooks}
@@ -166,11 +168,11 @@ export const ComposerMedia = memo(function ComposerMedia({
                   isIconOnly
                   size="sm"
                   variant="ghost"
-                  className="group size-6 min-w-0 shrink-0 touch-none cursor-grab bg-transparent p-0 text-foreground hover:bg-transparent data-[hovered=true]:bg-transparent active:cursor-grabbing"
+                  className="group/media-drag-handle size-6 min-w-0 shrink-0 touch-none cursor-grab bg-transparent p-0 text-foreground hover:bg-transparent data-[hovered=true]:bg-transparent active:cursor-grabbing"
                   aria-label={`Reorder ${image.fileName}`}
                   isDisabled={disabled}
                 >
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-transparent group-hover:border-separator group-hover:bg-default group-data-[hovered=true]:border-separator group-data-[hovered=true]:bg-default group-data-[focus-visible=true]:bg-default">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-transparent group-hover/media-drag-handle:border-separator group-hover/media-drag-handle:bg-default group-data-[hovered=true]/media-drag-handle:border-separator group-data-[hovered=true]/media-drag-handle:bg-default group-data-[focus-visible=true]/media-drag-handle:bg-default">
                     <HugeiconsIcon
                       icon={DragDropVerticalIcon}
                       size={16}

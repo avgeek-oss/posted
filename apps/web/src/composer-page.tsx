@@ -987,6 +987,8 @@ export function ComposerPage({
         aria-label="Master posts"
         items={parts}
         selectionMode="none"
+        keyboardNavigationBehavior="tab"
+        disallowTypeAhead
         dependencies={[
           parts,
           activePostId,
