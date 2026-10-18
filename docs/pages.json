@@ -11,6 +11,11 @@
     "description": "Write a post, choose accounts and make it your own for each one."
   },
   {
+    "name": "publishing-across-accounts",
+    "title": "Publishing across accounts",
+    "description": "Understand shared posts, media, threads and account reconnection."
+  },
+  {
     "name": "drafts",
     "title": "Pending drafts",
     "description": "Save ideas without creating publishing jobs."
