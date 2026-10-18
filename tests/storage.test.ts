@@ -25,6 +25,8 @@ import { seal } from "../apps/api/src/social/secrets.js";
 import { prepareImage } from "../apps/api/src/media/prepare.js";
 import { deliverNext } from "../apps/worker/src/delivery.js";
 import { videoFixture } from "./video-fixture.js";
+import { gifFixture } from "./gif-fixture.js";
+import { gifMetadata } from "../apps/api/src/media/gif.js";
 import { prepareNextMedia } from "../apps/worker/src/media.js";
 const endpoint =
   process.env.POSTED_TEST_STORAGE_ENDPOINT ?? "http://127.0.0.1:55491";
@@ -516,6 +518,255 @@ test("worker delivers account-specific image order, explicit empty media and inh
       (await sql`SELECT state FROM post_deliveries`).every(
         (row) => row.state === "published",
       ),
+    );
+  } finally {
+    mock.restoreAll();
+  }
+});
+
+test("GIF uploads keep private originals, prepare once, and publish animation through X and LinkedIn", async () => {
+  const admin = await setupUser();
+  const source = await gifFixture();
+  const upload = await begin(admin.cookie, source, {
+    fileName: "animation.gif",
+    contentType: "image/gif",
+  });
+  assert.equal(
+    (
+      await request(`/api/media/${upload.mediaId}/complete`, {
+        cookie: admin.cookie,
+        body: {},
+      })
+    ).status,
+    202,
+  );
+  assert.deepEqual(
+    (await Promise.all([prepareNextMedia(), prepareNextMedia()])).sort(),
+    [false, true],
+  );
+  const status = await request(`/api/media/${upload.mediaId}/status`, {
+    cookie: admin.cookie,
+  });
+  const { media, state } = await status.json();
+  assert.equal(state, "ready");
+  assert.equal(media.contentType, "image/gif");
+  assert.equal(media.width, 160);
+  assert.equal(media.height, 90);
+  assert.equal(media.durationSeconds, 0.8);
+  const [stored] =
+    await sql`SELECT original_object_key,object_key,thumbnail_object_key FROM post_media WHERE id=${media.id}`;
+  assert.deepEqual(await mediaBytes(stored.originalObjectKey), source);
+  assert.notEqual(stored.originalObjectKey, stored.objectKey);
+  for (const key of [
+    stored.originalObjectKey,
+    stored.objectKey,
+    stored.thumbnailObjectKey,
+  ])
+    assert.equal((await fetch(`${endpoint}/${bucket}/${key}`)).status, 403);
+  assert.equal((await request(`/api/media/${media.id}/preview`)).status, 401);
+  const preview = await request(`/api/media/${media.id}/preview`, {
+    cookie: admin.cookie,
+  });
+  const urls = await preview.json();
+  assert.equal(
+    (await fetch(urls.url)).headers.get("content-type"),
+    "image/gif",
+  );
+  assert.equal(
+    (await fetch(urls.thumbnailUrl)).headers.get("content-type"),
+    "image/png",
+  );
+  const accounts: string[] = [];
+  for (const provider of ["x", "linkedin"]) {
+    const id = randomUUID();
+    const credentials = seal(
+      {
+        accessToken: "disposable-access",
+        issuedAt: Date.now(),
+        expiresAt: Date.now() + 36e5,
+      },
+      `social-connection:${id}`,
+    );
+    await sql`INSERT INTO social_connections(id,workspace_id,provider,account_id,name,handle,encrypted_credentials) VALUES(${id},(SELECT id FROM workspace),${provider},'fixture','Example','example',${credentials})`;
+    accounts.push(id);
+  }
+  const input = {
+    text: "GIF fixture",
+    mediaIds: [media.id],
+    connectionIds: accounts,
+    scheduledAt: new Date().toISOString(),
+    idempotencyKey: randomUUID(),
+  };
+  const stillUpload = await begin(admin.cookie, await image());
+  await request(`/api/media/${stillUpload.mediaId}/complete`, {
+    cookie: admin.cookie,
+    body: {},
+  });
+  assert.equal(
+    (await request("/api/posts", { cookie: admin.cookie, body: input })).status,
+    201,
+  );
+  assert.equal(
+    (
+      await request("/api/posts", {
+        cookie: admin.cookie,
+        body: {
+          ...input,
+          mediaIds: [media.id, stillUpload.mediaId],
+          idempotencyKey: randomUUID(),
+        },
+      })
+    ).status,
+    400,
+  );
+  let xUploaded = false;
+  let linkedInUploaded = false;
+  let published = 0;
+  mock.method(
+    globalThis,
+    "fetch",
+    async (input: string | URL | Request, init?: RequestInit) => {
+      const url = new URL(String(input));
+      if (url.pathname === "/2/media/upload/initialize") {
+        const body = JSON.parse(String(init?.body));
+        assert.equal(body.media_type, "image/gif");
+        assert.equal(body.media_category, "tweet_gif");
+        return Response.json({ data: { id: "gif-media" } });
+      }
+      if (url.pathname.endsWith("/append")) {
+        const body = JSON.parse(String(init?.body));
+        const bytes = Buffer.from(body.media, "base64");
+        assert.equal((await gifMetadata(bytes)).frames, 4);
+        assert.equal(bytes.includes(Buffer.from("private-gif-fixture")), false);
+        xUploaded = true;
+        return new Response(null, { status: 204 });
+      }
+      if (url.pathname.endsWith("/finalize"))
+        return Response.json({ data: {} });
+      if (url.pathname === "/2/tweets") {
+        assert.equal(xUploaded, true);
+        published++;
+        return Response.json({ data: { id: "gif-tweet" } });
+      }
+      if (url.pathname === "/rest/images")
+        return Response.json({
+          value: {
+            image: "urn:li:image:gif",
+            uploadUrl: "https://media.licdn.com/gif-upload",
+          },
+        });
+      if (url.hostname === "media.licdn.com") {
+        assert.equal(
+          new Headers(init?.headers).get("content-type"),
+          "image/gif",
+        );
+        assert.ok(init?.body instanceof Uint8Array);
+        assert.equal((await gifMetadata(init.body)).frames, 4);
+        linkedInUploaded = true;
+        return new Response(null, { status: 201 });
+      }
+      assert.equal(url.pathname, "/rest/posts");
+      assert.equal(linkedInUploaded, true);
+      published++;
+      return new Response(null, {
+        status: 201,
+        headers: { "x-restli-id": "urn:li:share:gif" },
+      });
+    },
+  );
+  try {
+    assert.equal(await deliverNext(), true);
+    assert.equal(await deliverNext(), true);
+    assert.equal(published, 2);
+    assert.deepEqual(
+      (await sql`SELECT state FROM post_deliveries`).map((d) => d.state),
+      ["published", "published"],
+    );
+  } finally {
+    mock.restoreAll();
+  }
+});
+
+test("Threads GIF delivery uses a private signed MP4 and only publishes after processing", async () => {
+  const admin = await setupUser();
+  const upload = await begin(admin.cookie, await gifFixture(), {
+    fileName: "animation.gif",
+    contentType: "image/gif",
+  });
+  await request(`/api/media/${upload.mediaId}/complete`, {
+    cookie: admin.cookie,
+    body: {},
+  });
+  await prepareNextMedia();
+  const id = randomUUID();
+  const credentials = seal(
+    {
+      accessToken: "disposable-access",
+      issuedAt: Date.now(),
+      expiresAt: Date.now() + 36e5,
+    },
+    `social-connection:${id}`,
+  );
+  await sql`INSERT INTO social_connections(id,workspace_id,provider,account_id,name,handle,encrypted_credentials) VALUES(${id},(SELECT id FROM workspace),'threads','fixture','Example','example',${credentials})`;
+  assert.equal(
+    (
+      await request("/api/posts", {
+        cookie: admin.cookie,
+        body: {
+          text: "GIF as video",
+          mediaIds: [upload.mediaId],
+          connectionIds: [id],
+          scheduledAt: new Date().toISOString(),
+          idempotencyKey: randomUUID(),
+        },
+      })
+    ).status,
+    201,
+  );
+  const actualFetch = globalThis.fetch;
+  let prepared = false;
+  let published = false;
+  mock.method(
+    globalThis,
+    "fetch",
+    async (input: string | URL | Request, init?: RequestInit) => {
+      const url = new URL(String(input));
+      if (url.hostname === "127.0.0.1") return actualFetch(input, init);
+      assert.equal(url.hostname, "graph.threads.net");
+      if (url.pathname.endsWith("/threads")) {
+        const body = new URLSearchParams(String(init?.body));
+        assert.equal(body.get("media_type"), "VIDEO");
+        const videoUrl = body.get("video_url");
+        assert.ok(videoUrl);
+        const signed = new URL(videoUrl);
+        assert.ok(signed.searchParams.has("X-Amz-Signature"));
+        const response = await actualFetch(signed);
+        assert.equal(response.headers.get("content-type"), "video/mp4");
+        assert.ok((await response.arrayBuffer()).byteLength > 100);
+        signed.search = "";
+        assert.equal((await actualFetch(signed)).status, 403);
+        return Response.json({ id: "gif-container" });
+      }
+      if (url.searchParams.get("fields") === "id,status") {
+        prepared = true;
+        return Response.json({ status: "FINISHED" });
+      }
+      if (url.pathname.endsWith("/threads_publish")) {
+        assert.equal(prepared, true);
+        published = true;
+        return Response.json({ id: "gif-post" });
+      }
+      return Response.json({
+        permalink: "https://www.threads.net/@example/post/gif-post",
+      });
+    },
+  );
+  try {
+    assert.equal(await deliverNext(), true);
+    assert.equal(published, true);
+    assert.equal(
+      (await sql`SELECT state FROM post_deliveries`)[0].state,
+      "published",
     );
   } finally {
     mock.restoreAll();

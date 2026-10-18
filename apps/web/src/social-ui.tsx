@@ -1,3 +1,4 @@
+import { PostLinkPreview } from "./post-link-preview.js";
 import { MediaVideo } from "./media-video.js";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -99,6 +100,7 @@ export function StateChip({
 export type PreviewMedia = {
   id: string;
   url: string;
+  thumbnailUrl?: string;
   alt: string;
   contentType: string;
   durationSeconds: number | null;
@@ -249,6 +251,11 @@ export function SocialPreview({
             )}
           </p>
         )}
+        {!media.length && (
+          <PostLinkPreview
+            text={textForProviderPreview(account.provider, text)}
+          />
+        )}
         {!!media.length && (
           <div
             className={`mt-3 grid overflow-hidden rounded-xl border border-separator ${media.length > 1 ? "grid-cols-2 gap-0.5" : "grid-cols-1"} ${singleImage ? "w-fit max-w-80" : ""}`}
@@ -263,7 +270,7 @@ export function SocialPreview({
                   />
                 ) : (
                   <img
-                    src={image.url}
+                    src={image.thumbnailUrl ?? image.url}
                     alt={image.alt || "Post image"}
                     loading="lazy"
                     decoding="async"

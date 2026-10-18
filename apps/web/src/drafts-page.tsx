@@ -104,17 +104,29 @@ export function DraftsPage({ session }: { session: Session }) {
               {
                 key: "accounts",
                 header: "Accounts",
+                className: "whitespace-nowrap",
                 cell: (draft) => (
-                  <div className="flex gap-2">
+                  <div className="flex w-max gap-2">
                     {draft.connections.map((account) => (
-                      <span
+                      <TooltipText
                         key={account.id}
+                        className="inline-flex size-5 shrink-0 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-focus"
                         role="img"
-                        aria-label={`${providerNames[account.provider]}: @${account.handle}`}
-                        title={`@${account.handle}`}
+                        aria-label={`${providerNames[account.provider]}: ${account.name}, @${account.handle}`}
+                        tabIndex={0}
+                        openOnPress
+                        tooltip={
+                          <span className="grid gap-0.5">
+                            <span>{account.name}</span>
+                            <span>@{account.handle}</span>
+                          </span>
+                        }
                       >
-                        <ProviderIcon provider={account.provider} />
-                      </span>
+                        <ProviderIcon
+                          provider={account.provider}
+                          className="size-5"
+                        />
+                      </TooltipText>
                     ))}
                   </div>
                 ),

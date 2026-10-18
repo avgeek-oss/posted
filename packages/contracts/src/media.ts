@@ -10,6 +10,8 @@ export const videoDurationLimits: Record<Provider, number> = {
 };
 export const isVideo = (media: { contentType: string }) =>
   media.contentType.startsWith("video/");
+export const isGif = (media: { contentType: string }) =>
+  media.contentType === "image/gif";
 
 export function mediaForProvider<T extends { contentType: string }>(
   provider: Provider,
@@ -25,6 +27,8 @@ export function mediaError(
   provider: Provider,
   media: readonly { contentType: string; durationSeconds: number | null }[],
 ): string | undefined {
+  if (media.some(isGif) && media.length > 1)
+    return "Use one GIF without other images or videos in this post.";
   if (
     provider !== "threads" &&
     media.some(isVideo) &&

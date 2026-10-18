@@ -1,3 +1,5 @@
+import { firstPostLink } from "../../../../packages/contracts/src/links.js";
+import { getLinkPreview } from "../links/preview.js";
 import { z } from "zod";
 import { Agent, RichText, XRPCError } from "@atproto/api";
 import { setTimeout as delay } from "node:timers/promises";
@@ -25,7 +27,8 @@ export type DeliveryVideo = Omit<DeliveryImage, "kind"> & {
   kind: "video";
   durationSeconds: number;
 };
-export type DeliveryMedia = DeliveryImage | DeliveryVideo;
+export type DeliveryGif = Omit<DeliveryImage, "kind"> & { kind: "gif" };
+export type DeliveryMedia = DeliveryImage | DeliveryVideo | DeliveryGif;
 export type Publication = { id: string; url: string; cid?: string };
 export type PreparedPublication = {
   checkpoint:
@@ -71,8 +74,8 @@ async function prepareX(
 ): Promise<PreparedPublication> {
   const ids: string[] = [];
   for (const image of images) {
-    if (image.kind === "video") {
-      ids.push(await uploadXVideo(image, token));
+    if (image.kind === "video" || image.kind === "gif") {
+      ids.push(await uploadXMotion(image, token));
       continue;
     }
     const { data } = await providerJson(
@@ -134,31 +137,37 @@ async function prepareLinkedIn(
       media.push({ id: await uploadLinkedInVideo(image, owner, token) });
       continue;
     }
-    const { value } = await providerJson(
-      "https://api.linkedin.com/rest/images?action=initializeUpload",
-      z.object({
-        value: z.object({
-          uploadUrl: z.string().url(),
-          image: z.string().startsWith("urn:li:image:"),
-        }),
-      }),
-      {
-        ...jsonBody({ initializeUploadRequest: { owner } }),
-        headers: {
-          ...linkedinHeaders(token),
-          "Content-Type": "application/json",
-        },
-      },
-    );
-    await providerRequest(trustedLinkedInUpload(value.uploadUrl), {
-      method: "PUT",
-      headers: { ...bearer(token), "Content-Type": "image/jpeg" },
-      body: new Uint8Array(image.bytes),
+    media.push({
+      id: await uploadLinkedInImage(
+        image.bytes,
+        image.kind === "gif" ? "image/gif" : "image/jpeg",
+        owner,
+        token,
+      ),
+      altText: image.alt,
     });
-    media.push({ id: value.image, altText: image.alt });
   }
-  const content =
-    media.length === 1
+  const link = !images.length ? firstPostLink(job.text) : null;
+  const preview = link ? await getLinkPreview(link) : null;
+  const thumbnail = preview?.image
+    ? await uploadLinkedInImage(
+        Buffer.from(preview.image.data, "base64"),
+        "image/jpeg",
+        owner,
+        token,
+      )
+    : undefined;
+  if (thumbnail) media.push({ id: thumbnail });
+  const content = preview
+    ? {
+        article: {
+          source: preview.url,
+          title: preview.title,
+          description: preview.description,
+          ...(thumbnail ? { thumbnail } : {}),
+        },
+      }
+    : media.length === 1
       ? { media: media[0] }
       : media.length > 1
         ? { multiImage: { images: media } }
@@ -197,6 +206,35 @@ async function prepareLinkedIn(
       };
     },
   };
+}
+async function uploadLinkedInImage(
+  bytes: Buffer,
+  contentType: string,
+  owner: string,
+  token: string,
+) {
+  const { value } = await providerJson(
+    "https://api.linkedin.com/rest/images?action=initializeUpload",
+    z.object({
+      value: z.object({
+        uploadUrl: z.string().url(),
+        image: z.string().startsWith("urn:li:image:"),
+      }),
+    }),
+    {
+      ...jsonBody({ initializeUploadRequest: { owner } }),
+      headers: {
+        ...linkedinHeaders(token),
+        "Content-Type": "application/json",
+      },
+    },
+  );
+  await providerRequest(trustedLinkedInUpload(value.uploadUrl), {
+    method: "PUT",
+    headers: { ...bearer(token), "Content-Type": contentType },
+    body: new Uint8Array(bytes),
+  });
+  return value.image;
 }
 async function threadsContainer(
   accountId: string,
@@ -332,6 +370,16 @@ async function prepareBluesky(
       aspectRatio: { width: image.width, height: image.height },
     });
   }
+  const link = !images.length ? firstPostLink(job.text) : null;
+  const preview = link ? await getLinkPreview(link) : null;
+  const thumb = preview?.image
+    ? (
+        await agent.uploadBlob(
+          new Uint8Array(Buffer.from(preview.image.data, "base64")),
+          { encoding: "image/jpeg" },
+        )
+      ).data.blob
+    : undefined;
   const richText = new RichText({ text: job.text });
   await richText.detectFacets(agent);
   if (job.replyTo && (!job.replyTo.cid || !job.threadRoot?.cid))
@@ -360,7 +408,19 @@ async function prepareBluesky(
         }
       : uploaded.length
         ? { embed: { $type: "app.bsky.embed.images", images: uploaded } }
-        : {}),
+        : preview
+          ? {
+              embed: {
+                $type: "app.bsky.embed.external",
+                external: {
+                  uri: preview.url,
+                  title: preview.title,
+                  description: preview.description,
+                  ...(thumb ? { thumb } : {}),
+                },
+              },
+            }
+          : {}),
   };
   // A deterministic record key lets an operator reconcile a lost response without another post.
   const rkey = `posted-${job.id}`;
@@ -409,7 +469,10 @@ const xProcessing = z.object({
 const xMediaStatus = z.object({
   data: z.object({ processing_info: xProcessing.optional() }),
 });
-async function uploadXVideo(video: DeliveryVideo, token: string) {
+async function uploadXMotion(
+  video: DeliveryVideo | DeliveryGif,
+  token: string,
+) {
   const headers = { ...bearer(token), "Content-Type": "application/json" };
   const { data } = await providerJson(
     "https://api.x.com/2/media/upload/initialize",
@@ -417,8 +480,8 @@ async function uploadXVideo(video: DeliveryVideo, token: string) {
     {
       ...jsonBody({
         total_bytes: video.bytes.length,
-        media_type: "video/mp4",
-        media_category: "tweet_video",
+        media_type: video.kind === "gif" ? "image/gif" : "video/mp4",
+        media_category: video.kind === "gif" ? "tweet_gif" : "tweet_video",
       }),
       headers,
     },
@@ -453,9 +516,9 @@ async function uploadXVideo(video: DeliveryVideo, token: string) {
     status.data.processing_info.state !== "succeeded"
   ) {
     if (status.data.processing_info.state === "failed")
-      throw new Error("X could not process this video");
+      throw new Error("X could not process this media");
     if (Date.now() >= deadline)
-      throw new Error("X video processing timed out before publishing");
+      throw new Error("X media processing timed out before publishing");
     await delay(
       Math.max(
         1,

@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { z } from "zod";
 import { videoUploadBytes } from "../../../../packages/contracts/src/media.js";
+import { gifMetadata } from "./gif.js";
 
 const execute = promisify(execFile);
 const metadata = z.object({
@@ -18,7 +19,7 @@ const metadata = z.object({
   ),
   format: z.object({ duration: z.coerce.number().positive().max(1800) }),
 });
-async function probe(path: string) {
+async function probe(path: string, minimumDuration = 3) {
   const { stdout } = await execute(
     "ffprobe",
     [
@@ -44,7 +45,7 @@ async function probe(path: string) {
     !video[0].height ||
     video[0].width > 8192 ||
     video[0].height > 8192 ||
-    result.format.duration < 3
+    result.format.duration < minimumDuration
   )
     throw new Error(
       "Upload a video between 3 seconds and 30 minutes with valid dimensions.",
@@ -55,15 +56,19 @@ async function probe(path: string) {
     durationSeconds: result.format.duration,
   };
 }
-export async function normalizeVideo(original: Uint8Array) {
+export async function normalizeVideo(
+  original: Uint8Array,
+  inputType: "video" | "gif" = "video",
+) {
   if (original.length > videoUploadBytes)
     throw new Error("Videos must be 100 MB or smaller.");
   const directory = await mkdtemp(join(tmpdir(), "posted-video-"));
   try {
+    const animation = inputType === "gif" ? await gifMetadata(original) : null;
     const input = join(directory, "input");
     const output = join(directory, "video.mp4");
     await writeFile(input, original, { mode: 0o600 });
-    await probe(input);
+    await probe(input, animation ? 0 : 3);
     await execute(
       "ffmpeg",
       [
@@ -72,6 +77,7 @@ export async function normalizeVideo(original: Uint8Array) {
         "error",
         "-protocol_whitelist",
         "file,pipe",
+        ...(animation ? ["-stream_loop", "-1", "-ignore_loop", "1"] : []),
         "-i",
         input,
         "-map",
@@ -109,7 +115,7 @@ export async function normalizeVideo(original: Uint8Array) {
         "-threads",
         "2",
         "-t",
-        "1801",
+        animation ? String(Math.max(3.2, animation.durationSeconds)) : "1801",
         output,
       ],
       { timeout: 900_000, maxBuffer: 1024 * 1024 },

@@ -9,6 +9,10 @@ export async function prepareImage(original: Uint8Array, provider: Provider) {
     animated: false,
   });
   const metadata = await input.metadata();
+  if ((metadata.pages ?? 1) > 1)
+    throw new Error(
+      "Animated media must use GIF preparation to preserve its frames",
+    );
   if (
     !metadata.width ||
     !metadata.height ||

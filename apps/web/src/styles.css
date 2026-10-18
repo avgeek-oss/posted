@@ -19,6 +19,21 @@
   outline: none;
   box-shadow: none;
 }
+@media (hover: hover) and (pointer: fine) {
+  .composer-media-remove {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .composer-image:has(.composer-media-preview:hover) .composer-media-remove,
+  .composer-media-remove:is(
+    :hover,
+    :focus-visible,
+    [data-focus-visible="true"]
+  ) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
 
 .settings-page {
   width: 100%;

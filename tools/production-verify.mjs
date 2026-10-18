@@ -423,6 +423,75 @@ try {
   result.checks.push(
     "private signed media, real FFmpeg normalization and worker readiness",
   );
+  docker(
+    "exec",
+    names.worker,
+    "node",
+    "--input-type=module",
+    "-e",
+    "import sharp from 'sharp';const pixels=Buffer.alloc(160*180*3);pixels.fill(255,0,160*90*3);await sharp(pixels,{raw:{width:160,height:180,pageHeight:90,channels:3}}).gif({delay:[200,200],keepDuplicateFrames:true}).toFile('/tmp/review.gif');",
+  );
+  const gif = execFileSync("docker", [
+    "exec",
+    names.worker,
+    "cat",
+    "/tmp/review.gif",
+  ]);
+  const gifReservation = await request("/media/uploads", {
+    fileName: "review.gif",
+    contentType: "image/gif",
+    sizeBytes: gif.length,
+    alt: "Disposable animation",
+  });
+  assert.equal(gifReservation.status, 201);
+  const gifUpload = await gifReservation.json();
+  assert.equal(
+    (
+      await fetch(gifUpload.uploadUrl, {
+        method: "PUT",
+        headers: gifUpload.headers,
+        body: gif,
+      })
+    ).status,
+    200,
+  );
+  assert.equal(
+    (await request(`/media/${gifUpload.mediaId}/complete`, {})).status,
+    202,
+  );
+  await eventually(async () => {
+    const response = await request(`/media/${gifUpload.mediaId}/status`);
+    assert.equal(response.status, 200);
+    const state = await response.json();
+    if (state.state !== "ready") return false;
+    assert.equal(state.media.contentType, "image/gif");
+    assert.equal(state.media.height, 90);
+    assert.equal(state.media.durationSeconds, 0.4);
+    return true;
+  }, "GIF preparation");
+  const gifUrls = await (
+    await request(`/media/${gifUpload.mediaId}/preview`)
+  ).json();
+  for (const [url, contentType] of [
+    [gifUrls.url, "image/gif"],
+    [gifUrls.thumbnailUrl, "image/png"],
+  ]) {
+    assert.equal((await fetch(url)).headers.get("content-type"), contentType);
+    const unsigned = new URL(url);
+    unsigned.search = "";
+    assert([403, 404].includes((await fetch(unsigned)).status));
+  }
+  docker(
+    "exec",
+    names.worker,
+    "node",
+    "--input-type=module",
+    "-e",
+    "import {readFile} from 'node:fs/promises';import {normalizeVideo} from './dist/apps/api/src/media/video.js';const video=await normalizeVideo(await readFile('/tmp/review.gif'),'gif');if(video.contentType!=='video/mp4'||video.durationSeconds<3)throw Error('GIF video conversion failed');",
+  );
+  result.checks.push(
+    "animated GIF preparation, private still thumbnails and GIF-to-MP4 conversion",
+  );
   const connectionId = randomUUID();
   db(
     `INSERT INTO social_connections(id,workspace_id,provider,account_id,name,handle,encrypted_credentials) VALUES('${connectionId}',(SELECT id FROM workspace),'bluesky','disposable','Example','example.test','unusable-fixture-credentials')`,
@@ -552,6 +621,17 @@ try {
     await request(`/media/${media.id}/preview`)
   ).json();
   assert.equal((await fetch(restoredPreview.url)).status, 200);
+  const restoredGif = await (
+    await request(`/media/${gifUpload.mediaId}/preview`)
+  ).json();
+  assert.equal(
+    (await fetch(restoredGif.url)).headers.get("content-type"),
+    "image/gif",
+  );
+  assert.equal(
+    (await fetch(restoredGif.thumbnailUrl)).headers.get("content-type"),
+    "image/png",
+  );
   result.checks.push(
     "PostgreSQL restore, stable secret, restored private media and sign-in",
   );

@@ -14,10 +14,13 @@ import {
   PlayIcon,
 } from "@hugeicons/core-free-icons";
 import type { PostMedia } from "../../../packages/contracts/src/index.js";
-import { isVideo } from "../../../packages/contracts/src/media.js";
+import { isGif, isVideo } from "../../../packages/contracts/src/media.js";
 import { reorderItems } from "./item-order.js";
 
-export type ComposerMediaItem = PostMedia & { url?: string };
+export type ComposerMediaItem = PostMedia & {
+  url?: string;
+  thumbnailUrl?: string;
+};
 
 const mediaSizeFormat = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 1,
@@ -112,7 +115,7 @@ export const ComposerMedia = memo(function ComposerMedia({
           items={media}
           dependencies={[disabled, media, onChange]}
           dragAndDropHooks={dragAndDropHooks}
-          className="composer-media relative grid auto-cols-[9rem] grid-flow-col gap-3 sm:auto-cols-[6rem]"
+          className="composer-media relative grid auto-cols-[10rem] grid-flow-col gap-3 sm:auto-cols-[9rem]"
         >
           {(image) => (
             <GridListItem
@@ -122,7 +125,7 @@ export const ComposerMedia = memo(function ComposerMedia({
             >
               <Button
                 variant="ghost"
-                className="relative block aspect-[4/3] h-auto w-full min-w-0 transform-none overflow-hidden rounded-none bg-default p-0 hover:bg-default active:transform-none data-[hovered=true]:bg-default data-[pressed=true]:transform-none"
+                className="composer-media-preview relative block aspect-[4/3] h-auto w-full min-w-0 transform-none overflow-hidden rounded-none bg-default p-0 hover:bg-default active:transform-none data-[hovered=true]:bg-default data-[pressed=true]:transform-none"
                 aria-label={`Preview ${image.fileName}`}
                 isDisabled={!image.url}
                 onPress={() => setPreviewId(image.id)}
@@ -137,7 +140,7 @@ export const ComposerMedia = memo(function ComposerMedia({
                     />
                   ) : (
                     <img
-                      src={image.url}
+                      src={image.thumbnailUrl ?? image.url}
                       alt={image.alt || image.fileName}
                       draggable={false}
                       loading="lazy"
@@ -157,6 +160,13 @@ export const ComposerMedia = memo(function ComposerMedia({
                     <span className="flex size-7 items-center justify-center rounded-full bg-foreground/60 text-background">
                       <HugeiconsIcon icon={PlayIcon} size={16} aria-hidden />
                     </span>
+                  </span>
+                )}
+                {isGif(image) && (
+                  <span className="pointer-events-none absolute bottom-1 right-1 rounded-full bg-surface">
+                    <Chip size="sm" color="accent" variant="soft">
+                      <Chip.Label>GIF</Chip.Label>
+                    </Chip>
                   </span>
                 )}
               </Button>
@@ -192,14 +202,14 @@ export const ComposerMedia = memo(function ComposerMedia({
                 isIconOnly
                 variant="secondary"
                 size="sm"
-                className="absolute right-1 top-1 size-6 min-w-0 bg-transparent p-0 hover:bg-transparent data-[hovered=true]:bg-transparent"
+                className="composer-media-remove absolute right-1 top-1 size-6 min-w-0 bg-transparent p-0 hover:bg-transparent data-[hovered=true]:bg-transparent"
                 aria-label={`Remove ${image.fileName}`}
                 isDisabled={disabled}
                 onPress={() =>
                   onChange(media.filter((item) => item.id !== image.id))
                 }
               >
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-default">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface/70">
                   <HugeiconsIcon
                     icon={Cancel01Icon}
                     size={12}
@@ -230,18 +240,19 @@ export const ComposerMedia = memo(function ComposerMedia({
                 <Chip size="sm" variant="soft" color="accent">
                   <Chip.Label>{formatMediaSize(preview.sizeBytes)}</Chip.Label>
                 </Chip>
-                {isVideo(preview) && preview.durationSeconds !== null && (
-                  <Chip
-                    size="sm"
-                    variant="soft"
-                    color="accent"
-                    aria-label={`Duration: ${formatMediaDuration(preview.durationSeconds)}`}
-                  >
-                    <Chip.Label>
-                      {formatMediaDuration(preview.durationSeconds)}
-                    </Chip.Label>
-                  </Chip>
-                )}
+                {(isVideo(preview) || isGif(preview)) &&
+                  preview.durationSeconds !== null && (
+                    <Chip
+                      size="sm"
+                      variant="soft"
+                      color="accent"
+                      aria-label={`Duration: ${formatMediaDuration(preview.durationSeconds)}`}
+                    >
+                      <Chip.Label>
+                        {formatMediaDuration(preview.durationSeconds)}
+                      </Chip.Label>
+                    </Chip>
+                  )}
               </span>
             </span>
           ) : (

@@ -32,8 +32,8 @@
   },
   {
     "name": "media",
-    "title": "Images and videos",
-    "description": "Upload images and videos, reorder it and review provider-specific limits."
+    "title": "Images, GIFs and videos",
+    "description": "Upload media, reorder attachments and review provider limits."
   },
   {
     "name": "connections",

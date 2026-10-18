@@ -38,6 +38,12 @@ importers:
       hono:
         specifier: 4.13.8
         version: 4.13.8
+      htmlparser2:
+        specifier: 8.0.2
+        version: 8.0.2
+      ipaddr.js:
+        specifier: 2.5.0
+        version: 2.5.0
       jose:
         specifier: 6.2.12
         version: 6.2.12
