@@ -158,7 +158,7 @@ export function ConnectionsPage({
               className: "min-w-60",
               cell: (item) => (
                 <div className="flex items-center gap-3">
-                  <AccountAvatar account={item} />
+                  <AccountAvatar account={item} providerBadgeSize="md" />
                   <span className="sr-only">
                     {providerNames[item.provider]}
                   </span>

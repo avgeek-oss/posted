@@ -230,7 +230,7 @@ export function ComposerAccounts({
                     <Checkbox.Control>
                       <Checkbox.Indicator />
                     </Checkbox.Control>
-                    <AccountAvatar account={account} />
+                    <AccountAvatar account={account} providerBadgeSize="md" />
                     <span className="grid min-w-0 gap-0.5">
                       <span
                         className="truncate font-medium"

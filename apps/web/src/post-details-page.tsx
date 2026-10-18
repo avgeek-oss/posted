@@ -138,6 +138,7 @@ export function PostDetailsPage({
                 cell: (delivery) => (
                   <div className="flex items-center gap-2">
                     <AccountAvatar
+                      providerBadgeSize="md"
                       account={{
                         name: delivery.accountName,
                         provider: delivery.provider,
