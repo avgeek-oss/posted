@@ -89,6 +89,7 @@
             "pages": [
               "composer",
               "threads",
+              "publishing-across-accounts",
               "scheduling",
               "drafts",
               "deliveries"
