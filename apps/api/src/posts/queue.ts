@@ -29,6 +29,8 @@ export type DeliveryJob = {
 
 export async function claimDelivery(): Promise<DeliveryJob | null> {
   return sql.begin(async (tx) => {
+    // Account callbacks take the exclusive workspace lock before changing queue state.
+    await tx`SELECT id FROM workspace FOR SHARE`;
     // A crash before publishing is safe to retry. A crash after the publishing boundary isn't.
     await tx`UPDATE post_deliveries SET
       state=CASE WHEN retry_attempts>=${deliveryAttemptLimit} THEN 'failed' ELSE 'scheduled' END,
@@ -103,6 +105,7 @@ export async function failDelivery(
   retry?: { retryAfterMs: number },
 ) {
   await sql.begin(async (tx) => {
+    await tx`SELECT id FROM workspace FOR SHARE`;
     const [current] = await tx<
       { retryAttempts: number; retryCancelledAt: Date | null }[]
     >`SELECT retry_attempts,retry_cancelled_at FROM post_deliveries WHERE id=${job.id} AND lease_token=${job.leaseToken} AND state IN ('preparing','publishing') FOR UPDATE`;

@@ -149,8 +149,6 @@ for (const action of ["deauthorize", "delete"] as const) {
         const connections = await sql<
           { id: string }[]
         >`SELECT id FROM social_connections WHERE provider='threads' AND account_id=${payload.user_id} FOR UPDATE`;
-        // The queue locks deliveries before groups; keep the same order during cleanup.
-        await sql`SELECT id FROM post_deliveries WHERE connection_id=ANY(${connections.map((connection) => connection.id)}::uuid[]) ORDER BY post_index,group_id,id FOR UPDATE`;
         for (const connection of connections) {
           if (action === "delete") await deleteAccount(connection.id);
           else {

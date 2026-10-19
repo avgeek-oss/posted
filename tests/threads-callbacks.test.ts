@@ -1,6 +1,7 @@
 import { after, afterEach, beforeEach, mock, test } from "node:test";
 import assert from "node:assert/strict";
 import { createHmac, randomUUID } from "node:crypto";
+import { setTimeout as delay } from "node:timers/promises";
 import {
   sql,
   request,
@@ -622,5 +623,73 @@ test("Revocation uses the time after the authority lock even when its transactio
       await sql`SELECT id FROM social_connections WHERE provider='threads' AND account_id='1001' AND state='connected'`
     ).length,
     0,
+  );
+});
+
+test("Callback cleanup and recovery of expired preparing and publishing leases share the authority gate without deadlocking", async () => {
+  const { ids, cookie, post } = await fixture();
+  await sql`DELETE FROM post_deliveries WHERE connection_id<>${ids[0]!}`;
+  const second = await request("/api/posts", {
+    cookie,
+    body: {
+      text: "Another queued post",
+      connectionIds: [ids[0]!],
+      mediaIds: [],
+      scheduledAt: new Date().toISOString(),
+      idempotencyKey: randomUUID(),
+    },
+  });
+  assert.equal(second.status, 201);
+  const secondPost = (await second.json()).post;
+  await sql`UPDATE post_deliveries SET state='publishing',lease_token=gen_random_uuid(),lease_until=now()-interval '1 minute',attempts=1,retry_attempts=1 WHERE group_id=${post.id} AND post_index=0`;
+  await sql`UPDATE post_deliveries SET state='preparing',lease_token=gen_random_uuid(),lease_until=now()-interval '1 minute',attempts=1,retry_attempts=1 WHERE group_id=${secondPost.id}`;
+  let locked!: (pid: number) => void;
+  const ready = new Promise<number>((resolve) => {
+    locked = resolve;
+  });
+  let processCallback!: () => void;
+  const proceed = new Promise<void>((resolve) => {
+    processCallback = resolve;
+  });
+  const notification = withDatabaseTransaction(async () => {
+    await sql`SELECT id FROM workspace FOR UPDATE`;
+    await sql`SELECT id FROM post_deliveries WHERE group_id=${post.id} AND post_index=0 FOR UPDATE`;
+    const [backend] = await sql<
+      { pid: number }[]
+    >`SELECT pg_backend_pid() AS pid`;
+    locked(backend!.pid);
+    await proceed;
+    return callback("deauthorize");
+  });
+  const blockingPid = await ready;
+  const recovery = claimDelivery();
+  let waiting = false;
+  try {
+    const deadline = Date.now() + 3000;
+    while (Date.now() < deadline) {
+      const [activity] = await sql<
+        { waiting: boolean }[]
+      >`SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE ${blockingPid}=ANY(pg_blocking_pids(pid)) AND query LIKE '%workspace%FOR SHARE%') AS waiting`;
+      if (activity?.waiting) {
+        waiting = true;
+        break;
+      }
+      await delay(10);
+    }
+  } finally {
+    processCallback();
+  }
+  const [result, job] = await Promise.all([notification, recovery]);
+  assert.ok(
+    waiting,
+    "Lease recovery must wait for the account callback's authority lock",
+  );
+  assert.equal(result.status, 200);
+  assert.equal(job, null);
+  const deliveries =
+    await sql`SELECT state FROM post_deliveries WHERE connection_id=${ids[0]!}`;
+  assert.equal(deliveries.filter((d) => d.state === "uncertain").length, 1);
+  assert.ok(
+    deliveries.every((d) => ["uncertain", "cancelled"].includes(d.state)),
   );
 });
