@@ -34,9 +34,10 @@ export function mediaError(
     alt?: string;
   }[],
 ): string | undefined {
+  const selected = mediaForProvider(provider, media);
   if (
     provider === "instagram" &&
-    media.some(
+    selected.some(
       (item) =>
         !isVideo(item) && !isGif(item) && [...(item.alt ?? "")].length > 1000,
     )
@@ -52,7 +53,6 @@ export function mediaError(
     media.some((item) => !isVideo(item))
   )
     return "Choose images or a video for this post.";
-  const selected = mediaForProvider(provider, media);
   if (
     selected.some(
       (item) =>
