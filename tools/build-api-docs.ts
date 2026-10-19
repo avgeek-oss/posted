@@ -258,7 +258,9 @@ for (const endpoint of endpoints) {
         ? { type: "string", enum: [...PROVIDERS] }
         : {
             type: "string",
-            ...(endpoint.path.includes("/passkeys/") ? {} : { format: "uuid" }),
+            ...(endpoint.path.includes("/passkeys/") || match[1] === "code"
+              ? {}
+              : { format: "uuid" }),
           },
     description: `The ${match[1]} from the corresponding list, record or authorization response.`,
   }));
@@ -303,6 +305,13 @@ for (const endpoint of endpoints) {
           : "Successful response. Examples are illustrative; field values vary by record.",
     ...(endpoint.path === "/mcp" && endpoint.method === "GET"
       ? { content: { "text/event-stream": { schema: { type: "string" } } } }
+      : {}),
+    ...(endpoint.responseContentType
+      ? {
+          content: {
+            [endpoint.responseContentType]: { schema: { type: "string" } },
+          },
+        }
       : {}),
     ...(endpoint.result
       ? {

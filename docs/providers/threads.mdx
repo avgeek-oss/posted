@@ -33,17 +33,108 @@ POSTED_THREADS_CLIENT_SECRET=YOUR_THREADS_CLIENT_SECRET
 
 ## Application configuration
 
-Create a Threads application with permission to read account identity and publish content. Complete any approval steps required for the accounts you want to connect.
+Open [Meta for Developers](https://developers.facebook.com/apps/) and create an app for your Posted installation.
 
-Register this callback URL in your Threads application:
+<Steps>
+  <Step title="Enter your app details">
+    Give the app a name and enter a contact email you check regularly. Click **Next**.
 
-```text title="Callback URL"
-{{POSTED_API_URL}}/api/social/callback/threads
-```
+    <Frame caption="Name your app and add a contact email.">
+      <img src="/assets/providers/threads/01-app-details@2x.png" alt="Meta app creation with app name and contact email fields." width="1800" height="984" />
+    </Frame>
 
-Posted requests `threads_basic`, `threads_content_publish`.
+  </Step>
+  <Step title="Choose the Threads use case">
+    Select **Access the Threads API**. If it is not visible, choose **All** in the filter. Continue to the next step.
 
-Follow the provider's [official authorization documentation](https://developers.facebook.com/docs/threads/) to register your application and complete any approval steps.
+    <Frame caption="Select Access the Threads API.">
+      <img src="/assets/providers/threads/02-threads-use-case@2x.png" alt="Meta use cases with Access the Threads API selected." width="1800" height="984" />
+    </Frame>
+
+  </Step>
+  <Step title="Choose your business portfolio">
+    Select the business portfolio that will own the app, or choose to add one later. Meta may require business verification before you can connect accounts outside your app's testers.
+
+    <Frame caption="Choose the business portfolio for your app.">
+      <img src="/assets/providers/threads/03-business-portfolio@2x.png" alt="Meta app creation with a business portfolio selected." width="1800" height="984" />
+    </Frame>
+
+  </Step>
+  <Step title="Create the app">
+    Review the details and requirements. Read Meta's terms and policies, then click **Create app** if you accept them.
+
+    <Frame caption="Review the app before creating it.">
+      <img src="/assets/providers/threads/04-create-app@2x.png" alt="Meta app overview with the Create app button." width="1800" height="984" />
+    </Frame>
+
+  </Step>
+  <Step title="Check the permissions">
+    Open **Use cases → Access the Threads API → Customize**. In **Permissions and features**, add **threads_content_publish** if it is not already present. Posted requests `threads_basic`, `threads_content_publish`. Select any additional permissions based on the scope of your Posted use.
+
+    <Frame caption="Enable the permissions for your Posted use.">
+      <img src="/assets/providers/threads/05-permissions@2x.png" alt="Threads permissions with threads_basic and threads_content_publish ready for testing." width="1800" height="984" />
+    </Frame>
+
+  </Step>
+  <Step title="Save the credentials and callback URLs">
+    Open **Settings** within the Threads use case. Copy the **Threads app ID** and **Threads app secret** into the environment variables above. These are the Threads credentials shown here, rather than the regular Meta app credentials.
+
+    Add these three URLs and click **Save**. Use your Posted API origin in place of `{{POSTED_API_URL}}`.
+
+    ```text title="Redirect Callback URLs"
+    {{POSTED_API_URL}}/api/social/callback/threads
+    ```
+
+    ```text title="Uninstall Callback URL"
+    {{POSTED_API_URL}}/api/social/threads/deauthorize
+    ```
+
+    ```text title="Delete Callback URL"
+    {{POSTED_API_URL}}/api/social/threads/data-deletion
+    ```
+
+    <Frame caption="Find the Threads credentials and enter your installation's callback URLs.">
+      <img src="/assets/providers/threads/06-callback-settings@2x.png" alt="Threads settings with a masked app secret and blurred installation domains in all three callback URLs." width="1800" height="984" />
+    </Frame>
+
+    The uninstall callback disconnects the matching Threads account and stops queued posts. The delete callback also removes its stored profile and delivery records, then returns a confirmation link. Team-authored master copy, uploaded files and other accounts remain. Already published posts remain on Threads, and a publishing request already in progress cannot be recalled.
+
+  </Step>
+  <Step title="Open Threads testers">
+    Click **Add or Remove Threads Testers** in the use case settings. On **App roles → Roles**, select **Threads Testers**, then **Add People**.
+
+    <Frame caption="Add a Threads tester to the app.">
+      <img src="/assets/providers/threads/07-tester-roles@2x.png" alt="Meta app roles showing Threads Testers and Add People." width="1800" height="984" />
+    </Frame>
+
+  </Step>
+  <Step title="Invite the account">
+    Choose **Threads Tester**, enter the Threads username, and click **Add**.
+
+    <Frame caption="Invite the Threads account you want to test.">
+      <img src="/assets/providers/threads/08-invite-tester@2x.png" alt="Add people dialog with Threads Tester selected and a username entered." width="1800" height="984" />
+    </Frame>
+
+  </Step>
+  <Step title="Open website permissions in Threads">
+    Sign in to Threads as the invited account. Open **Settings → More settings → Website permissions**.
+
+    <Frame caption="Open Website permissions in the invited Threads account.">
+      <img src="/assets/providers/threads/09-website-permissions@2x.png" alt="Threads More settings with Website permissions highlighted." width="1800" height="984" />
+    </Frame>
+
+  </Step>
+  <Step title="Accept the invitation">
+    Open **Invitations** and click **Accept** for your app. Return to Posted and connect the account through **Connections → Add connection → Threads**.
+
+    <Frame caption="Accept the app's tester invitation.">
+      <img src="/assets/providers/threads/10-accept-invitation@2x.png" alt="Threads Website permissions showing an app tester invitation and Accept button." width="1800" height="984" />
+    </Frame>
+
+  </Step>
+</Steps>
+
+Testing with invited accounts does not make the app available to everyone. Before connecting other accounts, complete the review and publishing requirements shown in your Meta dashboard. See Meta's [Threads app setup guide](https://developers.facebook.com/documentation/threads/get-started/create-an-app) for the current requirements.
 
 ## Limits enforced by Posted
 

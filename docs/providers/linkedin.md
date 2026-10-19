@@ -6,7 +6,14 @@ Publish individual member posts to connected LinkedIn accounts. Multiple posts a
 
 <Steps>
   <Step title="Configure the provider">Add the required environment variables below to your Posted installation.</Step>
-  <Step title="Authorize the account">A team administrator opens **Connections → Add connection**, chooses **LinkedIn**, and completes the provider’s sign-in and consent flow.</Step>
+  <Step title="Authorize the account">
+    A team administrator opens **Connections → Add connection** and chooses **LinkedIn**. Sign in to the member account you want to connect, review the requested permissions, and click **Allow** to return to Posted.
+
+    <Frame caption="Review LinkedIn's permissions and allow the connection.">
+      <img src="/assets/providers/linkedin/09-oauth-consent@2x.png" alt="LinkedIn authorization screen showing the requested permissions and Allow button." width="1800" height="984" />
+    </Frame>
+
+  </Step>
   <Step title="Choose it in the composer">After returning to Posted, confirm that the account is Connected. Select it through **Choose Accounts**, review its preview and customize its text or media if needed.</Step>
 </Steps>
 

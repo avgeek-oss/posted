@@ -22,6 +22,7 @@ import {
 } from "../../../../packages/database/src/index.js";
 import { requireHuman, requireRole, type Env } from "../http.js";
 import { withMutationAuthority } from "../middleware.js";
+import { checkThreadsAuthorization } from "./threads-callbacks.js";
 import { config } from "../config.js";
 import { enabledProviders } from "./capabilities.js";
 import { seal, unseal } from "./secrets.js";
@@ -277,6 +278,8 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
           message:
             "This connection request expired or was already used. Start again",
         });
+      if (provider === "threads")
+        await checkThreadsAuthorization(profile.accountId, hash(rawState));
       const [existing] = await sql<
         { id: string }[]
       >`SELECT id FROM social_connections WHERE workspace_id=${pending.workspaceId} AND provider=${provider} AND account_id=${profile.accountId}`;

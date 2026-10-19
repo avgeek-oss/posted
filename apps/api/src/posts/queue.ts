@@ -29,6 +29,8 @@ export type DeliveryJob = {
 
 export async function claimDelivery(): Promise<DeliveryJob | null> {
   return sql.begin(async (tx) => {
+    // Account callbacks take the exclusive workspace lock before changing queue state.
+    await tx`SELECT id FROM workspace FOR SHARE`;
     // A crash before publishing is safe to retry. A crash after the publishing boundary isn't.
     await tx`UPDATE post_deliveries SET
       state=CASE WHEN retry_attempts>=${deliveryAttemptLimit} THEN 'failed' ELSE 'scheduled' END,
@@ -103,11 +105,12 @@ export async function failDelivery(
   retry?: { retryAfterMs: number },
 ) {
   await sql.begin(async (tx) => {
-    if (retry && !uncertain) {
-      const [current] = await tx<
-        { retryAttempts: number }[]
-      >`SELECT retry_attempts FROM post_deliveries WHERE id=${job.id} AND lease_token=${job.leaseToken} AND state IN ('preparing','publishing') FOR UPDATE`;
-      if (!current) return;
+    await tx`SELECT id FROM workspace FOR SHARE`;
+    const [current] = await tx<
+      { retryAttempts: number; retryCancelledAt: Date | null }[]
+    >`SELECT retry_attempts,retry_cancelled_at FROM post_deliveries WHERE id=${job.id} AND lease_token=${job.leaseToken} AND state IN ('preparing','publishing') FOR UPDATE`;
+    if (!current) return;
+    if (retry && !uncertain && !current.retryCancelledAt) {
       if (current.retryAttempts < deliveryAttemptLimit) {
         const delay = deliveryRetryDelay(
           current.retryAttempts,
@@ -118,7 +121,7 @@ export async function failDelivery(
       }
     }
     const rows =
-      await tx`UPDATE post_deliveries SET state=${uncertain ? "uncertain" : "failed"},error=${error},lease_token=NULL,lease_until=NULL,updated_at=now()
+      await tx`UPDATE post_deliveries SET state=${uncertain ? "uncertain" : current.retryCancelledAt ? "cancelled" : "failed"},error=${error},lease_token=NULL,lease_until=NULL,updated_at=now()
       WHERE id=${job.id} AND lease_token=${job.leaseToken} AND state IN ('preparing','publishing') RETURNING id`;
     if (rows.length)
       await tx`UPDATE post_deliveries SET state='failed',error='An earlier post in this sequence did not finish publishing. Later posts were not sent.',updated_at=now()

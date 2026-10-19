@@ -3064,6 +3064,132 @@
         }
       }
     },
+    "/api/social/threads/deauthorize": {
+      "post": {
+        "operationId": "post_api_social_threads_deauthorize",
+        "summary": "Receive a Threads uninstall notification",
+        "description": "Meta sends a form-encoded signed_request verified with the configured Threads app secret. Disconnects only the matching Threads account, clears its credentials and cancels scheduled or preparing deliveries. Repeated events are idempotent. A request already publishing cannot be recalled. Browser sessions and API keys do not authorize this callback.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
+        "tags": ["Social connections"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": { "signed_request": { "type": "string" } },
+                "required": ["signed_request"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "success": { "type": "boolean" } },
+                  "additionalProperties": true
+                },
+                "example": { "success": true }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/threads/data-deletion": {
+      "post": {
+        "operationId": "post_api_social_threads_data_deletion",
+        "summary": "Receive a Threads data deletion request",
+        "description": "Meta sends a form-encoded signed_request verified with the configured Threads app secret. Removes the matching Threads connection, credentials, profile and delivery records in one transaction. Team-authored master copy, uploaded originals, human users and other providers remain. Returns a private confirmation link; repeated events return the same receipt. This does not delete posts on Threads or recall an in-flight publish.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
+        "tags": ["Social connections"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": { "signed_request": { "type": "string" } },
+                "required": ["signed_request"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "confirmation_code": { "type": "string" }
+                  },
+                  "additionalProperties": true
+                },
+                "example": {
+                  "url": "https://posted-api.example.com/api/social/threads/data-deletion/0123456789abcdef0123456789abcdef0123456789abcdef",
+                  "confirmation_code": "0123456789abcdef0123456789abcdef0123456789abcdef"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/threads/data-deletion/{code}": {
+      "get": {
+        "operationId": "get_api_social_threads_data_deletion_by_code",
+        "summary": "Check a Threads deletion receipt",
+        "description": "Returns a human-readable HTML completion receipt for an unguessable 48-character confirmation code. Does not show an account identifier, name, handle, token or post content. Unknown codes return 404. Keep the receipt link private.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
+        "tags": ["Social connections"],
+        "security": [],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "The code from the corresponding list, record or authorization response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": { "text/html": { "schema": { "type": "string" } } }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/social/bluesky/client-metadata.json": {
       "get": {
         "operationId": "get_social_bluesky_client_metadata_json",
