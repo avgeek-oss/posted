@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readdir, readFile, stat } from "node:fs/promises";
-import { resolve, dirname, extname } from "node:path";
+import { resolve, dirname, extname, basename, relative } from "node:path";
 import sharp from "sharp";
 import { compile } from "@mdx-js/mdx";
 const root = process.cwd();
@@ -19,12 +19,6 @@ const routes = pageRoutes(
   site.navigation.dropdowns.flatMap((item) => item.groups),
 );
 assert.equal(new Set(routes).size, routes.length);
-const guides = JSON.parse(await readFile(resolve(dir, "pages.json"), "utf8"));
-for (const guide of guides)
-  assert(
-    routes.includes(guide.name),
-    `${guide.name} is generated but missing from the sidebar`,
-  );
 for (const route of routes) {
   const body = await readFile(resolve(dir, route + ".mdx"), "utf8");
   await compile(body);
@@ -50,10 +44,32 @@ async function walk(directory) {
       continue;
     const path = resolve(directory, entry.name);
     if (entry.isDirectory()) await walk(path);
-    else if ([".md", ".mdx"].includes(extname(path))) files.push(path);
+    else if ([".md", ".mdx"].includes(extname(path))) {
+      if (path.startsWith(dir + "/") && extname(path) === ".md") {
+        assert(
+          path.startsWith(resolve(dir, "assets") + "/") &&
+            basename(path) === "README.md",
+          `${path}: write documentation pages as .mdx`,
+        );
+      }
+      files.push(path);
+    }
   }
 }
 await walk(root);
+const publishedRoutes = new Set([
+  ...routes,
+  "index",
+  ...(site.redirects ?? []).map(({ source }) => source.replace(/^\//, "")),
+]);
+for (const path of files)
+  if (path.startsWith(dir + "/") && extname(path) === ".mdx") {
+    const route = relative(dir, path).slice(0, -4);
+    assert(
+      publishedRoutes.has(route),
+      `${route} is missing from navigation or redirects`,
+    );
+  }
 for (const path of files) {
   const body = (await readFile(path, "utf8"))
     .replace(/^```[^\n]*\n[\s\S]*?^```[^\n]*$/gm, "")
