@@ -31,6 +31,8 @@ export const providerNames: Record<Provider, string> = {
   x: "X",
   linkedin: "LinkedIn",
   "linkedin-pages": "LinkedIn Pages",
+  "facebook-pages": "Facebook Pages",
+  instagram: "Instagram",
   bluesky: "Bluesky",
   threads: "Threads",
 };
@@ -223,28 +225,65 @@ export function SocialPreview({
 }) {
   const linkedIn =
     account.provider === "linkedin" || account.provider === "linkedin-pages";
+  const facebook = account.provider === "facebook-pages";
+  const instagram = account.provider === "instagram";
   const x = account.provider === "x";
   const singleImage =
     media.length === 1 && media[0]?.contentType.startsWith("image/");
-  const actions = linkedIn
+  const actions = facebook
     ? [
         { icon: ThumbsUpIcon, label: "Like" },
         { icon: Comment01Icon, label: "Comment" },
-        { icon: RepeatIcon, label: "Repost" },
-        { icon: Share08Icon, label: "Send" },
+        { icon: Share08Icon, label: "Share" },
       ]
-    : (account.provider === "threads"
-        ? [FavouriteIcon, Comment01Icon, RepeatIcon, Share08Icon]
-        : x
-          ? [
-              Comment01Icon,
-              RepeatIcon,
-              FavouriteIcon,
-              Bookmark02Icon,
-              Share08Icon,
-            ]
-          : [Comment01Icon, RepeatIcon, FavouriteIcon, Share08Icon]
-      ).map((icon) => ({ icon, label: "" }));
+    : linkedIn
+      ? [
+          { icon: ThumbsUpIcon, label: "Like" },
+          { icon: Comment01Icon, label: "Comment" },
+          { icon: RepeatIcon, label: "Repost" },
+          { icon: Share08Icon, label: "Send" },
+        ]
+      : (instagram
+          ? [FavouriteIcon, Comment01Icon, Share08Icon, Bookmark02Icon]
+          : account.provider === "threads"
+            ? [FavouriteIcon, Comment01Icon, RepeatIcon, Share08Icon]
+            : x
+              ? [
+                  Comment01Icon,
+                  RepeatIcon,
+                  FavouriteIcon,
+                  Bookmark02Icon,
+                  Share08Icon,
+                ]
+              : [Comment01Icon, RepeatIcon, FavouriteIcon, Share08Icon]
+        ).map((icon) => ({ icon, label: "" }));
+  const copy = (text.trim() || !media.length) && (
+    <p
+      className={`mt-4 whitespace-pre-wrap break-words leading-relaxed ${x ? "text-lg" : "text-sm"} ${!text.trim() ? "text-muted" : ""}`}
+    >
+      {text.trim() ? (
+        textForProviderPreview(account.provider, text)
+      ) : (
+        <span className="flex items-center gap-2">
+          <TooltipText
+            tooltip={
+              <span className="block max-w-56 whitespace-normal">
+                Post copy missing, type in the composer to reflect in the
+                preview.
+              </span>
+            }
+            openOnPress
+            tabIndex={0}
+            aria-label="Post copy missing"
+            className="inline-flex shrink-0 rounded-sm text-danger outline-none focus-visible:ring-2 focus-visible:ring-focus"
+          >
+            <HugeiconsIcon icon={TriangleAlertIcon} size={16} aria-hidden />
+          </TooltipText>
+          <em className="text-sm italic">Your post will appear here.</em>
+        </span>
+      )}
+    </p>
+  );
   return (
     <article
       className="overflow-hidden rounded-2xl border border-separator bg-surface shadow-none"
@@ -277,7 +316,9 @@ export function SocialPreview({
               {account.name}
             </p>
             <p className="truncate text-xs leading-4 text-muted">
-              {linkedIn ? "Just now · Public" : `@${account.handle} · now`}
+              {linkedIn || facebook
+                ? "Just now · Public"
+                : `@${account.handle} · now`}
             </p>
           </div>
           <HugeiconsIcon
@@ -287,38 +328,8 @@ export function SocialPreview({
             aria-hidden
           />
         </div>
-        {(text.trim() || !media.length) && (
-          <p
-            className={`mt-4 whitespace-pre-wrap break-words leading-relaxed ${x ? "text-lg" : "text-sm"} ${!text.trim() ? "text-muted" : ""}`}
-          >
-            {text.trim() ? (
-              textForProviderPreview(account.provider, text)
-            ) : (
-              <span className="flex items-center gap-2">
-                <TooltipText
-                  tooltip={
-                    <span className="block max-w-56 whitespace-normal">
-                      Post copy missing, type in the composer to reflect in the
-                      preview.
-                    </span>
-                  }
-                  openOnPress
-                  tabIndex={0}
-                  aria-label="Post copy missing"
-                  className="inline-flex shrink-0 rounded-sm text-danger outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                >
-                  <HugeiconsIcon
-                    icon={TriangleAlertIcon}
-                    size={16}
-                    aria-hidden
-                  />
-                </TooltipText>
-                <em className="text-sm italic">Your post will appear here.</em>
-              </span>
-            )}
-          </p>
-        )}
-        {!media.length && (
+        {!instagram && copy}
+        {!media.length && account.provider !== "instagram" && (
           <PostLinkPreview
             text={textForProviderPreview(account.provider, text)}
           />
@@ -359,6 +370,7 @@ export function SocialPreview({
             ))}
           </div>
         )}
+        {instagram && copy}
       </div>
       <div
         className="flex items-center justify-between border-t border-separator p-3 text-muted"

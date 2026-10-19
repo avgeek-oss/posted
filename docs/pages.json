@@ -123,5 +123,15 @@
     "name": "api-reference/overview",
     "title": "Request conventions",
     "description": "Authentication, pagination, retries, versions and delivery outcomes for the HTTP API."
+  },
+  {
+    "name": "providers/facebook-pages",
+    "title": "Facebook Pages",
+    "description": "Connect your Facebook Pages and publish text, photos, videos and link previews."
+  },
+  {
+    "name": "providers/instagram",
+    "title": "Instagram",
+    "description": "Connect a Business or Creator account and publish photos, photo carousels and Reels."
   }
 ]

@@ -1,3 +1,5 @@
+import { prepareInstagram } from "./instagram-publish.js";
+import { prepareFacebook } from "./facebook-publish.js";
 import { linkedinHeaders } from "./linkedin-pages.js";
 import { firstPostLink } from "../../../../packages/contracts/src/links.js";
 import { getLinkPreview } from "../links/preview.js";
@@ -61,6 +63,10 @@ export async function preparePublication(
     case "linkedin":
     case "linkedin-pages":
       return prepareLinkedIn(job, images, accessToken);
+    case "facebook-pages":
+      return prepareFacebook(job, images, accessToken);
+    case "instagram":
+      return prepareInstagram(job, images, accessToken);
     case "threads":
       return prepareThreads(job, images, accessToken);
   }

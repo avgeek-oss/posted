@@ -53,6 +53,24 @@ export function previewOAuth(webUrl: string, apiUrl: string) {
         },
       ];
     },
+    async facebookPages() {
+      return [
+        {
+          accountId: "123456",
+          name: "Studio North",
+          handle: "studio-north",
+          avatarUrl: null,
+          accessToken: "disposable-preview-not-a-provider-token",
+        },
+        {
+          accountId: "789012",
+          name: "Studio Journal",
+          handle: "studio-journal",
+          avatarUrl: null,
+          accessToken: "disposable-preview-not-a-provider-token",
+        },
+      ];
+    },
     async authorize(provider, handle, state, verifier) {
       for (const [key, grant] of grants)
         if (grant.expiresAt <= Date.now()) grants.delete(key);
@@ -61,7 +79,10 @@ export function previewOAuth(webUrl: string, apiUrl: string) {
       grants.set(state, {
         provider,
         handle: accountHandle,
-        accountId: `preview-${provider}-${accountHandle.toLowerCase()}`,
+        accountId:
+          provider === "facebook-pages"
+            ? "123456789"
+            : `preview-${provider}-${accountHandle.toLowerCase()}`,
         challenge: hash(verifier),
         expiresAt: Date.now() + 600_000,
       });

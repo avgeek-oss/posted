@@ -6,6 +6,8 @@ export const videoDurationLimits: Record<Provider, number> = {
   x: 140,
   linkedin: 1800,
   "linkedin-pages": 1800,
+  "facebook-pages": 1800,
+  instagram: 900,
   bluesky: 180,
   threads: 300,
 };
@@ -26,8 +28,23 @@ export function mediaForProvider<T extends { contentType: string }>(
 }
 export function mediaError(
   provider: Provider,
-  media: readonly { contentType: string; durationSeconds: number | null }[],
+  media: readonly {
+    contentType: string;
+    durationSeconds: number | null;
+    alt?: string;
+  }[],
 ): string | undefined {
+  const selected = mediaForProvider(provider, media);
+  if (
+    provider === "instagram" &&
+    selected.some(
+      (item) =>
+        !isVideo(item) && !isGif(item) && [...(item.alt ?? "")].length > 1000,
+    )
+  )
+    return "Instagram photo descriptions must be 1,000 characters or fewer.";
+  if (provider === "instagram" && !media.length)
+    return "Add a photo or video for Instagram. Captions need media.";
   if (media.some(isGif) && media.length > 1)
     return "Use one GIF without other images or videos in this post.";
   if (
@@ -36,7 +53,6 @@ export function mediaError(
     media.some((item) => !isVideo(item))
   )
     return "Choose images or a video for this post.";
-  const selected = mediaForProvider(provider, media);
   if (
     selected.some(
       (item) =>

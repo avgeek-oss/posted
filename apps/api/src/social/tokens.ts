@@ -1,5 +1,12 @@
+import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import type { Provider } from "../../../../packages/contracts/src/index.js";
+import { metaVersion } from "./meta-api.js";
+import {
+  instagramScopes,
+  instagramSingle,
+  instagramProfile,
+} from "./instagram.js";
 import { config } from "../config.js";
 import { bearer, providerJson, ProviderFailure } from "./network.js";
 
@@ -48,6 +55,16 @@ export function clientCredentials(provider: Exclude<Provider, "bluesky">) {
         id: value.POSTED_LINKEDIN_PAGES_CLIENT_ID,
         secret: value.POSTED_LINKEDIN_PAGES_CLIENT_SECRET,
       };
+    case "facebook-pages":
+      return {
+        id: value.POSTED_FACEBOOK_CLIENT_ID,
+        secret: value.POSTED_FACEBOOK_CLIENT_SECRET,
+      };
+    case "instagram":
+      return {
+        id: value.POSTED_INSTAGRAM_CLIENT_ID,
+        secret: value.POSTED_INSTAGRAM_CLIENT_SECRET,
+      };
     case "threads":
       return {
         id: value.POSTED_THREADS_CLIENT_ID,
@@ -61,6 +78,64 @@ export async function exchangeCode(
   verifier: string,
 ) {
   const client = clientCredentials(provider);
+  if (provider === "instagram") {
+    const short = await providerJson(
+      "https://api.instagram.com/oauth/access_token",
+      instagramSingle(
+        z.object({ access_token: z.string().min(1), permissions: z.string() }),
+      ),
+      {
+        method: "POST",
+        body: new URLSearchParams({
+          client_id: client.id,
+          client_secret: client.secret,
+          grant_type: "authorization_code",
+          redirect_uri: callbackUrl(provider),
+          code,
+        }),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      },
+    );
+    const granted = new Set(
+      short.permissions.split(",").map((value) => value.trim()),
+    );
+    if (!instagramScopes.every((scope) => granted.has(scope)))
+      throw new HTTPException(403, {
+        message:
+          "Allow Instagram profile and publishing access, then connect again.",
+      });
+    const url = new URL("https://graph.instagram.com/access_token");
+    url.search = new URLSearchParams({
+      grant_type: "ig_exchange_token",
+      client_secret: client.secret,
+      access_token: short.access_token,
+    }).toString();
+    return credentials(
+      await providerJson(
+        url,
+        tokenResponse.extend({ expires_in: z.number().int().positive() }),
+      ),
+    );
+  }
+  if (provider === "facebook-pages") {
+    const url = new URL(
+      `https://graph.facebook.com/${metaVersion}/oauth/access_token`,
+    );
+    url.search = new URLSearchParams({
+      client_id: client.id,
+      client_secret: client.secret,
+      redirect_uri: callbackUrl(provider),
+      code,
+    }).toString();
+    const short = await providerJson(url, tokenResponse);
+    url.search = new URLSearchParams({
+      grant_type: "fb_exchange_token",
+      client_id: client.id,
+      client_secret: client.secret,
+      fb_exchange_token: short.access_token,
+    }).toString();
+    return credentials(await providerJson(url, tokenResponse));
+  }
   const form = new URLSearchParams({
     grant_type: "authorization_code",
     code,
@@ -108,15 +183,26 @@ export async function refreshCredentials(
   if (!current.expiresAt || current.expiresAt > Date.now() + 5 * 60_000)
     return current;
   const client = clientCredentials(provider);
-  if (provider === "threads") {
+  if (provider === "facebook-pages") throw new ProviderFailure(401);
+  if (provider === "threads" || provider === "instagram") {
     if (current.issuedAt > Date.now() - 24 * 60 * 60_000)
       throw new ProviderFailure(401);
-    const url = new URL("https://graph.threads.net/refresh_access_token");
+    const url = new URL(
+      provider === "instagram"
+        ? "https://graph.instagram.com/refresh_access_token"
+        : "https://graph.threads.net/refresh_access_token",
+    );
     url.search = new URLSearchParams({
-      grant_type: "th_refresh_token",
+      grant_type:
+        provider === "instagram" ? "ig_refresh_token" : "th_refresh_token",
       access_token: current.accessToken,
     }).toString();
-    return credentials(await refreshToken(url));
+    const refreshed = await refreshToken(url);
+    if (provider === "instagram")
+      tokenResponse
+        .extend({ expires_in: z.number().int().positive() })
+        .parse(refreshed);
+    return credentials(refreshed);
   }
   if (!current.refreshToken) throw new ProviderFailure(401);
   const form = new URLSearchParams({
@@ -153,9 +239,10 @@ async function refreshToken(url: string | URL, options?: RequestInit) {
   }
 }
 export async function accountProfile(
-  provider: Exclude<Provider, "bluesky" | "linkedin-pages">,
+  provider: Exclude<Provider, "bluesky" | "linkedin-pages" | "facebook-pages">,
   accessToken: string,
 ) {
+  if (provider === "instagram") return instagramProfile(accessToken);
   const options = { headers: bearer(accessToken) };
   if (provider === "x") {
     const { data } = await providerJson(

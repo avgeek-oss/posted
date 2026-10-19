@@ -279,3 +279,16 @@ test("media priority and early account validation match each provider's supporte
     undefined,
   );
 });
+
+test("Instagram descriptions validate only photos selected for delivery", () => {
+  const photos = Array.from({ length: 20 }, (_, index) => ({
+    contentType: "image/jpeg",
+    durationSeconds: null,
+    alt: index === 10 ? "a".repeat(1001) : "Landscape",
+  }));
+  assert.equal(mediaError("instagram", photos), undefined);
+  assert.match(
+    mediaError("instagram", [photos[10]!, ...photos.slice(0, 9)]) ?? "",
+    /1,000/,
+  );
+});

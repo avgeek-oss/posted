@@ -1,0 +1,12 @@
+---
+title: "Receive a Instagram uninstall notification"
+description: "Meta sends a form-encoded signed_request verified with the configured Instagram app secret. Disconnects only the matching Instagram account, clears its credentials and cancels scheduled or preparing deliveries. Repeated events are idempotent. A request already publishing cannot be recalled. Browser sessions and API keys do not authorize this callback."
+playground: simple
+openapi: "/api-reference/openapi.json POST /api/social/instagram/deauthorize"
+---
+
+No signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.
+
+Meta sends a form-encoded signed_request verified with the configured Instagram app secret. Disconnects only the matching Instagram account, clears its credentials and cancels scheduled or preparing deliveries. Repeated events are idempotent. A request already publishing cannot be recalled. Browser sessions and API keys do not authorize this callback.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

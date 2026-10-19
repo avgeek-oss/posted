@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Posted HTTP API",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "description": "All registered application, account, OAuth, MCP transport and health endpoints. Publishing and draft request schemas come from the shared runtime validators. Replace the example server with your installation. Documentation uses simple request examples and does not execute live publishing requests."
   },
   "servers": [{ "url": "https://posted-api.example.com" }],
@@ -2774,7 +2774,15 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["x", "linkedin", "linkedin-pages", "bluesky", "threads"]
+              "enum": [
+                "x",
+                "linkedin",
+                "linkedin-pages",
+                "facebook-pages",
+                "instagram",
+                "bluesky",
+                "threads"
+              ]
             },
             "description": "The provider from the corresponding list, record or authorization response."
           }
@@ -2996,6 +3004,182 @@
         }
       }
     },
+    "/api/social/facebook-pages/authorizations/{id}": {
+      "get": {
+        "operationId": "get_api_social_facebook_pages_authorizations_by_id",
+        "summary": "List Facebook Pages available to connect",
+        "description": "Returns the Pages discovered during this administrator's Facebook Pages OAuth flow. Grants expire after ten minutes. Provider credentials are never returned.\n\nA signed-in human administrator is required. API keys and MCP credentials cannot replace that session. Sensitive operations can also require recent authentication.",
+        "tags": ["Social connections"],
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "The id from the corresponding list, record or authorization response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "accountId": { "type": "string" },
+                          "name": { "type": "string" },
+                          "handle": { "type": "string" },
+                          "avatarUrl": { "type": ["string", "null"] }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "example": {
+                  "pages": [
+                    {
+                      "accountId": "123456",
+                      "name": "Studio North",
+                      "handle": "studio-north",
+                      "avatarUrl": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_social_facebook_pages_authorizations_by_id",
+        "summary": "Connect selected Facebook Pages",
+        "description": "Rechecks current Page access and connects only the selected Page IDs to the team. Consumes the pending authorization atomically; repeated requests cannot create duplicate connections.\n\nA signed-in human administrator is required. API keys and MCP credentials cannot replace that session. Sensitive operations can also require recent authentication.",
+        "tags": ["Social connections"],
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "The id from the corresponding list, record or authorization response."
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" },
+            "description": "The exact configured Posted UI origin. Required for browser mutations carrying session cookies."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "accountIds": {
+                    "minItems": 1,
+                    "maxItems": 2000,
+                    "type": "array",
+                    "items": { "type": "string", "pattern": "^[0-9]+$" }
+                  }
+                },
+                "required": ["accountIds"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "connected": { "type": "integer" } },
+                  "additionalProperties": true
+                },
+                "example": { "connected": 1 }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_api_social_facebook_pages_authorizations_by_id",
+        "summary": "Cancel Facebook Page selection",
+        "description": "Discards this administrator's pending authorization without saving or removing any team connections.\n\nA signed-in human administrator is required. API keys and MCP credentials cannot replace that session. Sensitive operations can also require recent authentication.",
+        "tags": ["Social connections"],
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "The id from the corresponding list, record or authorization response."
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" },
+            "description": "The exact configured Posted UI origin. Required for browser mutations carrying session cookies."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "cancelled": { "type": "boolean" } },
+                  "additionalProperties": true
+                },
+                "example": { "cancelled": true }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/social/callback/{provider}": {
       "get": {
         "operationId": "get_api_social_callback_by_provider",
@@ -3010,7 +3194,15 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["x", "linkedin", "linkedin-pages", "bluesky", "threads"]
+              "enum": [
+                "x",
+                "linkedin",
+                "linkedin-pages",
+                "facebook-pages",
+                "instagram",
+                "bluesky",
+                "threads"
+              ]
             },
             "description": "The provider from the corresponding list, record or authorization response."
           },
@@ -3162,6 +3354,258 @@
       "get": {
         "operationId": "get_api_social_threads_data_deletion_by_code",
         "summary": "Check a Threads deletion receipt",
+        "description": "Returns a human-readable HTML completion receipt for an unguessable 48-character confirmation code. Does not show an account identifier, name, handle, token or post content. Unknown codes return 404. Keep the receipt link private.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
+        "tags": ["Social connections"],
+        "security": [],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "The code from the corresponding list, record or authorization response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": { "text/html": { "schema": { "type": "string" } } }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/instagram/deauthorize": {
+      "post": {
+        "operationId": "post_api_social_instagram_deauthorize",
+        "summary": "Receive a Instagram uninstall notification",
+        "description": "Meta sends a form-encoded signed_request verified with the configured Instagram app secret. Disconnects only the matching Instagram account, clears its credentials and cancels scheduled or preparing deliveries. Repeated events are idempotent. A request already publishing cannot be recalled. Browser sessions and API keys do not authorize this callback.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
+        "tags": ["Social connections"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": { "signed_request": { "type": "string" } },
+                "required": ["signed_request"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "success": { "type": "boolean" } },
+                  "additionalProperties": true
+                },
+                "example": { "success": true }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/instagram/data-deletion": {
+      "post": {
+        "operationId": "post_api_social_instagram_data_deletion",
+        "summary": "Receive a Instagram data deletion request",
+        "description": "Meta sends a form-encoded signed_request verified with the configured Instagram app secret. Removes the matching Instagram connection, credentials, profile and delivery records in one transaction. Team-authored master copy, uploaded originals, human users and other providers remain. Returns a private confirmation link; repeated events return the same receipt. This does not delete posts on Instagram or recall an in-flight publish.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
+        "tags": ["Social connections"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": { "signed_request": { "type": "string" } },
+                "required": ["signed_request"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "confirmation_code": { "type": "string" }
+                  },
+                  "additionalProperties": true
+                },
+                "example": {
+                  "url": "https://posted-api.example.com/api/social/instagram/data-deletion/0123456789abcdef0123456789abcdef0123456789abcdef",
+                  "confirmation_code": "0123456789abcdef0123456789abcdef0123456789abcdef"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/instagram/data-deletion/{code}": {
+      "get": {
+        "operationId": "get_api_social_instagram_data_deletion_by_code",
+        "summary": "Check a Instagram deletion receipt",
+        "description": "Returns a human-readable HTML completion receipt for an unguessable 48-character confirmation code. Does not show an account identifier, name, handle, token or post content. Unknown codes return 404. Keep the receipt link private.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
+        "tags": ["Social connections"],
+        "security": [],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "The code from the corresponding list, record or authorization response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": { "text/html": { "schema": { "type": "string" } } }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/facebook/deauthorize": {
+      "post": {
+        "operationId": "post_api_social_facebook_deauthorize",
+        "summary": "Receive a Facebook uninstall notification",
+        "description": "Meta sends a form-encoded signed_request verified with the configured Facebook app secret. Disconnects all Page connections authorized by the matching Facebook user, clears its credentials and cancels scheduled or preparing deliveries. Repeated events are idempotent. A request already publishing cannot be recalled. Browser sessions and API keys do not authorize this callback.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
+        "tags": ["Social connections"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": { "signed_request": { "type": "string" } },
+                "required": ["signed_request"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "success": { "type": "boolean" } },
+                  "additionalProperties": true
+                },
+                "example": { "success": true }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/facebook/data-deletion": {
+      "post": {
+        "operationId": "post_api_social_facebook_data_deletion",
+        "summary": "Receive a Facebook data deletion request",
+        "description": "Meta sends a form-encoded signed_request verified with the configured Facebook app secret. Removes the Page connections authorized by the matching Facebook user, their credentials, profiles and delivery records in one transaction. Team-authored master copy, uploaded originals, human users and other providers remain. Returns a private confirmation link; repeated events return the same receipt. This does not delete posts on Facebook or recall an in-flight publish.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
+        "tags": ["Social connections"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": { "signed_request": { "type": "string" } },
+                "required": ["signed_request"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response. Examples are illustrative; field values vary by record.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "confirmation_code": { "type": "string" }
+                  },
+                  "additionalProperties": true
+                },
+                "example": {
+                  "url": "https://posted-api.example.com/api/social/facebook/data-deletion/0123456789abcdef0123456789abcdef0123456789abcdef",
+                  "confirmation_code": "0123456789abcdef0123456789abcdef0123456789abcdef"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Request failure. Inspect code, message and requestId; respect Retry-After on HTTP 429.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/facebook/data-deletion/{code}": {
+      "get": {
+        "operationId": "get_api_social_facebook_data_deletion_by_code",
+        "summary": "Check a Facebook deletion receipt",
         "description": "Returns a human-readable HTML completion receipt for an unguessable 48-character confirmation code. Does not show an account identifier, name, handle, token or post content. Unknown codes return 404. Keep the receipt link private.\n\nNo signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.",
         "tags": ["Social connections"],
         "security": [],

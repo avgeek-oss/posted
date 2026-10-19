@@ -1,4 +1,4 @@
-import { LinkedInPagesDialog } from "./linkedin-pages-dialog.js";
+import { PageConnectionDialog } from "./page-connection-dialog.js";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -52,9 +52,19 @@ export function ConnectionsPage({
   const providers = useResource<{
     providers: ProviderCapabilities[];
   }>("/providers");
-  const [pageAuthorization, setPageAuthorization] = useState(() =>
-    new URLSearchParams(window.location.search).get("linkedinPages"),
-  );
+  const [pageAuthorization, setPageAuthorization] = useState<{
+    provider: "linkedin-pages" | "facebook-pages";
+    id: string;
+  } | null>(() => {
+    const query = new URLSearchParams(window.location.search);
+    const facebook = query.get("facebookPages");
+    const linkedin = query.get("linkedinPages");
+    return facebook
+      ? { provider: "facebook-pages", id: facebook }
+      : linkedin
+        ? { provider: "linkedin-pages", id: linkedin }
+        : null;
+  });
   const [open, setOpen] = useState(false);
   const [provider, setProvider] = useState<Provider | "">("");
   const [handle, setHandle] = useState("");
@@ -103,8 +113,9 @@ export function ConnectionsPage({
   return (
     <section className="min-w-0">
       {canManage && pageAuthorization && (
-        <LinkedInPagesDialog
-          authorizationId={pageAuthorization}
+        <PageConnectionDialog
+          provider={pageAuthorization.provider}
+          authorizationId={pageAuthorization.id}
           onDone={() => {
             setPageAuthorization(null);
             window.history.replaceState(

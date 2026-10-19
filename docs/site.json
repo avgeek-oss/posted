@@ -59,6 +59,8 @@
               "providers/threads",
               "providers/linkedin",
               "providers/linkedin-pages",
+              "providers/facebook-pages",
+              "providers/instagram",
               "providers/bluesky"
             ]
           }
@@ -219,10 +221,19 @@
                   "api-reference/get_api_social_linkedin_pages_authorizations_by_id",
                   "api-reference/post_api_social_linkedin_pages_authorizations_by_id",
                   "api-reference/delete_api_social_linkedin_pages_authorizations_by_id",
+                  "api-reference/get_api_social_facebook_pages_authorizations_by_id",
+                  "api-reference/post_api_social_facebook_pages_authorizations_by_id",
+                  "api-reference/delete_api_social_facebook_pages_authorizations_by_id",
                   "api-reference/get_api_social_callback_by_provider",
                   "api-reference/post_api_social_threads_deauthorize",
                   "api-reference/post_api_social_threads_data_deletion",
                   "api-reference/get_api_social_threads_data_deletion_by_code",
+                  "api-reference/post_api_social_instagram_deauthorize",
+                  "api-reference/post_api_social_instagram_data_deletion",
+                  "api-reference/get_api_social_instagram_data_deletion_by_code",
+                  "api-reference/post_api_social_facebook_deauthorize",
+                  "api-reference/post_api_social_facebook_data_deletion",
+                  "api-reference/get_api_social_facebook_data_deletion_by_code",
                   "api-reference/get_social_bluesky_client_metadata_json",
                   "api-reference/get_social_bluesky_jwks_json",
                   "api-reference/get_api_connections",

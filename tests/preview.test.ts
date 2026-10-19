@@ -50,6 +50,8 @@ test("preview enables sample providers without enabling production OAuth", async
   assert.deepEqual(Object.keys(payload), ["providers"]);
   assert.deepEqual(payload.providers.map((p: { id: string }) => p.id).sort(), [
     "bluesky",
+    "facebook-pages",
+    "instagram",
     "linkedin",
     "linkedin-pages",
     "threads",
@@ -65,7 +67,14 @@ test("preview enables sample providers without enabling production OAuth", async
 test("fixture connections remain team owned, unique and unusable for provider authentication", async () => {
   const { cookie, user } = await setupUser({ workspaceName: "Posted Preview" });
   const preview = await createPreviewApi();
-  for (const provider of ["x", "x", "linkedin", "threads", "bluesky"]) {
+  for (const provider of [
+    "x",
+    "x",
+    "linkedin",
+    "threads",
+    "bluesky",
+    "instagram",
+  ]) {
     const response = await preview.fetch(
       fixtureRequest(
         `/api/social/connect/${provider}`,
@@ -122,8 +131,8 @@ test("fixture connections remain team owned, unique and unusable for provider au
     );
   }
   const connections = await sql`SELECT * FROM social_connections`;
-  assert.equal(connections.length, 5);
-  assert.equal(new Set(connections.map((item) => item.accountId)).size, 5);
+  assert.equal(connections.length, 6);
+  assert.equal(new Set(connections.map((item) => item.accountId)).size, 6);
   for (const item of connections) {
     assert.equal(item.connectedBy, user.id);
     assert.equal(item.workspaceId, (await sql`SELECT id FROM workspace`)[0].id);
@@ -137,12 +146,12 @@ test("fixture connections remain team owned, unique and unusable for provider au
     );
   }
   const list = await preview.fetch(fixtureRequest("/api/connections", cookie));
-  assert.equal((await list.json()).items.length, 5);
+  assert.equal((await list.json()).items.length, 6);
   assert.equal(
     (
       await sql`SELECT count(*)::int AS count FROM social_oauth_requests WHERE consumed_at IS NOT NULL`
     )[0].count,
-    5,
+    6,
   );
 });
 
@@ -361,44 +370,48 @@ test("preview refuses production, remote installations and ordinary workspaces",
   );
 });
 
-test("preview Page selection uses fixture discovery and never calls a real provider", async () => {
-  const { cookie } = await setupUser({ workspaceName: "Posted Preview" });
-  const preview = await createPreviewApi();
-  const start = await preview.fetch(
-    fixtureRequest("/api/social/connect/linkedin-pages", cookie, {}),
-  );
-  const authorization = new URL((await start.json()).authorizationUrl);
-  const decision = await preview.fetch(
-    fixtureRequest("/api/preview/social/decision", cookie, {
-      provider: "linkedin-pages",
-      state: authorization.searchParams.get("state"),
-      decision: "approve",
-    }),
-  );
-  const callback = new URL((await decision.json()).authorizationUrl);
-  const completed = await preview.fetch(
-    fixtureRequest(callback.pathname + callback.search, cookie),
-  );
-  const id = new URL(completed.headers.get("location")!).searchParams.get(
-    "linkedinPages",
-  );
-  const path = `/api/social/linkedin-pages/authorizations/${id}`;
-  assert.equal((await preview.fetch(fixtureRequest(path, cookie))).status, 200);
-  const saved = await preview.fetch(
-    fixtureRequest(path, cookie, { accountIds: ["123456"] }),
-  );
-  assert.equal(saved.status, 200);
-  assert.deepEqual(await saved.json(), { connected: 1 });
-  const [account] = await sql`SELECT * FROM social_connections`;
-  assert.equal(account.provider, "linkedin-pages");
-  assert.equal(account.accountId, "123456");
-  assert.equal(
-    (
-      unseal(
-        account.encryptedCredentials,
-        `social-connection:${account.id}`,
-      ) as { accessToken: string }
-    ).accessToken,
-    "disposable-preview-not-a-provider-token",
-  );
-});
+for (const provider of ["linkedin-pages", "facebook-pages"] as const)
+  test(`preview ${provider} selection uses fixture discovery and never calls a real provider`, async () => {
+    const { cookie } = await setupUser({ workspaceName: "Posted Preview" });
+    const preview = await createPreviewApi();
+    const start = await preview.fetch(
+      fixtureRequest(`/api/social/connect/${provider}`, cookie, {}),
+    );
+    const authorization = new URL((await start.json()).authorizationUrl);
+    const decision = await preview.fetch(
+      fixtureRequest("/api/preview/social/decision", cookie, {
+        provider,
+        state: authorization.searchParams.get("state"),
+        decision: "approve",
+      }),
+    );
+    const callback = new URL((await decision.json()).authorizationUrl);
+    const completed = await preview.fetch(
+      fixtureRequest(callback.pathname + callback.search, cookie),
+    );
+    const id = new URL(completed.headers.get("location")!).searchParams.get(
+      provider === "linkedin-pages" ? "linkedinPages" : "facebookPages",
+    );
+    const path = `/api/social/${provider}/authorizations/${id}`;
+    assert.equal(
+      (await preview.fetch(fixtureRequest(path, cookie))).status,
+      200,
+    );
+    const saved = await preview.fetch(
+      fixtureRequest(path, cookie, { accountIds: ["123456"] }),
+    );
+    assert.equal(saved.status, 200);
+    assert.deepEqual(await saved.json(), { connected: 1 });
+    const [account] = await sql`SELECT * FROM social_connections`;
+    assert.equal(account.provider, provider);
+    assert.equal(account.accountId, "123456");
+    assert.equal(
+      (
+        unseal(
+          account.encryptedCredentials,
+          `social-connection:${account.id}`,
+        ) as { accessToken: string }
+      ).accessToken,
+      "disposable-preview-not-a-provider-token",
+    );
+  });

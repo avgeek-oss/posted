@@ -1,0 +1,12 @@
+---
+title: "Receive a Facebook data deletion request"
+description: "Meta sends a form-encoded signed_request verified with the configured Facebook app secret. Removes the Page connections authorized by the matching Facebook user, their credentials, profiles and delivery records in one transaction. Team-authored master copy, uploaded originals, human users and other providers remain. Returns a private confirmation link; repeated events return the same receipt. This does not delete posts on Facebook or recall an in-flight publish."
+playground: simple
+openapi: "/api-reference/openapi.json POST /api/social/facebook/data-deletion"
+---
+
+No signed-in session is required. Endpoint-specific tokens, setup secrets or challenges may still be required.
+
+Meta sends a form-encoded signed_request verified with the configured Facebook app secret. Removes the Page connections authorized by the matching Facebook user, their credentials, profiles and delivery records in one transaction. Team-authored master copy, uploaded originals, human users and other providers remain. Returns a private confirmation link; repeated events return the same receipt. This does not delete posts on Facebook or recall an in-flight publish.
+
+[Request conventions](/api-reference/overview) · [API keys](/api-keys) · [MCP connections](/mcp-connections)

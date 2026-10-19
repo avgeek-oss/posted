@@ -1087,6 +1087,54 @@ export const supplementalEndpoints: Endpoint[] = [
   ),
   endpoint(
     "GET",
+    "/api/social/facebook-pages/authorizations/:id",
+    "List Facebook Pages available to connect",
+    "Social connections",
+    "admin-session",
+    "Returns the Pages discovered during this administrator's Facebook Pages OAuth flow. Grants expire after ten minutes. Provider credentials are never returned.",
+    {
+      result: {
+        pages: [
+          {
+            accountId: "123456",
+            name: "Studio North",
+            handle: "studio-north",
+            avatarUrl: null,
+          },
+        ],
+      },
+    },
+  ),
+  endpoint(
+    "POST",
+    "/api/social/facebook-pages/authorizations/:id",
+    "Connect selected Facebook Pages",
+    "Social connections",
+    "admin-session",
+    "Rechecks current Page access and connects only the selected Page IDs to the team. Consumes the pending authorization atomically; repeated requests cannot create duplicate connections.",
+    {
+      body: z
+        .object({
+          accountIds: z
+            .array(z.string().regex(/^[0-9]+$/))
+            .min(1)
+            .max(2000),
+        })
+        .strict(),
+      result: { connected: 1 },
+    },
+  ),
+  endpoint(
+    "DELETE",
+    "/api/social/facebook-pages/authorizations/:id",
+    "Cancel Facebook Page selection",
+    "Social connections",
+    "admin-session",
+    "Discards this administrator's pending authorization without saving or removing any team connections.",
+    { result: { cancelled: true } },
+  ),
+  endpoint(
+    "GET",
     "/api/social/callback/:provider",
     "Complete a social OAuth callback",
     "Social connections",
@@ -1135,6 +1183,82 @@ export const supplementalEndpoints: Endpoint[] = [
     "GET",
     "/api/social/threads/data-deletion/:code",
     "Check a Threads deletion receipt",
+    "Social connections",
+    "public",
+    "Returns a human-readable HTML completion receipt for an unguessable 48-character confirmation code. Does not show an account identifier, name, handle, token or post content. Unknown codes return 404. Keep the receipt link private.",
+    { responseContentType: "text/html" },
+  ),
+  endpoint(
+    "POST",
+    "/api/social/instagram/deauthorize",
+    "Receive a Instagram uninstall notification",
+    "Social connections",
+    "public",
+    "Meta sends a form-encoded signed_request verified with the configured Instagram app secret. Disconnects only the matching Instagram account, clears its credentials and cancels scheduled or preparing deliveries. Repeated events are idempotent. A request already publishing cannot be recalled. Browser sessions and API keys do not authorize this callback.",
+    {
+      body: z.object({ signed_request: str }),
+      form: true,
+      result: { success: true },
+    },
+  ),
+  endpoint(
+    "POST",
+    "/api/social/instagram/data-deletion",
+    "Receive a Instagram data deletion request",
+    "Social connections",
+    "public",
+    "Meta sends a form-encoded signed_request verified with the configured Instagram app secret. Removes the matching Instagram connection, credentials, profile and delivery records in one transaction. Team-authored master copy, uploaded originals, human users and other providers remain. Returns a private confirmation link; repeated events return the same receipt. This does not delete posts on Instagram or recall an in-flight publish.",
+    {
+      body: z.object({ signed_request: str }),
+      form: true,
+      result: {
+        url: "https://posted-api.example.com/api/social/instagram/data-deletion/0123456789abcdef0123456789abcdef0123456789abcdef",
+        confirmation_code: "0123456789abcdef0123456789abcdef0123456789abcdef",
+      },
+    },
+  ),
+  endpoint(
+    "GET",
+    "/api/social/instagram/data-deletion/:code",
+    "Check a Instagram deletion receipt",
+    "Social connections",
+    "public",
+    "Returns a human-readable HTML completion receipt for an unguessable 48-character confirmation code. Does not show an account identifier, name, handle, token or post content. Unknown codes return 404. Keep the receipt link private.",
+    { responseContentType: "text/html" },
+  ),
+  endpoint(
+    "POST",
+    "/api/social/facebook/deauthorize",
+    "Receive a Facebook uninstall notification",
+    "Social connections",
+    "public",
+    "Meta sends a form-encoded signed_request verified with the configured Facebook app secret. Disconnects all Page connections authorized by the matching Facebook user, clears its credentials and cancels scheduled or preparing deliveries. Repeated events are idempotent. A request already publishing cannot be recalled. Browser sessions and API keys do not authorize this callback.",
+    {
+      body: z.object({ signed_request: str }),
+      form: true,
+      result: { success: true },
+    },
+  ),
+  endpoint(
+    "POST",
+    "/api/social/facebook/data-deletion",
+    "Receive a Facebook data deletion request",
+    "Social connections",
+    "public",
+    "Meta sends a form-encoded signed_request verified with the configured Facebook app secret. Removes the Page connections authorized by the matching Facebook user, their credentials, profiles and delivery records in one transaction. Team-authored master copy, uploaded originals, human users and other providers remain. Returns a private confirmation link; repeated events return the same receipt. This does not delete posts on Facebook or recall an in-flight publish.",
+    {
+      body: z.object({ signed_request: str }),
+      form: true,
+      result: {
+        url: "https://posted-api.example.com/api/social/facebook/data-deletion/0123456789abcdef0123456789abcdef0123456789abcdef",
+        confirmation_code: "0123456789abcdef0123456789abcdef0123456789abcdef",
+      },
+    },
+  ),
+  endpoint(
+    "GET",
+    "/api/social/facebook/data-deletion/:code",
+    "Check a Facebook deletion receipt",
     "Social connections",
     "public",
     "Returns a human-readable HTML completion receipt for an unguessable 48-character confirmation code. Does not show an account identifier, name, handle, token or post content. Unknown codes return 404. Keep the receipt link private.",
