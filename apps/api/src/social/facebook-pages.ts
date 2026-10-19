@@ -78,7 +78,7 @@ export async function facebookPages(
             id: z.string().regex(/^[0-9]+$/),
             name: z.string().min(1),
             username: z.string().optional(),
-            access_token: z.string().min(1),
+            access_token: z.string().min(1).optional(),
             tasks: z.array(z.string()),
             picture: z
               .object({
@@ -102,6 +102,7 @@ export async function facebookPages(
     );
     for (const page of response.data) {
       if (
+        !page.access_token ||
         !page.tasks.some((task) => publishingTasks.has(task)) ||
         (accountIds && !accountIds.includes(page.id))
       )

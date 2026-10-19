@@ -116,7 +116,6 @@ function provider(onRequest?: (url: URL, init?: RequestInit) => Promise<void>) {
                 {
                   id: "789",
                   name: "Analytics only",
-                  access_token: "analytics-token",
                   tasks: ["ANALYZE"],
                 },
               ],
