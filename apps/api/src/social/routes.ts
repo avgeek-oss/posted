@@ -22,6 +22,7 @@ import {
 } from "../../../../packages/database/src/index.js";
 import { requireHuman, requireRole, type Env } from "../http.js";
 import { withMutationAuthority } from "../middleware.js";
+import { checkThreadsAuthorization } from "./threads-callbacks.js";
 import { config } from "../config.js";
 import { enabledProviders } from "./capabilities.js";
 import { seal, unseal } from "./secrets.js";
@@ -270,13 +271,15 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
     }
     await withDatabaseTransaction(async () => {
       const [pending] = await sql<
-        { workspaceId: string }[]
-      >`UPDATE social_oauth_requests SET consumed_at=now() WHERE state_hash=${hash(rawState)} AND provider=${provider} AND user_id=${actor.userId} AND expires_at>now() AND consumed_at IS NULL RETURNING workspace_id`;
+        { workspaceId: string; createdAt: Date }[]
+      >`UPDATE social_oauth_requests SET consumed_at=now() WHERE state_hash=${hash(rawState)} AND provider=${provider} AND user_id=${actor.userId} AND expires_at>now() AND consumed_at IS NULL RETURNING workspace_id,created_at`;
       if (!pending)
         throw new HTTPException(400, {
           message:
             "This connection request expired or was already used. Start again",
         });
+      if (provider === "threads")
+        await checkThreadsAuthorization(profile.accountId, pending.createdAt);
       const [existing] = await sql<
         { id: string }[]
       >`SELECT id FROM social_connections WHERE workspace_id=${pending.workspaceId} AND provider=${provider} AND account_id=${profile.accountId}`;

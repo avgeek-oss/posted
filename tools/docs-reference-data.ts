@@ -441,6 +441,7 @@ export type Endpoint = {
   result?: Record<string, unknown>;
   status?: number;
   form?: boolean;
+  responseContentType?: "text/html";
 };
 const str = z.string();
 const email = emailSchema;
@@ -1100,6 +1101,44 @@ export const supplementalEndpoints: Endpoint[] = [
       }),
       status: 302,
     },
+  ),
+  endpoint(
+    "POST",
+    "/api/social/threads/deauthorize",
+    "Receive a Threads uninstall notification",
+    "Social connections",
+    "public",
+    "Meta sends a form-encoded signed_request verified with the configured Threads app secret. Disconnects only the matching Threads account, clears its credentials and cancels scheduled or preparing deliveries. Repeated events are idempotent. A request already publishing cannot be recalled. Browser sessions and API keys do not authorize this callback.",
+    {
+      body: z.object({ signed_request: str }),
+      form: true,
+      result: { success: true },
+    },
+  ),
+  endpoint(
+    "POST",
+    "/api/social/threads/data-deletion",
+    "Receive a Threads data deletion request",
+    "Social connections",
+    "public",
+    "Meta sends a form-encoded signed_request verified with the configured Threads app secret. Removes the matching Threads connection, credentials, profile and delivery records in one transaction. Team-authored master copy, uploaded originals, human users and other providers remain. Returns a private confirmation link; repeated events return the same receipt. This does not delete posts on Threads or recall an in-flight publish.",
+    {
+      body: z.object({ signed_request: str }),
+      form: true,
+      result: {
+        url: "https://posted-api.example.com/api/social/threads/data-deletion/0123456789abcdef0123456789abcdef0123456789abcdef",
+        confirmation_code: "0123456789abcdef0123456789abcdef0123456789abcdef",
+      },
+    },
+  ),
+  endpoint(
+    "GET",
+    "/api/social/threads/data-deletion/:code",
+    "Check a Threads deletion receipt",
+    "Social connections",
+    "public",
+    "Returns a human-readable HTML completion receipt for an unguessable 48-character confirmation code. Does not show an account identifier, name, handle, token or post content. Unknown codes return 404. Keep the receipt link private.",
+    { responseContentType: "text/html" },
   ),
   endpoint(
     "GET",

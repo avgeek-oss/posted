@@ -67,6 +67,10 @@ async function readPost(id: string): Promise<Post> {
       providerPostCid: string | null;
     })[]
   >`SELECT d.id,d.post_index,d.connection_id,c.provider,c.state AS connection_state,c.name AS account_name,c.handle AS account_handle,c.avatar_url AS account_avatar_url,d.text_override,d.state,d.attempts,CASE WHEN d.state='scheduled' AND d.retry_attempts>0 AND d.error IS NOT NULL THEN d.available_at ELSE NULL END AS next_attempt_at,d.provider_post_id,d.provider_post_cid,d.published_url,d.error,d.published_at FROM post_deliveries d JOIN social_connections c ON c.id=d.connection_id WHERE d.group_id=${id} ORDER BY d.post_index,c.provider,c.id,d.id`;
+  if (!records.length)
+    throw new HTTPException(404, {
+      message: "This post no longer has any account deliveries",
+    });
   const resumableConnectionIds = cancelledAt
     ? []
     : [...new Set(records.map((item) => item.connectionId))].filter(
@@ -277,7 +281,7 @@ domainRoutes.get("/posts", async (c) => {
     })
     .parse(c.req.query());
   const active = sql`EXISTS(SELECT 1 FROM post_deliveries d WHERE d.group_id=g.id AND d.state IN ('scheduled','preparing','publishing'))`;
-  const condition = query.view === "scheduled" ? active : sql`NOT ${active}`;
+  const condition = sql`${query.view === "scheduled" ? active : sql`NOT ${active}`} AND EXISTS(SELECT 1 FROM post_deliveries d WHERE d.group_id=g.id)`;
   const [total] = await sql<
     { count: number }[]
   >`SELECT count(*)::int AS count FROM post_groups g WHERE ${condition}`;
