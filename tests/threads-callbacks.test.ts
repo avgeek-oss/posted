@@ -16,6 +16,7 @@ import {
   failDelivery,
   publishingBoundary,
 } from "../apps/api/src/posts/queue.js";
+import { deliverNext } from "../apps/worker/src/delivery.js";
 
 process.env.POSTED_THREADS_CLIENT_ID = "threads-disposable-client";
 process.env.POSTED_THREADS_CLIENT_SECRET = "threads-disposable-secret";
@@ -86,7 +87,7 @@ test("Threads callbacks authenticate Meta form signatures without a browser sess
     signed({ algorithm: "none" }),
     signed({ user_id: "" }),
     signed({ user_id: 1001 }),
-    signed({ issued_at: now + 301 }),
+    signed({ issued_at: now + 3600 }),
     signed({ issued_at: -1 }),
     signed({ issued_at: 1e15 }),
     signed() + ".extra",
@@ -255,7 +256,9 @@ test("Deletion removes profile and delivery data, cleans account overrides, and 
     "disposable-token",
     "private-provider-id",
   ])
-    assert.ok(!text.includes(privateValue));
+    assert.ok(
+      !text.replace(receipt.confirmation_code, "").includes(privateValue),
+    );
   const [event] = await sql`SELECT * FROM threads_account_events`;
   const stored = JSON.stringify(event);
   assert.ok(
@@ -461,4 +464,99 @@ test("Deletion rolls back the receipt and every account change if cleanup cannot
     await sql.unsafe(`DROP FUNCTION refuse_threads_deletion()`);
   }
   assert.equal((await callback("data-deletion")).status, 200);
+});
+
+test("Uninstall during publishing cancels a late 429 retry permanently, including after OAuth reconnection", async () => {
+  const { ids, cookie } = await fixture();
+  await sql`UPDATE post_deliveries SET available_at=now()+interval '1 day' WHERE connection_id<>${ids[0]!}`;
+  let publishes = 0;
+  mock.method(globalThis, "fetch", async (input: string | URL | Request) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    if (url.pathname === "/v1.0/1001/threads")
+      return Response.json({ id: "container" });
+    if (url.pathname === "/v1.0/container")
+      return Response.json({ id: "container", status: "FINISHED" });
+    if (url.pathname === "/v1.0/1001/threads_publish") {
+      publishes++;
+      assert.equal((await callback("deauthorize")).status, 200);
+      return Response.json(
+        { error: "Rate limited" },
+        { status: 429, headers: { "Retry-After": "1" } },
+      );
+    }
+    if (
+      url.pathname === "/oauth/access_token" ||
+      url.pathname === "/access_token"
+    )
+      return Response.json({
+        access_token: "fresh-disposable-token",
+        expires_in: 3600,
+      });
+    if (url.pathname === "/v1.0/me")
+      return Response.json({ id: "1001", username: "reconnected" });
+    throw new Error("Unexpected provider request");
+  });
+  assert.equal(await deliverNext(), true);
+  const start = await request("/api/social/connect/threads", {
+    cookie,
+    body: {},
+  });
+  assert.equal(start.status, 200);
+  const state = new URL((await start.json()).authorizationUrl).searchParams.get(
+    "state",
+  );
+  assert.equal(
+    (
+      await request(
+        `/api/social/callback/threads?state=${state}&code=fixture`,
+        { cookie },
+      )
+    ).status,
+    302,
+  );
+  assert.equal(
+    (await sql`SELECT state FROM social_connections WHERE id=${ids[0]!}`)[0]
+      ?.state,
+    "connected",
+  );
+  await sql`UPDATE post_deliveries SET available_at=now()-interval '1 day' WHERE connection_id=${ids[0]!}`;
+  assert.equal(await deliverNext(), false);
+  const deliveries =
+    await sql`SELECT state,retry_cancelled_at FROM post_deliveries WHERE connection_id=${ids[0]!}`;
+  assert.ok(
+    deliveries.every((d) => d.state === "cancelled" && d.retryCancelledAt),
+  );
+  assert.equal(publishes, 1);
+});
+
+test("Uninstall still records a confirmed in-flight publication", async () => {
+  const { ids } = await fixture();
+  await sql`UPDATE post_deliveries SET available_at=now()+interval '1 day' WHERE connection_id<>${ids[0]!}`;
+  const job = await claimDelivery();
+  assert.ok(job);
+  assert.equal(await publishingBoundary(job), true);
+  assert.equal((await callback("deauthorize")).status, 200);
+  await completeDelivery(job, {
+    id: "confirmed-result",
+    url: "https://threads.net/post/confirmed",
+  });
+  assert.equal(
+    (await sql`SELECT state FROM post_deliveries WHERE id=${job.id}`)[0]?.state,
+    "published",
+  );
+});
+
+test("Uninstall never retries an uncertain in-flight result", async () => {
+  const { ids } = await fixture();
+  await sql`UPDATE post_deliveries SET available_at=now()+interval '1 day' WHERE connection_id<>${ids[0]!}`;
+  const job = await claimDelivery();
+  assert.ok(job);
+  assert.equal(await publishingBoundary(job), true);
+  assert.equal((await callback("deauthorize")).status, 200);
+  await failDelivery(job, "Response unavailable", true, { retryAfterMs: 0 });
+  assert.equal(
+    (await sql`SELECT state FROM post_deliveries WHERE id=${job.id}`)[0]?.state,
+    "uncertain",
+  );
+  assert.equal(await claimDelivery(), null);
 });

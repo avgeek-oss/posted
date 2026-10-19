@@ -149,10 +149,13 @@ for (const action of ["deauthorize", "delete"] as const) {
         const connections = await sql<
           { id: string }[]
         >`SELECT id FROM social_connections WHERE provider='threads' AND account_id=${payload.user_id} FOR UPDATE`;
+        // The queue locks deliveries before groups; keep the same order during cleanup.
+        await sql`SELECT id FROM post_deliveries WHERE connection_id=ANY(${connections.map((connection) => connection.id)}::uuid[]) ORDER BY post_index,group_id,id FOR UPDATE`;
         for (const connection of connections) {
           if (action === "delete") await deleteAccount(connection.id);
           else {
             await sql`UPDATE social_connections SET state='disconnected',encrypted_credentials='',updated_at=now() WHERE id=${connection.id}`;
+            await sql`UPDATE post_deliveries SET retry_cancelled_at=now(),updated_at=now() WHERE connection_id=${connection.id} AND state IN ('scheduled','preparing','publishing')`;
             await sql`UPDATE post_deliveries SET state='cancelled',error='Threads access was removed',lease_token=NULL,lease_until=NULL,provider_checkpoint=NULL,updated_at=now() WHERE connection_id=${connection.id} AND state IN ('scheduled','preparing')`;
           }
         }
