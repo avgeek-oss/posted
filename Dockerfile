@@ -2,7 +2,7 @@
 FROM node:24.16.0-alpine@sha256:21f403ab171f2dc89bad4dd69d7721bfd15f084ccb46cdd225f31f2bc59b5c9a AS base
 
 FROM base AS build
-ARG RELEASE_VERSION=0.2.5
+ARG RELEASE_VERSION=0.2.6
 WORKDIR /build
 RUN npm install --global pnpm@11.5.3
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
@@ -22,7 +22,7 @@ RUN --mount=type=cache,id=posted-pnpm,target=/pnpm/store,sharing=locked \
 
 FROM base AS runtime
 ARG SOURCE_COMMIT=development
-ARG RELEASE_VERSION=0.2.5
+ARG RELEASE_VERSION=0.2.6
 LABEL org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.revision="${SOURCE_COMMIT}" \
       org.opencontainers.image.version="${RELEASE_VERSION}"
