@@ -58,46 +58,67 @@ POSTED_FACEBOOK_CONFIG_ID=YOUR_USER_TOKEN_CONFIGURATION_ID
 
 ## Set up your Meta app
 
-Open [Meta for Developers](https://developers.facebook.com/apps/). You can use an existing app if it supports the Page management use case, or create a separate app.
+Open [Meta for Developers](https://developers.facebook.com/apps/). You can add Page management to an existing app, including an app used for Threads, when Meta offers the use case. Otherwise, create a separate app.
 
 <Steps>
   <Step title="Add Page management">
-    Choose **Manage everything on your Page** when creating the app, or add the
-    corresponding use case to your existing app. Complete the app’s basic
-    details, privacy policy and contact information.
+    Open **Use cases → Add use cases**, select **Manage everything on your Page** and click **Save**.
+
+    <Frame caption="Add the Page management use case to your app.">
+      <img src="/assets/providers/facebook-pages/02-add-page-use-case@2x.png" alt="Meta Add more use cases dialog with Manage everything on your Page selected." width="1800" height="984" />
+    </Frame>
+
+    Meta may show a reminder about the requirements for this use case. Click **Add to app** to continue.
+
+    <Frame caption="Confirm the new use case.">
+      <img src="/assets/providers/facebook-pages/03-confirm-use-case@2x.png" alt="Meta confirmation dialog with Add to app highlighted." width="1800" height="984" />
+    </Frame>
+
   </Step>
-  <Step title="Configure Facebook Login for Business">
-    Open the login settings and add the callback URL below as a valid OAuth
-    redirect URI. Use your Posted API origin, including `https://`.
+  <Step title="Open the Page settings">
+    Back in **Use cases**, click **Customize** beside **Manage everything on your Page**.
+
+    <Frame caption="Open the Page management settings.">
+      <img src="/assets/providers/facebook-pages/04-customize-pages@2x.png" alt="Meta use cases showing Threads and Page management with the Page Customize button highlighted." width="1800" height="984" />
+    </Frame>
+
   </Step>
-  <Step title="Set the access permissions">
-    Enable Page discovery, reading and publishing. Posted requests
-    `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`. Select any
-    additional permissions based on the scope of your Posted use.
+  <Step title="Check the permissions">
+    In **Permissions and features**, add `pages_show_list`, `pages_read_engagement`, `pages_manage_posts` if they are not already present. **Ready for testing** means you can test with eligible app-role accounts. Select additional permissions based on the scope of your Posted use.
+
+    <Frame caption="Enable the permissions for your Posted use.">
+      <img src="/assets/providers/facebook-pages/05-page-permissions@2x.png" alt="Meta Page permissions with pages_manage_posts, pages_read_engagement and pages_show_list ready for testing." width="1800" height="984" />
+    </Frame>
+
   </Step>
-  <Step title="Add the lifecycle callbacks">
-    Set the deauthorization callback and data deletion callback to the URLs
-    below. Posted verifies these requests with your Facebook app secret.
+  <Step title="Save the callback URLs and credentials">
+    Open **Facebook Login for Business → Settings**. Enable **Client OAuth login** and **Web OAuth login**, then add the URLs below and save. Replace `{{POSTED_API_URL}}` with your Posted API origin, including `https://`.
+
+    ```text title="Valid OAuth Redirect URIs"
+    {{POSTED_API_URL}}/api/social/callback/facebook-pages
+    ```
+
+    ```text title="Deauthorize callback URL"
+    {{POSTED_API_URL}}/api/social/facebook/deauthorize
+    ```
+
+    ```text title="Data Deletion Request URL"
+    {{POSTED_API_URL}}/api/social/facebook/data-deletion
+    ```
+
+    <Frame caption="Configure Facebook Login for Business with your installation's callback URLs.">
+      <img src="/assets/providers/facebook-pages/06-callback-settings@2x.png" alt="Facebook Login for Business settings with OAuth redirect and deauthorization URLs entered and the data deletion section below." width="1800" height="984" />
+    </Frame>
+
+    Copy the regular **App ID** and **App Secret** from **App settings → Basic** into the environment variables above. If the same Meta app also uses Threads, keep using the separate **Threads app ID** and **Threads app secret** for that provider.
+
+    If you create a Facebook Login for Business configuration, select **User access token** and save its ID as `POSTED_FACEBOOK_CONFIG_ID`.
+
   </Step>
-  <Step title="Complete Meta’s access requirements">
-    During development, test with an account that has an app role and permission
-    to create content on the Page. Complete the App Review, business
-    verification and access requirements shown in your Meta dashboard before
-    connecting accounts outside your app roles.
+  <Step title="Complete Meta's access requirements">
+    Complete the app's basic details, privacy policy and contact information. During development, test with an account that has an app role and permission to create content on the Page. Complete the App Review, business verification and access requirements shown in your Meta dashboard before connecting accounts outside your app roles.
   </Step>
 </Steps>
-
-```text OAuth callback URL
-{{POSTED_API_URL}}/api/social/callback/facebook-pages
-```
-
-```text Deauthorization callback URL
-{{POSTED_API_URL}}/api/social/facebook/deauthorize
-```
-
-```text Data deletion callback URL
-{{POSTED_API_URL}}/api/social/facebook/data-deletion
-```
 
 Only Pages where the signed-in account can create content appear in Posted. If a Page is missing, check the permissions allowed during login and the account’s Page access, then start a new connection.
 
