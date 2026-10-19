@@ -82,7 +82,7 @@ Open [Meta for Developers](https://developers.facebook.com/apps/) and create an 
     ```
 
     <Frame caption="Find the Threads credentials and enter your installation's callback URLs.">
-      <img src="/assets/providers/threads/06-callback-settings@2x.png" alt="Threads settings with masked app secret and redirect, uninstall and delete callback fields." width="1800" height="984" />
+      <img src="/assets/providers/threads/06-callback-settings@2x.png" alt="Threads settings with a masked app secret and blurred installation domains in all three callback URLs." width="1800" height="984" />
     </Frame>
 
     The uninstall callback disconnects the matching Threads account and stops queued posts. The delete callback also removes its stored profile and delivery records, then returns a confirmation link. Team-authored master copy, uploaded files and other accounts remain. Already published posts remain on Threads, and a publishing request already in progress cannot be recalled.
