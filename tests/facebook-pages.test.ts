@@ -37,8 +37,10 @@ let publishStatus = 200;
 let publishError: unknown;
 let posts: unknown[] = [];
 let subjectId = "1001";
+let userTokenLifetime = 60 * 86400;
 function provider(onRequest?: (url: URL, init?: RequestInit) => Promise<void>) {
   revoked = false;
+  userTokenLifetime = 60 * 86400;
   subjectId = "1001";
   publishStatus = 200;
   publishError = undefined;
@@ -64,7 +66,7 @@ function provider(onRequest?: (url: URL, init?: RequestInit) => Promise<void>) {
           access_token: url.searchParams.has("fb_exchange_token")
             ? "user-long-token"
             : "user-short-token",
-          expires_in: 60 * 86400,
+          expires_in: userTokenLifetime,
         });
       }
       const token = new Headers(init?.headers)
@@ -709,7 +711,7 @@ test("Facebook rate limits retry the same delivery, while ambiguous server failu
   assert.equal(response.status, 201);
   const group = (await response.json()).post;
   publishStatus = 400;
-  publishError = { error: { code: 4 } };
+  publishError = { error: { code: 80001 } };
   await deliverNext();
   const [retry] =
     await sql`SELECT * FROM post_deliveries WHERE group_id=${group.id} ORDER BY post_index`;
@@ -737,4 +739,33 @@ test("Facebook rate limits retry the same delivery, while ambiguous server failu
   const calls = posts.length;
   assert.equal(await deliverNext(), false);
   assert.equal(posts.length, calls);
+});
+
+test("Page credentials remain usable after the originating User token expires", async () => {
+  const admin = await setupUser();
+  provider();
+  userTokenLifetime = 301;
+  const connectionId = await connect(admin.cookie);
+  const [connection] =
+    await sql`SELECT encrypted_credentials FROM social_connections WHERE id=${connectionId}`;
+  const credential = unseal(
+    connection.encryptedCredentials,
+    `social-connection:${connectionId}`,
+  );
+  assert.deepEqual(Object.keys(credential as object).sort(), [
+    "accessToken",
+    "issuedAt",
+  ]);
+  await scheduled(admin.cookie, connectionId);
+  mock.timers.enable({ apis: ["Date"], now: Date.now() + 302_000 });
+  try {
+    assert.equal(await deliverNext(), true);
+    assert.equal(
+      (await sql`SELECT state FROM post_deliveries`)[0]!.state,
+      "published",
+    );
+    assert.equal(posts.length, 1);
+  } finally {
+    mock.timers.reset();
+  }
 });

@@ -239,7 +239,7 @@ export function facebookPageRoutes(listPages = facebookPages) {
         >`SELECT id FROM social_connections WHERE workspace_id=${value.workspaceId} AND provider='facebook-pages' AND account_id=${page.accountId}`;
         const connectionId = existing?.id ?? randomUUID();
         const encrypted = seal(
-          { ...credential, accessToken: page.accessToken },
+          { accessToken: page.accessToken, issuedAt: Date.now() },
           `social-connection:${connectionId}`,
         );
         await sql`INSERT INTO social_connections(id,workspace_id,provider,account_id,name,handle,avatar_url,encrypted_credentials,connected_by,facebook_subject_hash) VALUES(${connectionId},${value.workspaceId},'facebook-pages',${page.accountId},${page.name},${page.handle},${page.avatarUrl},${encrypted},${actor.userId},${value.subjectHash}) ON CONFLICT(workspace_id,provider,account_id) DO UPDATE SET name=excluded.name,handle=excluded.handle,avatar_url=excluded.avatar_url,encrypted_credentials=excluded.encrypted_credentials,state='connected',connected_by=excluded.connected_by,facebook_subject_hash=excluded.facebook_subject_hash,updated_at=now()`;

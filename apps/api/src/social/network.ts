@@ -56,7 +56,7 @@ export function temporaryFailure(error: unknown): boolean {
   return false;
 }
 
-function retryAfter(response: Pick<Response, "headers" | "status">) {
+export function retryAfter(response: Pick<Response, "headers" | "status">) {
   const value = response.headers.get("Retry-After");
   const reset = response.headers.get("x-rate-limit-reset");
   const seconds = value === null || !value.trim() ? NaN : Number(value);
