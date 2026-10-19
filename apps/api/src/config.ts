@@ -57,6 +57,9 @@ const schema = z
     POSTED_LINKEDIN_CLIENT_SECRET: z.string().default(""),
     POSTED_LINKEDIN_PAGES_CLIENT_ID: z.string().trim().default(""),
     POSTED_LINKEDIN_PAGES_CLIENT_SECRET: z.string().default(""),
+    POSTED_FACEBOOK_CLIENT_ID: z.string().trim().default(""),
+    POSTED_FACEBOOK_CLIENT_SECRET: z.string().default(""),
+    POSTED_FACEBOOK_CONFIG_ID: z.string().trim().default(""),
     POSTED_THREADS_CLIENT_ID: z.string().trim().default(""),
     POSTED_THREADS_CLIENT_SECRET: z.string().default(""),
     POSTED_BLUESKY_CLIENT_ID: z.string().trim().default(""),
@@ -141,6 +144,15 @@ const schema = z
             "Configure each social provider's client ID and secret together",
         });
     }
+    if (
+      Boolean(value.POSTED_FACEBOOK_CLIENT_ID) !==
+        Boolean(value.POSTED_FACEBOOK_CLIENT_SECRET) ||
+      (value.POSTED_FACEBOOK_CONFIG_ID && !value.POSTED_FACEBOOK_CLIENT_ID)
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Configure the Facebook app ID and app secret together",
+      });
     if (
       value.POSTED_BLUESKY_CLIENT_ID &&
       value.POSTED_BLUESKY_CLIENT_ID !==

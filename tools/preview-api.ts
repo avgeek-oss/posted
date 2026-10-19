@@ -122,7 +122,9 @@ export async function createPreviewApi() {
           ["POST", "OPTIONS"].includes(request.method)) ||
         (path.startsWith("/api/social/callback/") &&
           request.method === "GET") ||
-        (path.startsWith("/api/social/linkedin-pages/authorizations/") &&
+        (/^\/api\/social\/(?:linkedin-pages|facebook-pages)\/authorizations\//.test(
+          path,
+        ) &&
           ["GET", "POST", "DELETE", "OPTIONS"].includes(request.method)) ||
         (path.startsWith("/api/preview/social/") &&
           ["GET", "POST", "OPTIONS"].includes(request.method));

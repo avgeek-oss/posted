@@ -211,9 +211,13 @@ try {
   const accountIds = new Map(
     accounts.map((account) => [account.provider, account.id]),
   );
-  if (accountIds.size !== 4)
+  if (
+    fixtures.some((fixture) =>
+      fixture.providers.some((provider) => !accountIds.has(provider)),
+    )
+  )
     throw new Error(
-      "Run tools/local-preview.ts to create all four preview accounts first",
+      "Run tools/local-preview.ts to create the preview accounts first",
     );
   const pending = [];
   for (const fixture of fixtures) {

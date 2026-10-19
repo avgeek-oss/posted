@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Provider } from "../../../../packages/contracts/src/index.js";
+import { facebookVersion } from "./facebook-api.js";
 import { config } from "../config.js";
 import { bearer, providerJson, ProviderFailure } from "./network.js";
 
@@ -48,6 +49,11 @@ export function clientCredentials(provider: Exclude<Provider, "bluesky">) {
         id: value.POSTED_LINKEDIN_PAGES_CLIENT_ID,
         secret: value.POSTED_LINKEDIN_PAGES_CLIENT_SECRET,
       };
+    case "facebook-pages":
+      return {
+        id: value.POSTED_FACEBOOK_CLIENT_ID,
+        secret: value.POSTED_FACEBOOK_CLIENT_SECRET,
+      };
     case "threads":
       return {
         id: value.POSTED_THREADS_CLIENT_ID,
@@ -61,6 +67,25 @@ export async function exchangeCode(
   verifier: string,
 ) {
   const client = clientCredentials(provider);
+  if (provider === "facebook-pages") {
+    const url = new URL(
+      `https://graph.facebook.com/${facebookVersion}/oauth/access_token`,
+    );
+    url.search = new URLSearchParams({
+      client_id: client.id,
+      client_secret: client.secret,
+      redirect_uri: callbackUrl(provider),
+      code,
+    }).toString();
+    const short = await providerJson(url, tokenResponse);
+    url.search = new URLSearchParams({
+      grant_type: "fb_exchange_token",
+      client_id: client.id,
+      client_secret: client.secret,
+      fb_exchange_token: short.access_token,
+    }).toString();
+    return credentials(await providerJson(url, tokenResponse));
+  }
   const form = new URLSearchParams({
     grant_type: "authorization_code",
     code,
@@ -108,6 +133,7 @@ export async function refreshCredentials(
   if (!current.expiresAt || current.expiresAt > Date.now() + 5 * 60_000)
     return current;
   const client = clientCredentials(provider);
+  if (provider === "facebook-pages") throw new ProviderFailure(401);
   if (provider === "threads") {
     if (current.issuedAt > Date.now() - 24 * 60 * 60_000)
       throw new ProviderFailure(401);
@@ -153,7 +179,7 @@ async function refreshToken(url: string | URL, options?: RequestInit) {
   }
 }
 export async function accountProfile(
-  provider: Exclude<Provider, "bluesky" | "linkedin-pages">,
+  provider: Exclude<Provider, "bluesky" | "linkedin-pages" | "facebook-pages">,
   accessToken: string,
 ) {
   const options = { headers: bearer(accessToken) };

@@ -1,4 +1,15 @@
 import {
+  facebookPages,
+  facebookPageRoutes,
+  saveFacebookPageGrant,
+  type FacebookPageGrant,
+} from "./facebook-pages.js";
+import {
+  facebookJson,
+  facebookScopes,
+  facebookVersion,
+} from "./facebook-api.js";
+import {
   linkedInPages,
   linkedInPageRoutes,
   saveLinkedInPageGrant,
@@ -38,6 +49,10 @@ import { blueskyLoginSchema } from "./bluesky-input.js";
 import type { Provider } from "../../../../packages/contracts/src/index.js";
 
 export type SocialOAuthProvider = {
+  facebookPages?: (
+    accessToken: string,
+    accountIds?: string[],
+  ) => Promise<FacebookPageGrant[]>;
   pages?: (
     accessToken: string,
     accountIds?: string[],
@@ -68,10 +83,12 @@ const hash = (value: string) =>
 export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
   const socialRoutes = new Hono<Env>();
   socialRoutes.route("/", linkedInPageRoutes(providerClient?.pages));
+  socialRoutes.route("/", facebookPageRoutes(providerClient?.facebookPages));
   socialRoutes.post("/api/social/connect/:provider", async (c) => {
     const actor = requireRole(c, "admin");
     const provider = providerSchema.parse(c.req.param("provider"));
-    if (provider === "linkedin-pages") requireHuman(c);
+    if (provider === "linkedin-pages" || provider === "facebook-pages")
+      requireHuman(c);
     if (
       !providerClient &&
       !enabledProviders(process.env).some((p) => p.id === provider)
@@ -123,11 +140,13 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
     } else {
       const client = clientCredentials(provider);
       url = new URL(
-        provider === "x"
-          ? "https://x.com/i/oauth2/authorize"
-          : provider === "linkedin" || provider === "linkedin-pages"
-            ? "https://www.linkedin.com/oauth/v2/authorization"
-            : "https://www.threads.net/oauth/authorize",
+        provider === "facebook-pages"
+          ? `https://www.facebook.com/${facebookVersion}/dialog/oauth`
+          : provider === "x"
+            ? "https://x.com/i/oauth2/authorize"
+            : provider === "linkedin" || provider === "linkedin-pages"
+              ? "https://www.linkedin.com/oauth/v2/authorization"
+              : "https://www.threads.net/oauth/authorize",
       );
       url.search = new URLSearchParams({
         client_id: client.id,
@@ -135,14 +154,20 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
         response_type: "code",
         state,
         scope:
-          provider === "x"
-            ? "tweet.read tweet.write users.read offline.access media.write"
-            : provider === "linkedin-pages"
-              ? "rw_organization_admin w_organization_social"
-              : provider === "linkedin"
-                ? "openid profile w_member_social"
-                : "threads_basic,threads_content_publish",
+          provider === "facebook-pages"
+            ? facebookScopes.join(",")
+            : provider === "x"
+              ? "tweet.read tweet.write users.read offline.access media.write"
+              : provider === "linkedin-pages"
+                ? "rw_organization_admin w_organization_social"
+                : provider === "linkedin"
+                  ? "openid profile w_member_social"
+                  : "threads_basic,threads_content_publish",
       }).toString();
+      if (provider === "facebook-pages" && config().POSTED_FACEBOOK_CONFIG_ID) {
+        url.searchParams.set("config_id", config().POSTED_FACEBOOK_CONFIG_ID);
+        url.searchParams.set("override_default_response_type", "true");
+      }
       if (provider === "x") {
         url.searchParams.set(
           "code_challenge",
@@ -157,7 +182,8 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
   socialRoutes.get("/api/social/callback/:provider", async (c) => {
     const actor = requireRole(c, "admin");
     const provider = providerSchema.parse(c.req.param("provider"));
-    if (provider === "linkedin-pages") requireHuman(c);
+    if (provider === "linkedin-pages" || provider === "facebook-pages")
+      requireHuman(c);
     let state = c.req.query("state");
     if (provider === "bluesky" && !providerClient) {
       const sdkState = z.string().min(1).max(512).parse(state);
@@ -201,6 +227,51 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
       });
       return c.redirect(
         `${config().POSTED_WEB_URL.replace(/\/$/, "")}/connections?connection=denied`,
+      );
+    }
+    if (provider === "facebook-pages") {
+      const verifier = z
+        .string()
+        .parse(
+          unseal(pending.encryptedVerifier, `social-oauth:${hash(rawState)}`),
+        );
+      const exchanged = providerClient
+        ? await providerClient.exchange(
+            provider,
+            new URL(c.req.url).searchParams,
+            verifier,
+          )
+        : undefined;
+      const token = exchanged
+        ? credentialsSchema.parse(exchanged.credential)
+        : await exchangeCode(
+            provider,
+            z.string().min(1).max(4096).parse(c.req.query("code")),
+            verifier,
+          );
+      const subject = exchanged
+        ? exchanged.profile.accountId
+        : (
+            await facebookJson(
+              "me?fields=id",
+              token.accessToken,
+              z.object({ id: z.string().regex(/^[0-9]+$/) }),
+            )
+          ).id;
+      const pages = await (providerClient?.facebookPages ?? facebookPages)(
+        token.accessToken,
+      );
+      const selection = await withMutationAuthority(c, () =>
+        saveFacebookPageGrant(
+          actor.userId,
+          hash(rawState),
+          token,
+          pages,
+          subject,
+        ),
+      );
+      return c.redirect(
+        `${config().POSTED_WEB_URL.replace(/\/$/, "")}/connections?facebookPages=${selection}`,
       );
     }
     if (provider === "linkedin-pages") {

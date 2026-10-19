@@ -8,20 +8,22 @@ import {
   ScrollShadow,
   toast,
 } from "@posted/web-design-system";
-import type { LinkedInPage } from "../../../packages/contracts/src/index.js";
+import type { SocialPage } from "../../../packages/contracts/src/index.js";
 import { api, errorText } from "./api.js";
 import { useResource } from "./use-resource.js";
 import { QueryFeedback } from "./query-feedback.js";
 
-export function LinkedInPagesDialog({
+export function PageConnectionDialog({
+  provider,
   authorizationId,
   onDone,
 }: {
+  provider: "linkedin-pages" | "facebook-pages";
   authorizationId: string;
   onDone: () => void;
 }) {
-  const path = `/social/linkedin-pages/authorizations/${encodeURIComponent(authorizationId)}`;
-  const resource = useResource<{ pages: LinkedInPage[] }>(path);
+  const path = `/social/${provider}/authorizations/${encodeURIComponent(authorizationId)}`;
+  const resource = useResource<{ pages: SocialPage[] }>(path);
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   async function cancel() {
@@ -57,7 +59,7 @@ export function LinkedInPagesDialog({
     <Dialog
       open
       onClose={() => void cancel()}
-      title="Choose LinkedIn Pages"
+      title={`Choose ${provider === "facebook-pages" ? "Facebook" : "LinkedIn"} Pages`}
       isDismissDisabled={busy}
       footer={
         <>
@@ -70,7 +72,7 @@ export function LinkedInPagesDialog({
           </Button>
           <Button
             type="submit"
-            form="choose-linkedin-pages"
+            form="choose-provider-pages"
             isDisabled={busy || !selected.length || resource.failed}
             isPending={busy}
           >
@@ -91,7 +93,7 @@ export function LinkedInPagesDialog({
         />
       ) : resource.value?.pages.length ? (
         <form
-          id="choose-linkedin-pages"
+          id="choose-provider-pages"
           className="grid gap-4"
           onSubmit={(event) => {
             event.preventDefault();
@@ -144,8 +146,8 @@ export function LinkedInPagesDialog({
       ) : (
         <p className="text-sm text-muted">
           No Pages with publishing access were found. Sign in with a Page
-          administrator and check that your LinkedIn app has Community
-          Management API access.
+          administrator and check that your provider app has Page publishing
+          access.
         </p>
       )}
     </Dialog>

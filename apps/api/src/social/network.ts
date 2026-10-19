@@ -78,7 +78,7 @@ function retryAfter(response: Pick<Response, "headers" | "status">) {
       : 0,
   );
 }
-export async function providerRequest(
+export async function providerResponse(
   url: string | URL,
   options: RequestInit = {},
 ): Promise<Response> {
@@ -92,7 +92,13 @@ export async function providerRequest(
   } catch {
     throw new ProviderFailure(0, true);
   }
-  return checkProviderResponse(response);
+  return response;
+}
+export async function providerRequest(
+  url: string | URL,
+  options: RequestInit = {},
+) {
+  return checkProviderResponse(await providerResponse(url, options));
 }
 
 export async function checkProviderResponse(response: Response) {

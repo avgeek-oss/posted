@@ -11,6 +11,7 @@ import { domainRoutes } from "./domain.js";
 import { linkRoutes } from "./links/routes.js";
 import { mediaRoutes } from "./media/routes.js";
 import { socialRoutes } from "./social/routes.js";
+import { createMetaCallbackRoutes } from "./social/meta-callbacks.js";
 import { threadsCallbackRoutes } from "./social/threads-callbacks.js";
 import {
   externalRoutes,
@@ -83,6 +84,7 @@ const standardBodyLimit = bodyLimit({
 app.use("*", standardBodyLimit);
 app.onError(handleError);
 app.route("/api/social/threads", threadsCallbackRoutes);
+app.route("/api/social/facebook", createMetaCallbackRoutes("facebook-pages"));
 app.get("/health/live", (c) => c.json({ status: "ok" }));
 app.get("/health/ready", async (c) => {
   c.header("Cache-Control", "no-store");

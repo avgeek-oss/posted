@@ -5,6 +5,7 @@ export const characterLimits: Record<Provider, number> = {
   x: 280,
   linkedin: 3000,
   "linkedin-pages": 3000,
+  "facebook-pages": 3000,
   bluesky: 300,
   threads: 500,
 };

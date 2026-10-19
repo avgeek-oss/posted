@@ -1,6 +1,6 @@
 # Compose threads
 
-A thread starts with a root post and continues with ordered posts. Posted keeps one master sequence and lets each selected account customize text and attachments for every post. X, Threads and Bluesky publish linked replies. LinkedIn and LinkedIn Pages publish the sequence as separate individual posts in the same order.
+A thread starts with a root post and continues with ordered posts. Posted keeps one master sequence and lets each selected account customize text and attachments for every post. X, Threads and Bluesky publish linked replies. LinkedIn, LinkedIn Pages and Facebook Pages publish the sequence as separate individual posts in the same order.
 
 ## Build the sequence
 
@@ -33,7 +33,10 @@ An empty custom media selection keeps that account post text-only. **Reset to ma
 | [Bluesky](/providers/bluesky)   | Later posts retain the first post as the thread root and the preceding post as their parent.                       |
 | [LinkedIn](/providers/linkedin) | Each item is an individual member post, published in order. Posted does not create a LinkedIn reply thread.        |
 
-In Preview, inset connectors identify linked replies. Separate LinkedIn posts have more space between cards. The preview illustrates the selected content; provider-side policies and access still apply.
+| [LinkedIn Pages](/providers/linkedin-pages) | Each item is an individual Page post, published in order without reply links. |
+| [Facebook Pages](/providers/facebook-pages) | Each item is an individual Page post, published in order without reply links. |
+
+In Preview, inset connectors identify linked replies. Separate posts have more space between cards. The preview illustrates the selected content; provider-side policies and access still apply.
 
 ## Delivery order and partial results
 
@@ -59,5 +62,3 @@ Temporary failures are retried with increasing delays when Posted can safely sen
 The root request is the first post; `additionalPosts` contains the remaining items. Each can have `textOverrides`, `mediaIds` and `mediaOverrides`. `connectionIds`, `scheduledAt` and `idempotencyKey` belong to the whole sequence. Use the latest draft or post version when saving an edit.
 
 See [create_post](/mcp-reference/create_post), [save_draft](/mcp-reference/save_draft) and the [HTTP request conventions](/api-reference/overview).
-
-LinkedIn Pages follows the same sequence behavior as LinkedIn: individual Page posts are published in order, without reply links.

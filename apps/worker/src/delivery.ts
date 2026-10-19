@@ -101,7 +101,11 @@ export async function deliverNext(): Promise<boolean> {
     for (const image of originals) {
       if (isGif(image)) {
         const bytes = await mediaBytes(image.objectKey);
-        if (job.provider === "bluesky" || job.provider === "threads") {
+        if (
+          job.provider === "bluesky" ||
+          job.provider === "threads" ||
+          job.provider === "facebook-pages"
+        ) {
           const video = await normalizeVideo(bytes, "gif");
           const url =
             job.provider === "threads"

@@ -42,6 +42,7 @@ export const PROVIDERS = [
   "x",
   "linkedin",
   "linkedin-pages",
+  "facebook-pages",
   "bluesky",
   "threads",
 ] as const;
@@ -187,9 +188,12 @@ export type Page<T> = {
 
 export type PostCounts = { scheduled: number; drafts: number };
 
-export type LinkedInPage = {
+export type SocialPage = {
   accountId: string;
   name: string;
   handle: string;
   avatarUrl: string | null;
 };
+
+export type LinkedInPage = SocialPage;
+export type FacebookPage = SocialPage;

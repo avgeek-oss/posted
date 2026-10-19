@@ -6,6 +6,7 @@ export const videoDurationLimits: Record<Provider, number> = {
   x: 140,
   linkedin: 1800,
   "linkedin-pages": 1800,
+  "facebook-pages": 1800,
   bluesky: 180,
   threads: 300,
 };

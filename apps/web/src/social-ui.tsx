@@ -31,6 +31,7 @@ export const providerNames: Record<Provider, string> = {
   x: "X",
   linkedin: "LinkedIn",
   "linkedin-pages": "LinkedIn Pages",
+  "facebook-pages": "Facebook Pages",
   bluesky: "Bluesky",
   threads: "Threads",
 };
@@ -223,28 +224,35 @@ export function SocialPreview({
 }) {
   const linkedIn =
     account.provider === "linkedin" || account.provider === "linkedin-pages";
+  const facebook = account.provider === "facebook-pages";
   const x = account.provider === "x";
   const singleImage =
     media.length === 1 && media[0]?.contentType.startsWith("image/");
-  const actions = linkedIn
+  const actions = facebook
     ? [
         { icon: ThumbsUpIcon, label: "Like" },
         { icon: Comment01Icon, label: "Comment" },
-        { icon: RepeatIcon, label: "Repost" },
-        { icon: Share08Icon, label: "Send" },
+        { icon: Share08Icon, label: "Share" },
       ]
-    : (account.provider === "threads"
-        ? [FavouriteIcon, Comment01Icon, RepeatIcon, Share08Icon]
-        : x
-          ? [
-              Comment01Icon,
-              RepeatIcon,
-              FavouriteIcon,
-              Bookmark02Icon,
-              Share08Icon,
-            ]
-          : [Comment01Icon, RepeatIcon, FavouriteIcon, Share08Icon]
-      ).map((icon) => ({ icon, label: "" }));
+    : linkedIn
+      ? [
+          { icon: ThumbsUpIcon, label: "Like" },
+          { icon: Comment01Icon, label: "Comment" },
+          { icon: RepeatIcon, label: "Repost" },
+          { icon: Share08Icon, label: "Send" },
+        ]
+      : (account.provider === "threads"
+          ? [FavouriteIcon, Comment01Icon, RepeatIcon, Share08Icon]
+          : x
+            ? [
+                Comment01Icon,
+                RepeatIcon,
+                FavouriteIcon,
+                Bookmark02Icon,
+                Share08Icon,
+              ]
+            : [Comment01Icon, RepeatIcon, FavouriteIcon, Share08Icon]
+        ).map((icon) => ({ icon, label: "" }));
   return (
     <article
       className="overflow-hidden rounded-2xl border border-separator bg-surface shadow-none"
@@ -277,7 +285,9 @@ export function SocialPreview({
               {account.name}
             </p>
             <p className="truncate text-xs leading-4 text-muted">
-              {linkedIn ? "Just now · Public" : `@${account.handle} · now`}
+              {linkedIn || facebook
+                ? "Just now · Public"
+                : `@${account.handle} · now`}
             </p>
           </div>
           <HugeiconsIcon
