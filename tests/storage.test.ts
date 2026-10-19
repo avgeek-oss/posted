@@ -773,3 +773,108 @@ test("Threads GIF delivery uses a private signed MP4 and only publishes after pr
     mock.restoreAll();
   }
 });
+
+for (const kind of ["image", "gif"] as const)
+  test(`Instagram worker sends only a signed prepared ${kind} and publishes once`, async () => {
+    const admin = await setupUser();
+    const connectionId = randomUUID(),
+      mediaId = randomUUID(),
+      key = `instagram-originals/${randomUUID()}`;
+    const bytes =
+      kind === "gif"
+        ? await gifFixture()
+        : await sharp({
+            create: {
+              width: 400,
+              height: 2000,
+              channels: 3,
+              background: "#345678",
+            },
+          })
+            .withExif({ IFD0: { Artist: "Private source metadata" } })
+            .png()
+            .toBuffer();
+    await storeOriginal(key, bytes, kind === "gif" ? "image/gif" : "image/png");
+    const dimensions = await sharp(bytes).metadata();
+    await sql`INSERT INTO social_connections(id,workspace_id,provider,account_id,name,handle,encrypted_credentials) VALUES(${connectionId},(SELECT id FROM workspace),'instagram','2001','Studio','studio',${seal({ accessToken: "instagram-disposable", issuedAt: Date.now(), expiresAt: Date.now() + 36e5 }, `social-connection:${connectionId}`)})`;
+    await sql`INSERT INTO post_media(id,workspace_id,object_key,file_name,content_type,size_bytes,width,height,state) VALUES(${mediaId},(SELECT id FROM workspace),${key},'fixture',${kind === "gif" ? "image/gif" : "image/png"},${bytes.length},${dimensions.width!},${dimensions.height!},'ready')`;
+    assert.equal(
+      (
+        await request("/api/posts", {
+          cookie: admin.cookie,
+          body: {
+            text: "Caption",
+            connectionIds: [connectionId],
+            mediaIds: [mediaId],
+            scheduledAt: new Date().toISOString(),
+            idempotencyKey: randomUUID(),
+          },
+        })
+      ).status,
+      201,
+    );
+    const fetchOriginal = globalThis.fetch;
+    let sent = 0,
+      prepared = 0;
+    mock.method(
+      globalThis,
+      "fetch",
+      async (input: string | URL | Request, init?: RequestInit) => {
+        const url = new URL(
+          input instanceof Request ? input.url : String(input),
+        );
+        assert.equal(url.origin, "https://graph.instagram.com");
+        if (url.pathname.endsWith("content_publishing_limit"))
+          return Response.json({
+            data: [{ quota_usage: 0, config: { quota_total: 100 } }],
+          });
+        if (url.pathname.endsWith("/media")) {
+          assert(init?.body instanceof URLSearchParams);
+          const signed = new URL(
+            String(init.body.get(kind === "gif" ? "video_url" : "image_url")),
+          );
+          assert.equal(signed.origin, new URL(endpoint).origin);
+          assert(!signed.pathname.includes("instagram-originals"));
+          assert(signed.pathname.includes("posted/delivery/"));
+          assert.equal(signed.searchParams.get("X-Amz-Expires"), "3600");
+          const response = await fetchOriginal(signed);
+          assert.equal(response.status, 200);
+          const output = Buffer.from(await response.arrayBuffer());
+          if (kind === "image") {
+            const image = await sharp(output).metadata();
+            assert.equal(image.format, "jpeg");
+            assert.equal(image.exif, undefined);
+            assert(image.width! / image.height! >= 0.8);
+            assert(image.width! / image.height! <= 1.91);
+          } else {
+            assert.equal(init.body.get("media_type"), "REELS");
+            assert.equal(response.headers.get("content-type"), "video/mp4");
+            assert(!output.equals(bytes));
+          }
+          prepared++;
+          return Response.json({ id: "3001" });
+        }
+        if (url.pathname.endsWith("media_publish")) {
+          sent++;
+          return Response.json({ id: "9001" });
+        }
+        if (url.searchParams.get("fields") === "permalink")
+          return Response.json({
+            permalink: "https://www.instagram.com/p/fixture/",
+          });
+        return Response.json({ status_code: "FINISHED" });
+      },
+    );
+    try {
+      assert.equal(await deliverNext(), true);
+      assert.equal(await deliverNext(), false);
+      assert.equal(prepared, 1);
+      assert.equal(sent, 1);
+      assert.equal(
+        (await sql`SELECT state FROM post_deliveries`)[0]!.state,
+        "published",
+      );
+    } finally {
+      mock.restoreAll();
+    }
+  });

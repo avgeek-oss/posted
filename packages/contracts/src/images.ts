@@ -5,6 +5,7 @@ export const imageLimits: Record<Provider, number> = {
   linkedin: 20,
   "linkedin-pages": 20,
   "facebook-pages": 10,
+  instagram: 10,
   bluesky: 4,
   threads: 20,
 };

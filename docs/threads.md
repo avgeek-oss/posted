@@ -1,6 +1,6 @@
 # Compose threads
 
-A thread starts with a root post and continues with ordered posts. Posted keeps one master sequence and lets each selected account customize text and attachments for every post. X, Threads and Bluesky publish linked replies. LinkedIn, LinkedIn Pages and Facebook Pages publish the sequence as separate individual posts in the same order.
+A thread starts with a root post and continues with ordered posts. Posted keeps one master sequence and lets each selected account customize text and attachments for every post. X, Threads and Bluesky publish linked replies. LinkedIn, LinkedIn Pages, Facebook Pages and Instagram publish the sequence as separate individual posts in the same order.
 
 ## Build the sequence
 
@@ -35,6 +35,8 @@ An empty custom media selection keeps that account post text-only. **Reset to ma
 
 | [LinkedIn Pages](/providers/linkedin-pages) | Each item is an individual Page post, published in order without reply links. |
 | [Facebook Pages](/providers/facebook-pages) | Each item is an individual Page post, published in order without reply links. |
+
+| [Instagram](/providers/instagram) | Each item is a separate photo, photo carousel or Reel, published in order. Every item needs media. |
 
 In Preview, inset connectors identify linked replies. Separate posts have more space between cards. The preview illustrates the selected content; provider-side policies and access still apply.
 

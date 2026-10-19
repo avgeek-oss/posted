@@ -6,6 +6,7 @@ export const characterLimits: Record<Provider, number> = {
   linkedin: 3000,
   "linkedin-pages": 3000,
   "facebook-pages": 3000,
+  instagram: 2200,
   bluesky: 300,
   threads: 500,
 };
@@ -35,4 +36,12 @@ export function textForProviderPreview(provider: Provider, text: string) {
       .map(({ segment }) => segment)
       .join("");
   return [...text].slice(0, limit).join("");
+}
+
+export function providerCaptionError(provider: Provider, text: string) {
+  if (provider !== "instagram") return;
+  if ((text.match(/(?:^|[^\p{L}\p{N}_])#[\p{L}\p{N}_]+/gu) ?? []).length > 30)
+    return "Instagram supports up to 30 hashtags per caption.";
+  if ((text.match(/(?:^|[^\p{L}\p{N}_.])@[A-Za-z0-9_.]+/gu) ?? []).length > 20)
+    return "Instagram supports up to 20 mentions per caption.";
 }

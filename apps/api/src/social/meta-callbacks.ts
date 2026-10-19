@@ -58,23 +58,30 @@ function verifyRequest(value: string, secret: string, name: string) {
   return result.data;
 }
 
-type MetaProvider = "threads" | "facebook-pages";
+type MetaProvider = "threads" | "facebook-pages" | "instagram";
 function metaClient(provider: MetaProvider) {
   const value = config();
-  return provider === "threads"
+  return provider === "instagram"
     ? {
-        id: value.POSTED_THREADS_CLIENT_ID,
-        secret: value.POSTED_THREADS_CLIENT_SECRET,
+        id: value.POSTED_INSTAGRAM_CLIENT_ID,
+        secret: value.POSTED_INSTAGRAM_CLIENT_SECRET,
       }
-    : {
-        id: value.POSTED_FACEBOOK_CLIENT_ID,
-        secret: value.POSTED_FACEBOOK_CLIENT_SECRET,
-      };
+    : provider === "threads"
+      ? {
+          id: value.POSTED_THREADS_CLIENT_ID,
+          secret: value.POSTED_THREADS_CLIENT_SECRET,
+        }
+      : {
+          id: value.POSTED_FACEBOOK_CLIENT_ID,
+          secret: value.POSTED_FACEBOOK_CLIENT_SECRET,
+        };
 }
 function eventTable(provider: MetaProvider) {
-  return provider === "threads"
-    ? "threads_account_events"
-    : "facebook_account_events";
+  return provider === "instagram"
+    ? "instagram_account_events"
+    : provider === "threads"
+      ? "threads_account_events"
+      : "facebook_account_events";
 }
 export function metaSubjectHash(provider: MetaProvider, accountId: string) {
   return createHmac("sha256", config().POSTED_SECRET)
@@ -112,8 +119,13 @@ async function deleteAccount(connectionId: string) {
 
 export function createMetaCallbackRoutes(provider: MetaProvider) {
   const routes = new Hono<Env>();
-  const name = provider === "threads" ? "Threads" : "Facebook";
-  const routeName = provider === "threads" ? "threads" : "facebook";
+  const name =
+    provider === "instagram"
+      ? "Instagram"
+      : provider === "threads"
+        ? "Threads"
+        : "Facebook";
+  const routeName = provider === "facebook-pages" ? "facebook" : provider;
   const table = eventTable(provider);
   routes.use("*", async (c, next) => {
     c.header("Cache-Control", "no-store");
@@ -163,7 +175,7 @@ export function createMetaCallbackRoutes(provider: MetaProvider) {
           await sql`INSERT INTO ${sql(table)}(request_hash,subject_hash,action,issued_at,confirmation_code) VALUES(${requestHash},${subjectHash},${action},${issuedAt},${confirmationCode})`;
           const connections = await sql<
             { id: string }[]
-          >`SELECT id FROM social_connections WHERE provider=${provider} AND ${provider === "threads" ? sql`account_id=${payload.user_id}` : sql`facebook_subject_hash=${subjectHash}`} FOR UPDATE`;
+          >`SELECT id FROM social_connections WHERE provider=${provider} AND ${provider === "threads" ? sql`account_id=${payload.user_id}` : provider === "instagram" ? sql`instagram_subject_hash=${subjectHash}` : sql`facebook_subject_hash=${subjectHash}`} FOR UPDATE`;
           if (provider === "facebook-pages")
             await sql`DELETE FROM facebook_page_authorizations WHERE subject_hash=${subjectHash}`;
           for (const connection of connections) {

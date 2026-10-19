@@ -85,6 +85,7 @@ app.use("*", standardBodyLimit);
 app.onError(handleError);
 app.route("/api/social/threads", threadsCallbackRoutes);
 app.route("/api/social/facebook", createMetaCallbackRoutes("facebook-pages"));
+app.route("/api/social/instagram", createMetaCallbackRoutes("instagram"));
 app.get("/health/live", (c) => c.json({ status: "ok" }));
 app.get("/health/ready", async (c) => {
   c.header("Cache-Control", "no-store");

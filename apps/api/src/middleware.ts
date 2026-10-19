@@ -148,7 +148,7 @@ export const mutationAuthority: MiddlewareHandler<Env> = async (c, next) => {
     !c.get("actor") ||
     c.req.path.startsWith("/api/auth/") ||
     (c.req.method === "GET" &&
-      /^\/api\/social\/callback\/(?:linkedin-pages|facebook-pages)$/.test(
+      /^\/api\/social\/callback\/(?:linkedin-pages|facebook-pages|instagram)$/.test(
         c.req.path,
       )) ||
     (c.req.method === "POST" &&

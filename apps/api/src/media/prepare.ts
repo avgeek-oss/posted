@@ -25,8 +25,10 @@ export async function prepareImage(original: Uint8Array, provider: Provider) {
     (metadata.orientation ?? 1) >= 5 ? metadata.width : metadata.height;
   const ratio = rotatedWidth / rotatedHeight;
   // Centre-crop only images outside supported aspect ratios, preserving ordinary compositions.
-  const maxRatio = provider === "threads" ? 10 : 20;
-  const minRatio = provider === "threads" ? 0.01 : 0.05;
+  const maxRatio =
+    provider === "instagram" ? 1.91 : provider === "threads" ? 10 : 20;
+  const minRatio =
+    provider === "instagram" ? 0.8 : provider === "threads" ? 0.01 : 0.05;
   const extract =
     ratio > maxRatio
       ? { width: Math.floor(rotatedHeight * maxRatio), height: rotatedHeight }

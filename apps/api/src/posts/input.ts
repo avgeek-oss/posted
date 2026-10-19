@@ -1,3 +1,4 @@
+import { providerCaptionError } from "../../../../packages/contracts/src/text.js";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { providerTextLength } from "../../../../packages/contracts/src/text.js";
@@ -107,6 +108,8 @@ export function validateProviderContent(
   text: string,
   imageCount: number,
 ) {
+  const captionError = providerCaptionError(provider, text);
+  if (captionError) throw new Error(captionError);
   const limit = capabilities[provider];
   const count = providerTextLength(provider, text);
   if (count > limit.maxCharacters)

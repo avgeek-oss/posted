@@ -43,6 +43,7 @@ export const PROVIDERS = [
   "linkedin",
   "linkedin-pages",
   "facebook-pages",
+  "instagram",
   "bluesky",
   "threads",
 ] as const;

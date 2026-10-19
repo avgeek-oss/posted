@@ -51,6 +51,7 @@ test("preview enables sample providers without enabling production OAuth", async
   assert.deepEqual(payload.providers.map((p: { id: string }) => p.id).sort(), [
     "bluesky",
     "facebook-pages",
+    "instagram",
     "linkedin",
     "linkedin-pages",
     "threads",
@@ -66,7 +67,14 @@ test("preview enables sample providers without enabling production OAuth", async
 test("fixture connections remain team owned, unique and unusable for provider authentication", async () => {
   const { cookie, user } = await setupUser({ workspaceName: "Posted Preview" });
   const preview = await createPreviewApi();
-  for (const provider of ["x", "x", "linkedin", "threads", "bluesky"]) {
+  for (const provider of [
+    "x",
+    "x",
+    "linkedin",
+    "threads",
+    "bluesky",
+    "instagram",
+  ]) {
     const response = await preview.fetch(
       fixtureRequest(
         `/api/social/connect/${provider}`,
@@ -123,8 +131,8 @@ test("fixture connections remain team owned, unique and unusable for provider au
     );
   }
   const connections = await sql`SELECT * FROM social_connections`;
-  assert.equal(connections.length, 5);
-  assert.equal(new Set(connections.map((item) => item.accountId)).size, 5);
+  assert.equal(connections.length, 6);
+  assert.equal(new Set(connections.map((item) => item.accountId)).size, 6);
   for (const item of connections) {
     assert.equal(item.connectedBy, user.id);
     assert.equal(item.workspaceId, (await sql`SELECT id FROM workspace`)[0].id);
@@ -138,12 +146,12 @@ test("fixture connections remain team owned, unique and unusable for provider au
     );
   }
   const list = await preview.fetch(fixtureRequest("/api/connections", cookie));
-  assert.equal((await list.json()).items.length, 5);
+  assert.equal((await list.json()).items.length, 6);
   assert.equal(
     (
       await sql`SELECT count(*)::int AS count FROM social_oauth_requests WHERE consumed_at IS NOT NULL`
     )[0].count,
-    5,
+    6,
   );
 });
 

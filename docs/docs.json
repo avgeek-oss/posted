@@ -103,6 +103,7 @@
               "providers/linkedin",
               "providers/linkedin-pages",
               "providers/facebook-pages",
+              "providers/instagram",
               "providers/bluesky"
             ]
           }
@@ -270,6 +271,9 @@
                   "api-reference/post_api_social_threads_deauthorize",
                   "api-reference/post_api_social_threads_data_deletion",
                   "api-reference/get_api_social_threads_data_deletion_by_code",
+                  "api-reference/post_api_social_instagram_deauthorize",
+                  "api-reference/post_api_social_instagram_data_deletion",
+                  "api-reference/get_api_social_instagram_data_deletion_by_code",
                   "api-reference/post_api_social_facebook_deauthorize",
                   "api-reference/post_api_social_facebook_data_deletion",
                   "api-reference/get_api_social_facebook_data_deletion_by_code",

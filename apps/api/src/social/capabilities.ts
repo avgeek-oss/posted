@@ -48,6 +48,16 @@ export const capabilities: Record<Provider, ProviderCapabilities> = {
     maxImageBytes: 4_000_000,
     maxImageDimension: 2048,
   },
+  instagram: {
+    id: "instagram",
+    name: "Instagram",
+    maxCharacters: 2200,
+    maxImages: 10,
+    maxVideos: 1,
+    maxVideoDurationSeconds: 900,
+    maxImageBytes: 8_000_000,
+    maxImageDimension: 1440,
+  },
   bluesky: {
     id: "bluesky",
     name: "Bluesky",
@@ -84,6 +94,7 @@ export function enabledProviders(
       "POSTED_FACEBOOK_CLIENT_ID",
       "POSTED_FACEBOOK_CLIENT_SECRET",
     ],
+    instagram: ["POSTED_INSTAGRAM_CLIENT_ID", "POSTED_INSTAGRAM_CLIENT_SECRET"],
     threads: ["POSTED_THREADS_CLIENT_ID", "POSTED_THREADS_CLIENT_SECRET"],
     bluesky: ["POSTED_BLUESKY_CLIENT_ID", "POSTED_BLUESKY_PRIVATE_KEY_JWK"],
   };

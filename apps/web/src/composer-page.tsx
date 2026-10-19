@@ -1,4 +1,5 @@
 import {
+  providerCaptionError,
   characterLimits,
   providerTextLength,
 } from "../../../packages/contracts/src/text.js";
@@ -362,7 +363,8 @@ export function ComposerPage({
       ? `${providerNames[account.provider]} supports up to ${characterLimits[account.provider]} characters.`
       : !value.trim() && !accountMedia.length
         ? "Add text or media for this account."
-        : mediaError(account.provider, accountMedia);
+        : (providerCaptionError(account.provider, value) ??
+          mediaError(account.provider, accountMedia));
   }
   const accountErrors: Record<string, string> = Object.fromEntries(
     chosen.flatMap((account) => {

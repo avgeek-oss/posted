@@ -104,11 +104,12 @@ export async function deliverNext(): Promise<boolean> {
         if (
           job.provider === "bluesky" ||
           job.provider === "threads" ||
-          job.provider === "facebook-pages"
+          job.provider === "facebook-pages" ||
+          job.provider === "instagram"
         ) {
           const video = await normalizeVideo(bytes, "gif");
           const url =
-            job.provider === "threads"
+            job.provider === "threads" || job.provider === "instagram"
               ? await preparedMediaUrl(
                   `posted/delivery/${job.id}/${job.leaseToken}/${image.id}.mp4`,
                   video.bytes,
@@ -133,7 +134,7 @@ export async function deliverNext(): Promise<boolean> {
           throw new Error("This video has not been prepared");
         const bytes = await mediaBytes(image.objectKey, videoUploadBytes);
         const url =
-          job.provider === "threads"
+          job.provider === "threads" || job.provider === "instagram"
             ? await preparedMediaUrl(
                 `posted/delivery/${job.id}/${job.leaseToken}/${image.id}.mp4`,
                 bytes,
@@ -157,7 +158,7 @@ export async function deliverNext(): Promise<boolean> {
         job.provider,
       );
       const url =
-        job.provider === "threads"
+        job.provider === "threads" || job.provider === "instagram"
           ? await preparedMediaUrl(
               `posted/delivery/${job.id}/${job.leaseToken}/${image.id}.jpg`,
               prepared.bytes,

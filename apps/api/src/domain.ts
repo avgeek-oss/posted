@@ -135,7 +135,7 @@ async function validateTargets(
   const mediaIds = allMediaIds(parts);
   const images = await sql<
     PostMedia[]
-  >`SELECT id,content_type,duration_seconds FROM post_media WHERE id=ANY(${mediaIds}::uuid[]) AND workspace_id=${workspaceId} AND state='ready' FOR SHARE`;
+  >`SELECT id,content_type,duration_seconds,alt FROM post_media WHERE id=ANY(${mediaIds}::uuid[]) AND workspace_id=${workspaceId} AND state='ready' FOR SHARE`;
   if (images.length !== mediaIds.length)
     throw new HTTPException(400, {
       message: "Wait for this team's media to finish uploading",

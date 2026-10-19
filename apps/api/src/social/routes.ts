@@ -1,14 +1,13 @@
+import { metaVersion } from "./meta-api.js";
+import { instagramScopes } from "./instagram.js";
+import { checkMetaAuthorization, metaSubjectHash } from "./meta-callbacks.js";
 import {
   facebookPages,
   facebookPageRoutes,
   saveFacebookPageGrant,
   type FacebookPageGrant,
 } from "./facebook-pages.js";
-import {
-  facebookJson,
-  facebookScopes,
-  facebookVersion,
-} from "./facebook-api.js";
+import { facebookJson, facebookScopes } from "./facebook-api.js";
 import {
   linkedInPages,
   linkedInPageRoutes,
@@ -70,6 +69,7 @@ export type SocialOAuthProvider = {
   ) => Promise<{
     profile: {
       accountId: string;
+      subjectId?: string;
       name: string;
       handle: string;
       avatarUrl: string | null;
@@ -87,7 +87,11 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
   socialRoutes.post("/api/social/connect/:provider", async (c) => {
     const actor = requireRole(c, "admin");
     const provider = providerSchema.parse(c.req.param("provider"));
-    if (provider === "linkedin-pages" || provider === "facebook-pages")
+    if (
+      provider === "linkedin-pages" ||
+      provider === "facebook-pages" ||
+      provider === "instagram"
+    )
       requireHuman(c);
     if (
       !providerClient &&
@@ -140,13 +144,15 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
     } else {
       const client = clientCredentials(provider);
       url = new URL(
-        provider === "facebook-pages"
-          ? `https://www.facebook.com/${facebookVersion}/dialog/oauth`
-          : provider === "x"
-            ? "https://x.com/i/oauth2/authorize"
-            : provider === "linkedin" || provider === "linkedin-pages"
-              ? "https://www.linkedin.com/oauth/v2/authorization"
-              : "https://www.threads.net/oauth/authorize",
+        provider === "instagram"
+          ? "https://www.instagram.com/oauth/authorize"
+          : provider === "facebook-pages"
+            ? `https://www.facebook.com/${metaVersion}/dialog/oauth`
+            : provider === "x"
+              ? "https://x.com/i/oauth2/authorize"
+              : provider === "linkedin" || provider === "linkedin-pages"
+                ? "https://www.linkedin.com/oauth/v2/authorization"
+                : "https://www.threads.net/oauth/authorize",
       );
       url.search = new URLSearchParams({
         client_id: client.id,
@@ -154,16 +160,20 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
         response_type: "code",
         state,
         scope:
-          provider === "facebook-pages"
-            ? facebookScopes.join(",")
-            : provider === "x"
-              ? "tweet.read tweet.write users.read offline.access media.write"
-              : provider === "linkedin-pages"
-                ? "rw_organization_admin w_organization_social"
-                : provider === "linkedin"
-                  ? "openid profile w_member_social"
-                  : "threads_basic,threads_content_publish",
+          provider === "instagram"
+            ? instagramScopes.join(",")
+            : provider === "facebook-pages"
+              ? facebookScopes.join(",")
+              : provider === "x"
+                ? "tweet.read tweet.write users.read offline.access media.write"
+                : provider === "linkedin-pages"
+                  ? "rw_organization_admin w_organization_social"
+                  : provider === "linkedin"
+                    ? "openid profile w_member_social"
+                    : "threads_basic,threads_content_publish",
       }).toString();
+      if (provider === "instagram")
+        url.searchParams.set("force_reauth", "true");
       if (provider === "facebook-pages" && config().POSTED_FACEBOOK_CONFIG_ID) {
         url.searchParams.set("config_id", config().POSTED_FACEBOOK_CONFIG_ID);
         url.searchParams.set("override_default_response_type", "true");
@@ -182,7 +192,11 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
   socialRoutes.get("/api/social/callback/:provider", async (c) => {
     const actor = requireRole(c, "admin");
     const provider = providerSchema.parse(c.req.param("provider"));
-    if (provider === "linkedin-pages" || provider === "facebook-pages")
+    if (
+      provider === "linkedin-pages" ||
+      provider === "facebook-pages" ||
+      provider === "instagram"
+    )
       requireHuman(c);
     let state = c.req.query("state");
     if (provider === "bluesky" && !providerClient) {
@@ -216,6 +230,7 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
       });
     let profile: {
       accountId: string;
+      subjectId?: string;
       name: string;
       handle: string;
       avatarUrl: string | null;
@@ -340,24 +355,39 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
       profile = await accountProfile(provider, token.accessToken);
       credential = token;
     }
-    await withDatabaseTransaction(async () => {
-      const [pending] = await sql<
-        { workspaceId: string }[]
-      >`UPDATE social_oauth_requests SET consumed_at=now() WHERE state_hash=${hash(rawState)} AND provider=${provider} AND user_id=${actor.userId} AND expires_at>now() AND consumed_at IS NULL RETURNING workspace_id`;
-      if (!pending)
-        throw new HTTPException(400, {
-          message:
-            "This connection request expired or was already used. Start again",
-        });
-      if (provider === "threads")
-        await checkThreadsAuthorization(profile.accountId, hash(rawState));
-      const [existing] = await sql<
-        { id: string }[]
-      >`SELECT id FROM social_connections WHERE workspace_id=${pending.workspaceId} AND provider=${provider} AND account_id=${profile.accountId}`;
-      const id = existing?.id ?? randomUUID();
-      const encrypted = seal(credential, `social-connection:${id}`);
-      await sql`INSERT INTO social_connections(id,workspace_id,provider,account_id,name,handle,avatar_url,encrypted_credentials,connected_by) VALUES(${id},${pending.workspaceId},${provider},${profile.accountId},${profile.name},${profile.handle},${profile.avatarUrl},${encrypted},${actor.userId}) ON CONFLICT(workspace_id,provider,account_id) DO UPDATE SET name=excluded.name,handle=excluded.handle,avatar_url=excluded.avatar_url,encrypted_credentials=excluded.encrypted_credentials,state='connected',connected_by=excluded.connected_by,updated_at=now()`;
-    });
+    await withMutationAuthority(c, () =>
+      withDatabaseTransaction(async () => {
+        const [pending] = await sql<
+          { workspaceId: string }[]
+        >`UPDATE social_oauth_requests SET consumed_at=now() WHERE state_hash=${hash(rawState)} AND provider=${provider} AND user_id=${actor.userId} AND expires_at>now() AND consumed_at IS NULL RETURNING workspace_id`;
+        if (!pending)
+          throw new HTTPException(400, {
+            message:
+              "This connection request expired or was already used. Start again",
+          });
+        if (provider === "threads")
+          await checkThreadsAuthorization(profile.accountId, hash(rawState));
+        if (provider === "instagram")
+          await checkMetaAuthorization(
+            "instagram",
+            profile.subjectId ?? profile.accountId,
+            hash(rawState),
+          );
+        const [existing] = await sql<
+          { id: string }[]
+        >`SELECT id FROM social_connections WHERE workspace_id=${pending.workspaceId} AND provider=${provider} AND account_id=${profile.accountId}`;
+        const id = existing?.id ?? randomUUID();
+        const encrypted = seal(credential, `social-connection:${id}`);
+        const instagramSubjectHash =
+          provider === "instagram"
+            ? metaSubjectHash(
+                "instagram",
+                profile.subjectId ?? profile.accountId,
+              )
+            : null;
+        await sql`INSERT INTO social_connections(id,workspace_id,provider,account_id,name,handle,avatar_url,encrypted_credentials,connected_by,instagram_subject_hash) VALUES(${id},${pending.workspaceId},${provider},${profile.accountId},${profile.name},${profile.handle},${profile.avatarUrl},${encrypted},${actor.userId},${instagramSubjectHash}) ON CONFLICT(workspace_id,provider,account_id) DO UPDATE SET name=excluded.name,handle=excluded.handle,avatar_url=excluded.avatar_url,encrypted_credentials=excluded.encrypted_credentials,state='connected',connected_by=excluded.connected_by,instagram_subject_hash=excluded.instagram_subject_hash,updated_at=now()`;
+      }),
+    );
     return c.redirect(
       `${config().POSTED_WEB_URL.replace(/\/$/, "")}/connections?connection=connected`,
     );
