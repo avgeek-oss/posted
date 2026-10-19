@@ -17,6 +17,7 @@ import {
   publishingBoundary,
 } from "../apps/api/src/posts/queue.js";
 import { deliverNext } from "../apps/worker/src/delivery.js";
+import { withDatabaseTransaction } from "../packages/database/src/index.js";
 
 process.env.POSTED_THREADS_CLIENT_ID = "threads-disposable-client";
 process.env.POSTED_THREADS_CLIENT_SECRET = "threads-disposable-secret";
@@ -559,4 +560,67 @@ test("Uninstall never retries an uncertain in-flight result", async () => {
     "uncertain",
   );
   assert.equal(await claimDelivery(), null);
+});
+
+test("Revocation uses the time after the authority lock even when its transaction started before OAuth", async () => {
+  const { cookie } = await fixture();
+  mock.method(globalThis, "fetch", async (input: string | URL | Request) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    if (
+      url.pathname === "/oauth/access_token" ||
+      url.pathname === "/access_token"
+    )
+      return Response.json({
+        access_token: "disposable-access",
+        expires_in: 3600,
+      });
+    if (url.pathname === "/v1.0/me")
+      return Response.json({ id: "1001", username: "revoked" });
+    throw new Error("Unexpected provider request");
+  });
+  let transactionStarted!: () => void;
+  const started = new Promise<void>((resolve) => {
+    transactionStarted = resolve;
+  });
+  let processCallback!: () => void;
+  const proceed = new Promise<void>((resolve) => {
+    processCallback = resolve;
+  });
+  const notification = withDatabaseTransaction(async () => {
+    await sql`SELECT now()`;
+    transactionStarted();
+    await proceed;
+    return callback("deauthorize");
+  });
+  await started;
+  let state: string | null = null;
+  try {
+    const start = await request("/api/social/connect/threads", {
+      cookie,
+      body: {},
+    });
+    assert.equal(start.status, 200);
+    state = new URL((await start.json()).authorizationUrl).searchParams.get(
+      "state",
+    );
+  } finally {
+    processCallback();
+  }
+  assert.equal((await notification).status, 200);
+  assert.ok(state);
+  assert.equal(
+    (
+      await request(
+        `/api/social/callback/threads?state=${state}&code=fixture`,
+        { cookie },
+      )
+    ).status,
+    409,
+  );
+  assert.equal(
+    (
+      await sql`SELECT id FROM social_connections WHERE provider='threads' AND account_id='1001' AND state='connected'`
+    ).length,
+    0,
+  );
 });

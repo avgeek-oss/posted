@@ -271,15 +271,15 @@ export function createSocialRoutes(providerClient?: SocialOAuthProvider) {
     }
     await withDatabaseTransaction(async () => {
       const [pending] = await sql<
-        { workspaceId: string; createdAt: Date }[]
-      >`UPDATE social_oauth_requests SET consumed_at=now() WHERE state_hash=${hash(rawState)} AND provider=${provider} AND user_id=${actor.userId} AND expires_at>now() AND consumed_at IS NULL RETURNING workspace_id,created_at`;
+        { workspaceId: string }[]
+      >`UPDATE social_oauth_requests SET consumed_at=now() WHERE state_hash=${hash(rawState)} AND provider=${provider} AND user_id=${actor.userId} AND expires_at>now() AND consumed_at IS NULL RETURNING workspace_id`;
       if (!pending)
         throw new HTTPException(400, {
           message:
             "This connection request expired or was already used. Start again",
         });
       if (provider === "threads")
-        await checkThreadsAuthorization(profile.accountId, pending.createdAt);
+        await checkThreadsAuthorization(profile.accountId, hash(rawState));
       const [existing] = await sql<
         { id: string }[]
       >`SELECT id FROM social_connections WHERE workspace_id=${pending.workspaceId} AND provider=${provider} AND account_id=${profile.accountId}`;

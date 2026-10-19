@@ -67,10 +67,10 @@ export function threadsSubjectHash(accountId: string) {
 
 export async function checkThreadsAuthorization(
   accountId: string,
-  startedAt: Date,
+  stateHash: string,
 ) {
   const [event] =
-    await sql`SELECT 1 FROM threads_account_events WHERE subject_hash=${threadsSubjectHash(accountId)} AND received_at>=${startedAt} LIMIT 1`;
+    await sql`SELECT 1 FROM threads_account_events e JOIN social_oauth_requests r ON r.state_hash=${stateHash} WHERE e.subject_hash=${threadsSubjectHash(accountId)} AND e.received_at>=r.created_at LIMIT 1`;
   if (event)
     throw new HTTPException(409, {
       message:
