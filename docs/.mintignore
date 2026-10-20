@@ -1,2 +1,2 @@
-# Publish generated MDX pages; editable Markdown sources use the same routes.
-**/*.md
+# Asset attribution notes are not documentation pages.
+assets/**/README.md
